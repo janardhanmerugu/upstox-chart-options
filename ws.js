@@ -400,8 +400,22 @@ function _ensureWSForCSV(onReady) {
     }
     else if (t === 'bubbles_data') {
       if (!msg.bubbles || msg.bubbles.length === 0) { document.getElementById('csv-bubble-status').textContent='⚠ No bubbles found'; return; }
-      const optType=msg.strike.toLowerCase().startsWith('pe')?'PE':'CE';
-      msg.bubbles.forEach(b => { if(BUB.items.length>=BUB.MAX)BUB.items.shift(); const t=b.time; BUB.items.push({time:t,chartTime:(selIv===60||selIv===300||selIv===900)?Math.floor(t/selIv)*selIv:t,open:b.open,spotClose:b.spot_close,ratio:b.ratio,optType,strike:msg.strike,spotDelta:0,optDelta:0}); });
+      msg.bubbles.forEach(b => {
+        if(BUB.items.length>=BUB.MAX)BUB.items.shift();
+        const bt=b.time;
+        // Use stored opt_type if present; fallback: check full strike string for CE/PE suffix
+        const fullStrike = b.strike || msg.strike || '';
+        let optType = (b.opt_type||'').toUpperCase();
+        if (!optType) {
+          const sl = fullStrike.toLowerCase();
+          optType = sl.includes('25pe') || sl.endsWith('pe') ? 'PE' : 'CE';
+        }
+        BUB.items.push({
+          time:bt, chartTime:(selIv===60||selIv===300||selIv===900)?Math.floor(bt/selIv)*selIv:bt,
+          open:b.open, spotClose:b.spot_close, ratio:b.ratio,
+          optType, strike:fullStrike, spotDelta:0, optDelta:0
+        });
+      });
       const el=document.getElementById('s-bubs'); if(el) el.textContent=BUB.items.length;
       requestAnimationFrame(()=>BUB.draw());
       document.getElementById('csv-bubble-status').textContent=`✅ ${msg.bubbles.length} bubbles (${msg.strike})`;
