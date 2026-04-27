@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Upstox Options Chart</title>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- APP SHELL -->
+<div id="app-shell">
+
+  <!-- SIDE DRAWER -->
+  <div id="side-drawer">
+
+    <!-- ── BRAND + CONNECTION ── -->
+    <div id="sidebar-top">
+      <div id="sidebar-brand">
+        <span><span class="brand-icon">⚡</span> UPSTOX OPTIONS</span>
+        <span class="badge idle" id="statusBadge">DISC</span>
+      </div>
+      <div id="sidebar-conn">
+        <button class="hbtn primary" id="connectBtn"    onclick="connectWS()">⬡ Connect</button>
+        <button class="hbtn danger"  id="disconnectBtn" onclick="disconnectWS()" disabled>✕ Disconnect</button>
+      </div>
+    </div>
+
+    <!-- ── ACCESS TOKEN ── -->
+    <div class="ds">
+      <div class="ds-title"><span class="ds-title-icon">🔑</span><span>Access Token</span></div>
+      <div style="display:flex;gap:.3rem">
+        <input type="password" id="token-input" placeholder="Paste Upstox token…" autocomplete="off"/>
+        <button class="show-hide" id="showHideBtn" onclick="toggleTokenVis()">Show</button>
+      </div>
+      <div style="display:flex;gap:.35rem">
+        <button class="hbtn primary" id="saveTokenBtn" onclick="saveToken()" disabled style="flex:1">Save Token</button>
+        <button class="hbtn ghost"   id="clearTokenBtn" onclick="clearToken()" disabled style="padding:.32rem .6rem">Clear</button>
+      </div>
+      <div id="token-status"><div id="tok-dot"></div><span id="tok-msg">Connect first, then save token</span></div>
+      <span class="tip">Expires daily → <a href="https://developer.upstox.com" target="_blank">developer.upstox.com</a></span>
+    </div>
+
+    <!-- ── OPTION CHAIN ── -->
+    <div id="opt-panel">
+      <div class="ds-title"><span class="ds-title-icon">🔗</span><span>Option Chain</span></div>
+
+      <!-- Underlying index pills -->
+      <div class="ul-pills">
+        <button class="opt-ul-btn active" id="opt-ul-nf"  onclick="optPickUL('NIFTY',this)">NIFTY</button>
+        <button class="opt-ul-btn"        id="opt-ul-bnf" onclick="optPickUL('BANKNIFTY',this)">BNIFTY</button>
+        <button class="opt-ul-btn"        id="opt-ul-fn"  onclick="optPickUL('FINNIFTY',this)">FINNIFTY</button>
+      </div>
+
+      <!-- Expiry + ATM range -->
+      <div class="expiry-row">
+        <span class="exp-label">📅 Expiry</span>
+        <select class="opt-exp-sel" id="opt-expiry" onchange="optOnExpiry()">
+          <option value="">— select —</option>
+        </select>
+        <span class="exp-label">ATM ±</span>
+        <select class="range-pill" id="opt-range" onchange="optBuildStrikes()">
+          <option value="3">3</option>
+          <option value="5" selected>5</option>
+          <option value="8">8</option>
+          <option value="10">10</option>
+        </select>
+      </div>
+
+      <!-- Load chain -->
+      <button class="opt-load-btn" id="opt-fetch-btn" onclick="optFetchChain()" disabled>⬇ Load Chain</button>
+      <div id="opt-chain-status">Connect &amp; authenticate first</div>
+
+      <!-- Strike grid (populated dynamically) -->
+      <div id="opt-strikes-row" style="display:none">
+        <div class="strikes-header">
+          <div class="sh-ce">▲ CE</div>
+          <div class="sh-mid">Strike</div>
+          <div class="sh-pe">▼ PE</div>
+        </div>
+        <div id="opt-strikes"></div>
+      </div>
+
+      <!-- Selected info card -->
+      <div id="opt-info-row" style="display:none">
+        <div id="opt-info-strip">
+          <div style="font-size:.58rem;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:.1rem">Selected Strikes</div>
+          <div id="oi-ce-wrap" style="display:none">
+            <div class="oi-row">
+              <div class="oi-chip">
+                <span style="color:var(--ce);font-size:.7rem">▲</span>
+                <span class="oi-lbl">CE</span>
+                <span class="oi-val oi-ce" id="oi-ce-strike">—</span>
+              </div>
+              <div class="oi-chip">
+                <span class="oi-lbl">Exp</span>
+                <span class="oi-val" id="oi-ce-expiry" style="font-size:.63rem">—</span>
+              </div>
+            </div>
+            <div style="font-size:.56rem;color:var(--muted);margin-top:.15rem;padding:0 .1rem" id="oi-ce-key">—</div>
+          </div>
+          <div id="oi-pe-wrap" style="display:none;margin-top:.25rem">
+            <div class="oi-row">
+              <div class="oi-chip">
+                <span style="color:var(--pe);font-size:.7rem">▼</span>
+                <span class="oi-lbl">PE</span>
+                <span class="oi-val oi-pe" id="oi-pe-strike">—</span>
+              </div>
+              <div class="oi-chip">
+                <span class="oi-lbl">Exp</span>
+                <span class="oi-val" id="oi-pe-expiry" style="font-size:.63rem">—</span>
+              </div>
+            </div>
+            <div style="font-size:.56rem;color:var(--muted);margin-top:.15rem;padding:0 .1rem" id="oi-pe-key">—</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+
+
+    <!-- ── INTERVAL ── -->
+    <div class="ds">
+      <div class="ds-title"><span class="ds-title-icon">⏱</span><span>Interval</span></div>
+      <div class="iv-group">
+        <button class="ivbtn"        data-iv="1"   onclick="pickIv(1)">1s</button>
+        <button class="ivbtn"        data-iv="5"   onclick="pickIv(5)">5s</button>
+        <button class="ivbtn"        data-iv="30"  onclick="pickIv(30)">30s</button>
+        <button class="ivbtn active" data-iv="60"  onclick="pickIv(60)">1m</button>
+        <button class="ivbtn"        data-iv="300" onclick="pickIv(300)">5m</button>
+        <button class="ivbtn"        data-iv="900" onclick="pickIv(900)">15m</button>
+      </div>
+    </div>
+
+    <!-- ── CHART TOOLS ── -->
+    <div class="ds">
+      <div class="ds-title"><span class="ds-title-icon">🛠</span><span>Chart Tools</span></div>
+      <div class="tool-row col2">
+        <button class="tbtn" id="bubBtn"      onclick="toggleBubbles()">● Bubbles ON</button>
+        <button class="tbtn" id="xhair-btn"   onclick="toggleCrosshair()">✥ Free</button>
+      </div>
+      <div class="tool-row col2">
+        <button class="tbtn" id="drawline-btn" onclick="toggleDrawLine()" title="Click chart to add · click near line to remove">✏ Draw Line</button>
+        <button class="tbtn off"               onclick="clearAllLines()"  title="Remove all lines">🗑 Clear Lines</button>
+      </div>
+    </div>
+
+    <!-- ── BUBBLE CONFIG ── -->
+    <div class="ds">
+      <div class="ds-title"><span class="ds-title-icon">🫧</span><span>Bubble Config</span></div>
+      <div class="bub-cfg">
+
+        <!-- Spot Delta Min -->
+        <div class="bub-cfg-row">
+          <span class="bub-cfg-label">Spot Δ Min</span>
+          <input type="number" id="bub-spot-min" class="bub-cfg-input" min="0" step="0.5" value="0.7"
+            title="Only show bubbles where |spot close−open| ≥ this value"
+            oninput="bubSpotDeltaMin=+this.value||0; BUB.draw()"/>
+          <span style="font-size:.58rem;color:var(--muted)">|spot C−O| ≥</span>
+        </div>
+
+        <!-- Bubble Size Multiplier -->
+        <div class="bub-cfg-row">
+          <span class="bub-cfg-label">Size ×</span>
+          <input type="number" id="bub-size-mult" class="bub-cfg-input" min="0.1" max="10" step="0.1" value="1"
+            title="Multiply all bubble radii. Lower values shrink bubbles, higher values enlarge them."
+            oninput="bubSizeMult=Math.max(0.1,Math.min(10,+this.value||1)); BUB.draw()"/>
+          <span style="font-size:.58rem;color:var(--muted)">0.1× to 10×</span>
+        </div>
+
+        <!-- Opacity -->
+        <div class="bub-cfg-row">
+          <span class="bub-cfg-label">Opacity</span>
+          <div class="bub-opacity-row" style="flex:1">
+            <input type="range" id="bub-opacity2" min="5" max="100" step="1" value="60"
+              oninput="bubOpacity=+this.value/100;
+                document.getElementById('bub-opacity-val2').textContent=this.value+'%';
+                document.getElementById('bub-opacity').value=this.value;
+                document.getElementById('bub-opacity-val').textContent=this.value+'%';
+                BUB.draw()"/>
+            <span id="bub-opacity-val2" class="bub-opacity-val">60%</span>
+          </div>
+        </div>
+
+        <!-- CE Bullish -->
+        <div class="bub-type-block">
+          <div class="bub-type-title">
+            <span class="dot" style="background:#00e676"></span>
+            <span style="color:#00e676">CE Bullish</span>
+            <span style="color:var(--muted);font-size:.55rem;font-weight:400;margin-left:auto">CE ratio &gt; 0</span>
+            <input type="color" id="clr-ce-bull" class="bub-color-pick" value="#00e676"
+              title="CE Bullish fill color" oninput="BUB.draw()"/>
+          </div>
+          <div class="bub-dir-row">
+            <span style="font-size:.57rem;color:var(--muted)">Index:</span>
+            <label class="bub-chk-label">
+              <input type="checkbox" id="chk-ce-bull-pos" checked onchange="BUB.draw()"/> ▲ +ve
+            </label>
+            <label class="bub-chk-label">
+              <input type="checkbox" id="chk-ce-bull-neg" checked onchange="BUB.draw()"/> ▼ −ve
+            </label>
+          </div>
+        </div>
+
+        <!-- CE Bearish -->
+        <div class="bub-type-block">
+          <div class="bub-type-title">
+            <span class="dot" style="background:#ff3d5a"></span>
+            <span style="color:#ff3d5a">CE Bearish</span>
+            <span style="color:var(--muted);font-size:.55rem;font-weight:400;margin-left:auto">CE ratio ≤ 0</span>
+            <input type="color" id="clr-ce-bear" class="bub-color-pick" value="#ff3d5a"
+              title="CE Bearish fill color" oninput="BUB.draw()"/>
+          </div>
+          <div class="bub-dir-row">
+            <span style="font-size:.57rem;color:var(--muted)">Index:</span>
+            <label class="bub-chk-label">
+              <input type="checkbox" id="chk-ce-bear-pos" checked onchange="BUB.draw()"/> ▲ +ve
+            </label>
+            <label class="bub-chk-label">
+              <input type="checkbox" id="chk-ce-bear-neg" checked onchange="BUB.draw()"/> ▼ −ve
+            </label>
+          </div>
+        </div>
+
+        <!-- PE Bullish -->
+        <div class="bub-type-block">
+          <div class="bub-type-title">
+            <span class="dot" style="background:#00e676"></span>
+            <span style="color:#00e676">PE Bullish</span>
+            <span style="color:var(--muted);font-size:.55rem;font-weight:400;margin-left:auto">PE ratio ≤ 0</span>
+            <input type="color" id="clr-pe-bull" class="bub-color-pick" value="#00e676"
+              title="PE Bullish fill color" oninput="BUB.draw()"/>
+          </div>
+          <div class="bub-dir-row">
+            <span style="font-size:.57rem;color:var(--muted)">Index:</span>
+            <label class="bub-chk-label">
+              <input type="checkbox" id="chk-pe-bull-pos" checked onchange="BUB.draw()"/> ▲ +ve
+            </label>
+            <label class="bub-chk-label">
+              <input type="checkbox" id="chk-pe-bull-neg" checked onchange="BUB.draw()"/> ▼ −ve
+            </label>
+          </div>
+        </div>
+
+        <!-- PE Bearish -->
+        <div class="bub-type-block">
+          <div class="bub-type-title">
+            <span class="dot" style="background:#ff3d5a"></span>
+            <span style="color:#ff3d5a">PE Bearish</span>
+            <span style="color:var(--muted);font-size:.55rem;font-weight:400;margin-left:auto">PE ratio &gt; 0</span>
+            <input type="color" id="clr-pe-bear" class="bub-color-pick" value="#ff3d5a"
+              title="PE Bearish fill color" oninput="BUB.draw()"/>
+          </div>
+          <div class="bub-dir-row">
+            <span style="font-size:.57rem;color:var(--muted)">Index:</span>
+            <label class="bub-chk-label">
+              <input type="checkbox" id="chk-pe-bear-pos" checked onchange="BUB.draw()"/> ▲ +ve
+            </label>
+            <label class="bub-chk-label">
+              <input type="checkbox" id="chk-pe-bear-neg" checked onchange="BUB.draw()"/> ▼ −ve
+            </label>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+<!-- ── CSV LOADERS ── -->
+    <div class="ds">
+      <div class="ds-title"><span class="ds-title-icon">📂</span><span>Load Saved Data</span></div>
+
+      <!-- Date picker shared by both loaders -->
+      <div class="bub-cfg-row" style="gap:.4rem">
+        <span class="bub-cfg-label">Date</span>
+        <input type="date" id="csv-date" style="
+          flex:1;font-family:'JetBrains Mono',monospace;font-size:.7rem;
+          background:#0a1020;border:1px solid var(--border);color:var(--text);
+          border-radius:6px;padding:.28rem .5rem;outline:none;
+        " onchange="csvDateChanged()"/>
+      </div>
+
+      <!-- Candle loader -->
+      <div style="display:flex;flex-direction:column;gap:.3rem;background:#0a1020;border:1px solid var(--border);border-radius:8px;padding:.45rem .55rem">
+        <div style="font-size:.6rem;font-weight:700;color:var(--accent);letter-spacing:.06em">📈 INDEX CANDLES</div>
+        <select id="csv-instrument" style="
+          font-family:'JetBrains Mono',monospace;font-size:.68rem;
+          background:#060a11;border:1px solid var(--border);color:var(--text);
+          border-radius:6px;padding:.26rem .4rem;outline:none;width:100%;
+        ">
+          <option value="">— pick date first —</option>
+        </select>
+        <button class="tbtn" onclick="loadCandlesCSV()" style="font-size:.65rem">⬆ Load Candles</button>
+        <div id="csv-candle-status" style="font-size:.58rem;color:var(--muted);min-height:12px"></div>
+      </div>
+
+      <!-- Bubble loader (local file) -->
+      <div style="display:flex;flex-direction:column;gap:.3rem;background:#0a1020;border:1px solid #00e67633;border-radius:8px;padding:.45rem .55rem">
+        <div style="font-size:.6rem;font-weight:700;color:#00e676;letter-spacing:.06em">🫧 BUBBLES (Local CSV)</div>
+        <input type="file" id="local-bubble-input" accept=".csv" style="display:none" onchange="loadLocalBubbles(this)"/>
+        <button class="tbtn" onclick="document.getElementById('local-bubble-input').click()" style="font-size:.65rem;border-color:#00e67655;color:#00e676">📂 Pick Bubble CSV</button>
+        <div id="local-bubble-status" style="font-size:.58rem;color:var(--muted);min-height:12px"></div>
+      </div>
+
+    </div>
+
+    <!-- ── LOAD BUTTON ── -->
+
+
+  </div><!-- /side-drawer -->
+
+  <!-- DRAWER TOGGLE TAB -->
+  <button id="drawer-toggle" onclick="toggleDrawer()" title="Toggle panel">‹</button>
+
+  <!-- MAIN CONTENT -->
+  <div id="main-content">
+
+    <!-- Hidden history elements (kept for JS compatibility) -->
+    <div style="display:none">
+      <select id="hist-unit">
+        <option value="1minute">1 min</option>
+        <option value="5minute" selected>5 min</option>
+        <option value="30minute">30 min</option>
+        <option value="day">Day</option>
+      </select>
+      <input type="date" id="hist-from"/>
+      <input type="date" id="hist-to"/>
+      <button id="hist-btn" onclick="loadHistory()" disabled>▶ Load History</button>
+      <span id="hist-status"></span>
+    </div>
+
+    <!-- COMPACT INFO BAR -->
+    <div id="info-bar">
+      <span id="sym-disp">—</span>
+      <div class="bar-sep"></div>
+      <div class="ti"><span class="tl">LTP</span>&nbsp;<span class="tv" id="t-ltp">—</span></div>
+      <div class="ti"><span class="tl">O</span>&nbsp;<span class="tv" id="t-o">—</span></div>
+      <div class="ti"><span class="tl">H</span>&nbsp;<span class="tv" id="t-h">—</span></div>
+      <div class="ti"><span class="tl">L</span>&nbsp;<span class="tv" id="t-l">—</span></div>
+      <div class="ti"><span class="tl">C</span>&nbsp;<span class="tv" id="t-c">—</span></div>
+      <div class="ti"><span class="tl">Vol</span>&nbsp;<span class="tv" id="t-v">—</span></div>
+      <div class="ti"><span class="tl">Δ</span>&nbsp;<span class="tv" id="t-chg">—</span></div>
+      <div class="ti"><span class="tl">Ratio</span>&nbsp;<span class="tv" id="t-rat" style="color:var(--accent)">—</span></div>
+      <div class="bar-sep"></div>
+      <div class="ti"><span class="tl">Sym</span>&nbsp;<span class="tv" id="s-sym">—</span></div>
+      <div class="ti"><span class="tl">Iv</span>&nbsp;<span class="tv" id="s-iv">—</span></div>
+      <div class="ti"><span class="tl">Bars</span>&nbsp;<span class="tv" id="s-bars">0</span></div>
+      <div class="ti"><span class="tl">Bubs</span>&nbsp;<span class="tv" id="s-bubs">0</span></div>
+      <div class="ti"><span class="tl">TPS</span>&nbsp;<span class="tv" id="s-tps">—</span></div>
+      <div class="ti"><span class="tl">Last</span>&nbsp;<span class="tv" id="s-last">—</span></div>
+      <div class="bar-sep"></div>
+      <!-- Bubble controls -->
+      <span class="bc-label">Scale</span>
+      <input type="range" id="bub-scale" class="bc-range" min="1" max="100" step="0.1" value="1"
+        oninput="bubScale=+this.value; document.getElementById('bub-scale-val').textContent=(+this.value).toFixed(1); BUB.draw()"/>
+      <span id="bub-scale-val" class="bc-val">1.0</span>
+      <span class="bc-label">Min CE</span>
+      <input type="number" id="bub-minrat-ce" class="bc-num" min="0" step="0.1" value="0"
+        oninput="bubMinRatioCE=+this.value||0; BUB.draw()" style="border-color:#ff3d5a55"/>
+      <span class="bc-label">Min PE</span>
+      <input type="number" id="bub-minrat-pe" class="bc-num" min="0" step="0.1" value="0"
+        oninput="bubMinRatioPE=+this.value||0; BUB.draw()" style="border-color:#00e67655"/>
+      <span class="bc-label">MaxPx</span>
+      <input type="number" id="bub-maxsize" class="bc-num" min="1" step="1" value="60"
+        oninput="bubMaxSize=Math.max(1,+this.value||60); BUB.draw()"/>
+      <span class="bc-label">🔆</span>
+      <input type="range" id="bub-opacity" class="bc-range" min="5" max="100" step="1" value="60"
+        oninput="bubOpacity=+this.value/100;
+          document.getElementById('bub-opacity-val').textContent=this.value+'%';
+          document.getElementById('bub-opacity2').value=this.value;
+          document.getElementById('bub-opacity-val2').textContent=this.value+'%';
+          BUB.draw()"/>
+      <span id="bub-opacity-val" class="bc-val">60%</span>
+      <span id="bub-hover-info"></span>
+    </div>
+
+    <div id="alerts"></div>
+
+    <!-- CHARTS -->
+    <div id="chart-wrap">
+      <div id="chart-con">
+        <div id="lw-chart"></div>
+        <div id="placeholder">
+          <svg width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" opacity="0.18"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          <p>
+            <span class="sn">1 →</span> Click <b style="color:var(--accent)">Connect</b><br/>
+            <span class="sn">2 →</span> Paste token → <b style="color:var(--accent)">Save Token</b><br/>
+            <span class="sn">3 →</span> Pick underlying, expiry → <b style="color:var(--accent)">⬇ Load Chain</b><br/>
+            <span class="sn">4 →</span> Click CE/PE strike → <b style="color:var(--accent)">▶ Load</b> to chart
+          </p>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /main-content -->
+
+</div><!-- /app-shell -->
+
+<!-- Tooltip -->
+<div id="bub-tip">
+  <div class="btt" id="btt-title"></div>
+  <div id="btt-body"></div>
+</div>
+
+<!-- LightweightCharts loader -->
+<script>
+(function(){
+  const srcs=[
+    'lightweight-charts.standalone.production.js',
+    'https://unpkg.com/lightweight-charts@4.2.0/dist/lightweight-charts.standalone.production.js',
+    'https://cdn.jsdelivr.net/npm/lightweight-charts@4.2.0/dist/lightweight-charts.standalone.production.js',
+  ];
+  let i=0;
+  function next(){
+    if(i>=srcs.length){alert('Chart library failed to load. Check internet.');return;}
+    const s=document.createElement('script');
+    s.src=srcs[i++];
+    s.onload=()=>{ if(typeof LightweightCharts==='undefined') next(); };
+    s.onerror=next;
+    document.head.appendChild(s);
+  }
+  next();
+})();
+</script>
+
+<script src="config.js"></script>
+<script src="ui.js"></script>
+<script src="bubbles.js"></script>
+<script src="chart.js"></script>
+<script src="ws.js"></script>
+<script src="init.js"></script>
+</body>
+</html>
