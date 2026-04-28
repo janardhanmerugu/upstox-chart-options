@@ -117,6 +117,7 @@ let spot5Bucket = { cur: null, _last: null };
 // ── Option Chain UI State ──────────────────────────────────────────────────
 // For storing selected CE/PE strikes and their DOM button references
 let selCEKey=null, selPEKey=null, selCEBtn=null, selPEBtn=null;
+let selCEStrike=null, selPEStrike=null;  // numeric strike price e.g. 22900
 
 // ❌ UNUSED: Was meant to track current spot instrument, but feature incomplete
 let spotInstrKey = 'NSE_INDEX|Nifty 50';

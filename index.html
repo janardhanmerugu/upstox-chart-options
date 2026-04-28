@@ -183,7 +183,26 @@
           </div>
         </div>
 
-        <!-- CE Bullish -->
+        <!-- Preset dropdown -->
+        <div style="display:flex;align-items:center;gap:.4rem;margin-bottom:.3rem">
+          <span style="font-size:.6rem;color:var(--muted);white-space:nowrap">Preset</span>
+          <select id="bub-preset"
+            onchange="bubApplyPreset(this.value)"
+            style="flex:1;font-family:'JetBrains Mono',monospace;font-size:.68rem;
+                   background:#060a11;border:1px solid var(--border);color:var(--text);
+                   border-radius:6px;padding:.26rem .4rem;outline:none;">
+            <option value="smart">🧠 Smart Money</option>
+            <option value="positive">📈 Positive Direction</option>
+            <option value="negative">📉 Negative Direction</option>
+            <option value="fake">🎭 Fake Move</option>
+            <option value="inverse_fake">🔄 Inverse Fake</option>
+            <option value="all">✅ All</option>
+            <option value="none">⬜ None</option>
+            <option value="custom" style="color:var(--muted)">✏ Custom</option>
+          </select>
+        </div>
+
+                <!-- CE Bullish -->
         <div class="bub-type-block">
           <div class="bub-type-title">
             <span class="dot" style="background:#00e676"></span>
@@ -195,10 +214,10 @@
           <div class="bub-dir-row">
             <span style="font-size:.57rem;color:var(--muted)">Index:</span>
             <label class="bub-chk-label">
-              <input type="checkbox" id="chk-ce-bull-pos" checked onchange="BUB.draw()"/> ▲ +ve
+              <input type="checkbox" id="chk-ce-bull-pos" onchange="bubPresetCustom()"/> ▲ +ve
             </label>
             <label class="bub-chk-label">
-              <input type="checkbox" id="chk-ce-bull-neg" checked onchange="BUB.draw()"/> ▼ −ve
+              <input type="checkbox" id="chk-ce-bull-neg" onchange="bubPresetCustom()"/> ▼ −ve
             </label>
           </div>
         </div>
@@ -215,10 +234,10 @@
           <div class="bub-dir-row">
             <span style="font-size:.57rem;color:var(--muted)">Index:</span>
             <label class="bub-chk-label">
-              <input type="checkbox" id="chk-ce-bear-pos" checked onchange="BUB.draw()"/> ▲ +ve
+              <input type="checkbox" id="chk-ce-bear-pos" onchange="bubPresetCustom()"/> ▲ +ve
             </label>
             <label class="bub-chk-label">
-              <input type="checkbox" id="chk-ce-bear-neg" checked onchange="BUB.draw()"/> ▼ −ve
+              <input type="checkbox" id="chk-ce-bear-neg" checked onchange="bubPresetCustom()"/> ▼ −ve
             </label>
           </div>
         </div>
@@ -235,10 +254,10 @@
           <div class="bub-dir-row">
             <span style="font-size:.57rem;color:var(--muted)">Index:</span>
             <label class="bub-chk-label">
-              <input type="checkbox" id="chk-pe-bull-pos" checked onchange="BUB.draw()"/> ▲ +ve
+              <input type="checkbox" id="chk-pe-bull-pos" checked onchange="bubPresetCustom()"/> ▲ +ve
             </label>
             <label class="bub-chk-label">
-              <input type="checkbox" id="chk-pe-bull-neg" checked onchange="BUB.draw()"/> ▼ −ve
+              <input type="checkbox" id="chk-pe-bull-neg" onchange="bubPresetCustom()"/> ▼ −ve
             </label>
           </div>
         </div>
@@ -255,10 +274,10 @@
           <div class="bub-dir-row">
             <span style="font-size:.57rem;color:var(--muted)">Index:</span>
             <label class="bub-chk-label">
-              <input type="checkbox" id="chk-pe-bear-pos" checked onchange="BUB.draw()"/> ▲ +ve
+              <input type="checkbox" id="chk-pe-bear-pos" onchange="bubPresetCustom()"/> ▲ +ve
             </label>
             <label class="bub-chk-label">
-              <input type="checkbox" id="chk-pe-bear-neg" checked onchange="BUB.draw()"/> ▼ −ve
+              <input type="checkbox" id="chk-pe-bear-neg" onchange="bubPresetCustom()"/> ▼ −ve
             </label>
           </div>
         </div>
@@ -294,6 +313,25 @@
         <div id="csv-candle-status" style="font-size:.58rem;color:var(--muted);min-height:12px"></div>
       </div>
 
+
+      <!-- ── OFFLINE BUBBLES — shares the Date picker above ── -->
+      <div style="display:flex;flex-direction:column;gap:.3rem;background:#0a1020;border:1px solid var(--border);border-radius:8px;padding:.45rem .55rem">
+        <div style="font-size:.6rem;font-weight:700;color:var(--accent);letter-spacing:.06em">🫧 OFFLINE BUBBLES</div>
+        <select id="offline-bub-strike" style="
+          font-family:'JetBrains Mono',monospace;font-size:.68rem;
+          background:#060a11;border:1px solid var(--border);color:var(--text);
+          border-radius:6px;padding:.26rem .4rem;outline:none;width:100%;
+        ">
+          <option value="">— pick date first —</option>
+        </select>
+        <div style="display:flex;gap:.3rem;align-items:center">
+          <label style="font-size:.62rem;color:var(--muted);cursor:pointer;display:flex;align-items:center;gap:.25rem">
+            <input type="checkbox" id="offline-bub-append">Append
+          </label>
+          <button class="tbtn" onclick="offlineLoadBubbles()" style="flex:1;font-size:.65rem">⬆ Load Bubbles</button>
+        </div>
+        <div id="offline-bub-status" style="font-size:.58rem;color:var(--muted);min-height:12px"></div>
+      </div>
 
     </div>
 

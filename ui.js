@@ -257,7 +257,7 @@ function optSelectStrike(strike, optType, instrKey, btn) {
 
   if (optType === 'CE') {
     if (selCEBtn) selCEBtn.classList.remove('active');
-    selCEBtn = btn; selCEKey = instrKey;
+    selCEBtn = btn; selCEKey = instrKey; selCEStrike = strike;
     btn.classList.add('active');
     document.getElementById('oi-ce-strike').textContent = strike;
     document.getElementById('oi-ce-expiry').textContent = expiry;
@@ -268,7 +268,7 @@ function optSelectStrike(strike, optType, instrKey, btn) {
     showAlert('info',`🔴 CE: ${optUL} ${strike}  |  Expiry: ${expiry}`);
   } else {
     if (selPEBtn) selPEBtn.classList.remove('active');
-    selPEBtn = btn; selPEKey = instrKey;
+    selPEBtn = btn; selPEKey = instrKey; selPEStrike = strike;
     btn.classList.add('active');
     document.getElementById('oi-pe-strike').textContent = strike;
     document.getElementById('oi-pe-expiry').textContent = expiry;
@@ -322,4 +322,87 @@ function loadHistory() {
   document.getElementById('hist-status').textContent = '⏳ Loading…';
   document.getElementById('hist-btn').disabled = true;
   ws.send(JSON.stringify({ type:'get_history', symbol:selSym, unit, from_date:fromDate, to_date:toDate }));
+}
+
+// ──── Offline Bubble Loader ────
+function offlineLoadBubbles() {
+  const dateStr = document.getElementById('csv-date').value;
+  const selVal  = document.getElementById('offline-bub-strike').value;
+  if (!dateStr) { showAlert('warn','⚠ Pick a date first.'); return; }
+  if (!selVal)  { showAlert('warn','⚠ Pick a strike first.'); return; }
+  let parsed;
+  try { parsed = JSON.parse(selVal); } catch(_) { showAlert('err','⚠ Invalid selection.'); return; }
+  wsLoadBubbles(dateStr, parsed.opt_type, parsed.strike);
+}
+
+// ──── Bubble Presets ────
+const BUB_PRESETS = {
+  smart: {
+    // Smart Money: writers confirming direction
+    // CE falling while spot falls + PE falling while spot rises
+    'chk-ce-bull-pos': false, 'chk-ce-bull-neg': false,
+    'chk-ce-bear-pos': false, 'chk-ce-bear-neg': true,
+    'chk-pe-bull-pos': true,  'chk-pe-bull-neg': false,
+    'chk-pe-bear-pos': false, 'chk-pe-bear-neg': false,
+  },
+  positive: {
+    // Positive Direction: all ▲ +ve — spot genuinely moving up
+    'chk-ce-bull-pos': true,  'chk-ce-bull-neg': false,
+    'chk-ce-bear-pos': true,  'chk-ce-bear-neg': false,
+    'chk-pe-bull-pos': true,  'chk-pe-bull-neg': false,
+    'chk-pe-bear-pos': true,  'chk-pe-bear-neg': false,
+  },
+  negative: {
+    // Negative Direction: all ▼ −ve — spot genuinely moving down
+    'chk-ce-bull-pos': false, 'chk-ce-bull-neg': true,
+    'chk-ce-bear-pos': false, 'chk-ce-bear-neg': true,
+    'chk-pe-bull-pos': false, 'chk-pe-bull-neg': true,
+    'chk-pe-bear-pos': false, 'chk-pe-bear-neg': true,
+  },
+  fake: {
+    // Fake Move: options contradicting price direction
+    // CE rising while spot falls + PE falling while spot falls + PE rising while spot rises
+    'chk-ce-bull-pos': false, 'chk-ce-bull-neg': true,
+    'chk-ce-bear-pos': false, 'chk-ce-bear-neg': false,
+    'chk-pe-bull-pos': false, 'chk-pe-bull-neg': true,
+    'chk-pe-bear-pos': true,  'chk-pe-bear-neg': false,
+  },
+  inverse_fake: {
+    // Inverse Fake: options confirming price from contrarian side
+    // CE rising while spot rises + CE falling while spot rises + PE falling while spot rises + PE rising while spot falls
+    'chk-ce-bull-pos': true,  'chk-ce-bull-neg': false,
+    'chk-ce-bear-pos': true,  'chk-ce-bear-neg': false,
+    'chk-pe-bull-pos': true,  'chk-pe-bull-neg': false,
+    'chk-pe-bear-pos': false, 'chk-pe-bear-neg': true,
+  },
+  all: {
+    'chk-ce-bull-pos': true,  'chk-ce-bull-neg': true,
+    'chk-ce-bear-pos': true,  'chk-ce-bear-neg': true,
+    'chk-pe-bull-pos': true,  'chk-pe-bull-neg': true,
+    'chk-pe-bear-pos': true,  'chk-pe-bear-neg': true,
+  },
+  none: {
+    'chk-ce-bull-pos': false, 'chk-ce-bull-neg': false,
+    'chk-ce-bear-pos': false, 'chk-ce-bear-neg': false,
+    'chk-pe-bull-pos': false, 'chk-pe-bull-neg': false,
+    'chk-pe-bear-pos': false, 'chk-pe-bear-neg': false,
+  },
+};
+
+function bubApplyPreset(val) {
+  if (val === 'custom') return; // user selected custom manually — do nothing
+  const preset = BUB_PRESETS[val];
+  if (!preset) return;
+  Object.entries(preset).forEach(([id, checked]) => {
+    const el = document.getElementById(id);
+    if (el) el.checked = checked;
+  });
+  BUB.draw();
+}
+
+// Called by every checkbox onchange — switches dropdown to Custom
+function bubPresetCustom() {
+  const sel = document.getElementById('bub-preset');
+  if (sel && sel.value !== 'custom') sel.value = 'custom';
+  BUB.draw();
 }

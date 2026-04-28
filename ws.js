@@ -227,6 +227,50 @@ function connectWS() {
       document.getElementById('csv-candle-status').textContent = `✅ ${cData.length} candles (${ivLabel(selIv)})`;
     }
 
+    else if (t === 'bubble_list') {
+      const files = msg.files || [];
+      const sel   = document.getElementById('offline-bub-strike');
+      if (!sel) return;
+      sel.innerHTML = '<option value="">— select strike —</option>';
+      if (files.length === 0) {
+        sel.innerHTML = '<option value="">No bubble files for this date</option>';
+      } else {
+        files.forEach(f => {
+          const opt = document.createElement('option');
+          opt.value = JSON.stringify({ opt_type: f.opt_type, strike: f.strike });
+          opt.textContent = `${f.opt_type}  ${f.strike}`;
+          sel.appendChild(opt);
+        });
+      }
+      const statusEl = document.getElementById('offline-bub-status');
+      if (statusEl) statusEl.textContent = files.length ? `${files.length} file(s) found` : 'No files';
+    }
+
+    else if (t === 'bubble_data') {
+      const items    = msg.items || [];
+      const statusEl = document.getElementById('offline-bub-status');
+      const append   = document.getElementById('offline-bub-append')?.checked;
+
+      if (!append) BUB.clear();
+
+      items.forEach(item => {
+        // Recalculate chartTime for current selIv
+        item.chartTime = (selIv === 60 || selIv === 300 || selIv === 900)
+          ? Math.floor(item.time / selIv) * selIv
+          : item.time;
+        if (BUB.items.length >= BUB.MAX) BUB.items.shift();
+        BUB.items.push(item);
+      });
+
+      const el = document.getElementById('s-bubs');
+      if (el) el.textContent = BUB.items.length;
+      requestAnimationFrame(() => BUB.draw());
+
+      if (statusEl) statusEl.textContent =
+        `✅ ${items.length} bubbles loaded (${msg.opt_type} ${msg.strike} ${msg.date})`;
+      showAlert('ok', `✅ ${items.length} offline bubbles loaded — ${msg.opt_type} ${msg.strike}`);
+    }
+
     else if (t === 'error') { showAlert('err','⚠ '+msg.message, false); }
   };
 
@@ -283,46 +327,34 @@ function connectPEWS(instrKey) {
   wsPE = _makeOptWS(instrKey, c => BUB.pushPE5s(c));
 }
 
-function loadLocalBubbles(input) {
-  const file = input.files[0];
-  if (!file) return;
-  const status = document.getElementById('local-bubble-status');
-  status.textContent = '⏳ Reading…';
-  const reader = new FileReader();
-  reader.onload = e => {
-    const lines = e.target.result.trim().split('\n');
-    const rows = lines.slice(1);
-    const optType = file.name.toLowerCase().includes('pe') ? 'PE' : 'CE';
-    let count = 0;
-    rows.forEach(line => {
-      const parts = line.split(',');
-      if (parts.length < 4) return;
-      const [dt, open, spot_close, ratio] = parts;
-      if (!dt || !open || !ratio) return;
-      const t = Math.floor(new Date(dt.trim().replace(' ', 'T') + 'Z').getTime() / 1000);
-      if (isNaN(t) || isNaN(+ratio)) return;
-      if (BUB.items.length >= BUB.MAX) BUB.items.shift();
-      BUB.items.push({
-        time:      t,
-        chartTime: (selIv === 60 || selIv === 300 || selIv === 900)
-                     ? Math.floor(t / selIv) * selIv : t,
-        open:      +open,
-        spotClose: +spot_close,
-        ratio:     +ratio,
-        optType,
-        strike:    file.name.replace(/\.csv$/i, ''),
-        spotDelta: 0,
-        optDelta:  0,
-      });
-      count++;
-    });
-    const el = document.getElementById('s-bubs');
-    if (el) el.textContent = BUB.items.length;
-    requestAnimationFrame(() => BUB.draw());
-    status.textContent = '✅ ' + count + ' bubbles loaded from ' + file.name;
-  };
-  reader.onerror = () => { status.textContent = '⚠ Failed to read file'; };
-  reader.readAsText(file);
+
+
+// ─────────────────────────────────────────────────────────────────────────────
+// BUBBLE PERSISTENCE — server-side save / load
+// ─────────────────────────────────────────────────────────────────────────────
+
+// Called from BUB._pushItem() every time a bubble is emitted during live feed.
+// Sends the item to server for appending to today's JSONL file.
+// No reply expected — fire and forget.
+function wsSaveBubble(item) {
+  if (!ws || ws.readyState !== WebSocket.OPEN) return;
+  ws.send(JSON.stringify({ type: 'save_bubble', item }));
+}
+
+// Ask server for the list of saved bubble files for a given date.
+// Response arrives as {type:'bubble_list', date, files:[{opt_type,strike,path_rel}]}
+function wsListBubbles(dateStr) {
+  if (!ws || ws.readyState !== WebSocket.OPEN) { showAlert('err','⚠ Connect first.'); return; }
+  ws.send(JSON.stringify({ type: 'list_bubbles', date: dateStr }));
+}
+
+// Load a specific bubble file from server into BUB.items[].
+// opt_type = 'CE'|'PE', strike = filename stem (e.g. 'NSE_FO_52345')
+function wsLoadBubbles(dateStr, optType, strike) {
+  if (!ws || ws.readyState !== WebSocket.OPEN) { showAlert('err','⚠ Connect first.'); return; }
+  const statusEl = document.getElementById('offline-bub-status');
+  if (statusEl) statusEl.textContent = '⏳ Loading…';
+  ws.send(JSON.stringify({ type: 'load_bubbles', date: dateStr, opt_type: optType, strike }));
 }
 
 function disconnectWS() {
@@ -416,8 +448,14 @@ function csvDateChanged() {
   if (!d) return;
   const candleStatus = document.getElementById('csv-candle-status');
   if (candleStatus) candleStatus.textContent = '';
+  // Reset bubble strike dropdown when date changes
+  const bubSel = document.getElementById('offline-bub-strike');
+  if (bubSel) bubSel.innerHTML = '<option value="">— loading… —</option>';
+  const bubStatus = document.getElementById('offline-bub-status');
+  if (bubStatus) bubStatus.textContent = '';
   _ensureWSForCSV(() => {
     ws.send(JSON.stringify({ type: 'list_saved', date: d }));
+    ws.send(JSON.stringify({ type: 'list_bubbles', date: d }));
   });
 }
 

@@ -86,17 +86,24 @@ const BUB = {
   },
 
   _pushItem(spotBucket, optDelta, spotDelta, ratio, optType) {
-    const strike = optType === 'CE' ? selCEKey : selPEKey;
+    const strike      = optType === 'CE' ? selCEKey    : selPEKey;
+    const strikePrice = optType === 'CE' ? selCEStrike : selPEStrike;
+    // strikeLabel is what gets used as the filename: e.g. "NIFTY_22900_CE"
+    const strikeLabel = strikePrice
+      ? `${optUL}_${strikePrice}_${optType}`
+      : strike.replace(/[|/ ]/g, '_');
     this.items.push({
       time:      spotBucket.time,
       chartTime: this._chartTime(spotBucket.time),
       open:      spotBucket.open,
       spotClose: spotBucket.close,
-      optDelta, spotDelta, ratio, optType, strike,
+      optDelta, spotDelta, ratio, optType, strike, strikeLabel,
     });
     if (this.items.length > this.MAX) this.items.shift();
     const el = document.getElementById('s-bubs');
     if (el) el.textContent = this.items.length;
+    // Auto-save to server for offline replay
+    if (typeof wsSaveBubble === 'function') wsSaveBubble(this.items[this.items.length - 1]);
     this.draw();
   },
 
