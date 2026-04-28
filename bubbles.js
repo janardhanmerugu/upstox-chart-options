@@ -94,7 +94,6 @@ const BUB = {
       : strike.replace(/[|/ ]/g, '_');
     this.items.push({
       time:      spotBucket.time,
-      chartTime: this._chartTime(spotBucket.time),
       open:      spotBucket.open,
       spotClose: spotBucket.close,
       optDelta, spotDelta, ratio, optType, strike, strikeLabel,
