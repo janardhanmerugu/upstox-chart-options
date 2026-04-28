@@ -150,22 +150,6 @@ function connectWS() {
       }
     }
 
-    else if (t === 'bubble_strikes') {
-      const sel = document.getElementById('csv-strike');
-      if (sel) {
-        sel.innerHTML = '<option value="">— select strike —</option>';
-        if (!msg.strikes || msg.strikes.length === 0) {
-          sel.innerHTML = '<option value="">No bubbles for this date</option>';
-        } else {
-          msg.strikes.forEach(s => {
-            const opt = document.createElement('option');
-            opt.value = s; opt.textContent = s;
-            sel.appendChild(opt);
-          });
-        }
-      }
-    }
-
     else if (t === 'csv_data') {
       if (!msg.candles || msg.candles.length === 0) {
         document.getElementById('csv-candle-status').textContent = '⚠ No candles found'; return;
@@ -183,36 +167,6 @@ function connectWS() {
       setTimeout(() => { lwChart.timeScale().fitContent(); requestAnimationFrame(() => BUB.draw()); }, 100);
       updateTicker(msg.candles[msg.candles.length-1], msg.label || '');
       document.getElementById('csv-candle-status').textContent = `✅ ${cData.length} candles (${ivLabel(selIv)})`;
-    }
-
-    else if (t === 'bubbles_data') {
-      if (!msg.bubbles || msg.bubbles.length === 0) {
-        document.getElementById('csv-bubble-status').textContent = '⚠ No bubbles found'; return;
-      }
-      const optType = msg.strike.toLowerCase().startsWith('pe') ? 'PE' : 'CE';
-      msg.bubbles.forEach(b => {
-        if (BUB.items.length >= BUB.MAX) BUB.items.shift();
-        // b.time is raw UTC epoch seconds — do NOT add IST_OFFSET_S here.
-        // BUB.toXY() already adds IST_OFFSET_S when calling timeToCoordinate().
-        const t = b.time;
-        BUB.items.push({
-          time:      t,
-          chartTime: (selIv === 60 || selIv === 300 || selIv === 900)
-                       ? Math.floor(t / selIv) * selIv : t,
-          open:      b.open,
-          spotClose: b.spot_close,
-          ratio:     b.ratio,
-          optType,
-          strike:    msg.strike,
-          spotDelta: 0,
-          optDelta:  0,
-        });
-      });
-      const el = document.getElementById('s-bubs');
-      if (el) el.textContent = BUB.items.length;
-      requestAnimationFrame(() => BUB.draw());
-      const _bs1 = document.getElementById('csv-bubble-status');
-      if (_bs1) _bs1.textContent = `✅ ${msg.bubbles.length} bubbles (${msg.strike})`;
     }
 
     else if (t === 'error') { showAlert('err','⚠ '+msg.message, false); }
@@ -320,7 +274,6 @@ function disconnectWS() {
   ce5Bucket   = { cur: null, _last: null };
   pe5Bucket   = { cur: null, _last: null };
   spot5Bucket = { cur: null, _last: null };
-  // Reset UI immediately — do not rely on onclose firing
   setStatus('idle', 'DISCONNECTED');
   document.getElementById('connectBtn').disabled    = false;
   document.getElementById('disconnectBtn').disabled = true;
@@ -333,7 +286,7 @@ function disconnectWS() {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// CSV LOADERS — auto-connect, then send requests via WS
+// CSV LOADERS — candles only (bubble save/load removed)
 // ─────────────────────────────────────────────────────────────────────────────
 function _ensureWSForCSV(onReady) {
   if (ws && ws.readyState === WebSocket.OPEN) { onReady(); return; }
@@ -354,8 +307,6 @@ function _ensureWSForCSV(onReady) {
     showAlert('err','⚠ Cannot connect to '+CONFIG.WEBSOCKET_URL+'\n→ Start server first.', false);
   };
   tmpWS.onclose = () => {
-    // Only reset state if ws still points to this temp connection.
-    // If connectWS() replaced it, or disconnectWS() already nulled it, do nothing.
     if (ws === tmpWS) {
       ws = null;
       setStatus('idle','DISCONNECTED');
@@ -379,14 +330,6 @@ function _ensureWSForCSV(onReady) {
       if (filtered.length === 0) { sel.innerHTML = '<option value="">No candles for this date</option>'; }
       else { filtered.forEach(d => { const opt=document.createElement('option'); opt.value=d.instrument; opt.textContent=d.instrument.split('/').pop(); sel.appendChild(opt); }); }
     }
-    else if (t === 'bubble_strikes') {
-      const sel = document.getElementById('csv-strike');
-      if (sel) {
-        sel.innerHTML = '<option value="">— select strike —</option>';
-        if (!msg.strikes || msg.strikes.length === 0) { sel.innerHTML = '<option value="">No bubbles for this date</option>'; }
-        else { msg.strikes.forEach(s => { const opt=document.createElement('option'); opt.value=s; opt.textContent=s; sel.appendChild(opt); }); }
-      }
-    }
     else if (t === 'csv_data') {
       if (!msg.candles || msg.candles.length === 0) { document.getElementById('csv-candle-status').textContent='⚠ No candles found'; return; }
       if (!lwChart && !initCharts()) return;
@@ -398,28 +341,6 @@ function _ensureWSForCSV(onReady) {
       updateTicker(msg.candles[msg.candles.length-1], msg.label||'');
       document.getElementById('csv-candle-status').textContent=`✅ ${cData.length} candles (${ivLabel(selIv)})`;
     }
-    else if (t === 'bubbles_data') {
-      if (!msg.bubbles || msg.bubbles.length === 0) { document.getElementById('csv-bubble-status').textContent='⚠ No bubbles found'; return; }
-      msg.bubbles.forEach(b => {
-        if(BUB.items.length>=BUB.MAX)BUB.items.shift();
-        const bt=b.time;
-        // Use stored opt_type if present; fallback: check full strike string for CE/PE suffix
-        const fullStrike = b.strike || msg.strike || '';
-        let optType = (b.opt_type||'').toUpperCase();
-        if (!optType) {
-          const sl = fullStrike.toLowerCase();
-          optType = sl.includes('25pe') || sl.endsWith('pe') ? 'PE' : 'CE';
-        }
-        BUB.items.push({
-          time:bt, chartTime:(selIv===60||selIv===300||selIv===900)?Math.floor(bt/selIv)*selIv:bt,
-          open:b.open, spotClose:b.spot_close, ratio:b.ratio,
-          optType, strike:fullStrike, spotDelta:0, optDelta:0
-        });
-      });
-      const el=document.getElementById('s-bubs'); if(el) el.textContent=BUB.items.length;
-      requestAnimationFrame(()=>BUB.draw());
-      document.getElementById('csv-bubble-status').textContent=`✅ ${msg.bubbles.length} bubbles (${msg.strike})`;
-    }
   };
 }
 
@@ -427,15 +348,9 @@ function csvDateChanged() {
   const d = document.getElementById('csv-date').value;
   if (!d) return;
   const candleStatus = document.getElementById('csv-candle-status');
-  const bubbleStatus = document.getElementById('csv-bubble-status');
   if (candleStatus) candleStatus.textContent = '';
-  if (bubbleStatus) bubbleStatus.textContent = '';
   _ensureWSForCSV(() => {
     ws.send(JSON.stringify({ type: 'list_saved', date: d }));
-    // Only request bubble strikes if the server-side strike select still exists in HTML
-    if (document.getElementById('csv-strike')) {
-      ws.send(JSON.stringify({ type: 'list_bubble_strikes', date: d }));
-    }
   });
 }
 
@@ -446,18 +361,6 @@ function loadCandlesCSV() {
   document.getElementById('csv-candle-status').textContent = '⏳ Loading…';
   _ensureWSForCSV(() => {
     ws.send(JSON.stringify({ type: 'load_csv', date: d, instrument: i, load: 'candles' }));
-  });
-}
-
-function loadBubblesCSV() {
-  const d = document.getElementById('csv-date').value;
-  const strikeEl = document.getElementById('csv-strike');
-  const bubStatus = document.getElementById('csv-bubble-status');
-  const s = strikeEl ? strikeEl.value : null;
-  if (!d || !s) { if (bubStatus) bubStatus.textContent = '⚠ Pick date + strike'; return; }
-  if (bubStatus) bubStatus.textContent = '⏳ Loading…';
-  _ensureWSForCSV(() => {
-    ws.send(JSON.stringify({ type: 'load_bubbles', date: d, strike: s }));
   });
 }
 
@@ -526,7 +429,6 @@ function onOptExpiries(msg) {
 }
 
 function onOptChain(msg) {
-  // msg is the raw server payload: {spot, atm_index, strikes:[{strike,ce_key,pe_key}]}
   optChain = msg;
   document.getElementById('opt-fetch-btn').disabled = false;
   optBuildStrikes();

@@ -94,18 +94,6 @@ const BUB = {
       spotClose: spotBucket.close,
       optDelta, spotDelta, ratio, optType, strike,
     });
-
-    // Auto-save to server CSV
-    if (ws && ws.readyState === WebSocket.OPEN && strike && typeof strike === 'string' && strike.trim()) {
-      ws.send(JSON.stringify({
-        type:       'bubble',
-        strike:     strike.trim(),
-        time:       spotBucket.time,
-        open:       spotBucket.open,
-        spot_close: spotBucket.close,
-        ratio:      ratio,
-      }));
-    }
     if (this.items.length > this.MAX) this.items.shift();
     const el = document.getElementById('s-bubs');
     if (el) el.textContent = this.items.length;
