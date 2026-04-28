@@ -1,63 +1,99 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// WEBSOCKET — main connection + CE/PE option feeds
+// WEBSOCKET — Main connection for auth, spot data, and option chains
+// Architecture: Single main WebSocket handles multiple message types
 // ─────────────────────────────────────────────────────────────────────────────
 
 function connectWS() {
-  clearAlerts();
+  clearAlerts();  // Remove any old alert messages
+  
+  // Close existing connection if present (prevent duplicate connections)
   if (ws) ws.close();
+  
   setStatus('connecting','CONNECTING…');
 
   try {
+    // Establish WebSocket to backend server
     ws = new WebSocket(CONFIG.WEBSOCKET_URL);
   } catch(e) {
+    // Connection creation failed (network issue, etc.)
     showAlert('err','⚠ WebSocket creation failed: ' + e.message, false);
     setStatus('err','ERROR');
     return;
   }
 
+  // ── CONNECTION ESTABLISHED ────────────────────────────────────────────
   ws.onopen = () => {
     setStatus('authed','● CONNECTED');
+    
+    // Enable buttons that require connection
     document.getElementById('connectBtn').disabled    = true;
     document.getElementById('disconnectBtn').disabled = false;
     document.getElementById('saveTokenBtn').disabled  = false;
+    
     showAlert('info','✅ Connected! Paste your token and click Save Token.');
+    
+    // Start TPS (Ticks Per Second) monitoring
+    // Measures data flow rate from server
     if (tpsTmr) clearInterval(tpsTmr);
     tpsTmr = setInterval(() => {
       const el = document.getElementById('s-tps');
-      if (el) el.textContent = tickCnt;
-      tickCnt = 0;
+      if (el) el.textContent = tickCnt;  // Display ticks received in last second
+      tickCnt = 0;  // Reset counter for next second
     }, CONFIG.TPS_INTERVAL_MS);
   };
 
+  // ── MESSAGE HANDLER ────────────────────────────────────────────────────
   ws.onmessage = e => {
-    let msg; try { msg = JSON.parse(e.data); } catch(_) { return; }
-    tickCnt++;
+    let msg; 
+    try { 
+      msg = JSON.parse(e.data); 
+    } catch(_) { 
+      return;  // Ignore malformed messages
+    }
+    
+    tickCnt++;  // Increment tick counter for TPS monitoring
     const t = msg.type;
 
+    // ── AUTH RESPONSE ──────────────────────────────────────────────────
     if (t === 'auth_ok') {
-      setTok(true,'✅ Token accepted!'); setStatus('live','● READY');
+      setTok(true,'✅ Token accepted!');
+      setStatus('live','● READY');
       showAlert('ok','✅ Token saved! Pick underlying & click ⬇ Load Chain');
+      
+      // Enable history button now that auth is successful
       const histBtn = document.getElementById('hist-btn');
       if (histBtn) histBtn.disabled = false;
-      optOnAuthOk();
+      
+      optOnAuthOk();  // Trigger option chain UI updates
     }
-    else if (t === 'auth_fail') { setTok(false,'❌ '+msg.message); showAlert('err','⚠ '+msg.message, false); }
+    else if (t === 'auth_fail') { 
+      setTok(false,'❌ '+msg.message); 
+      showAlert('err','⚠ '+msg.message, false); 
+    }
 
+    // ── INITIAL DATA LOAD (called when new symbol subscribed) ────────────
     else if (t === 'init') {
       if (msg.candles && msg.candles.length > 0) {
-        if (!lwChart && !initCharts()) return;
+        if (!lwChart && !initCharts()) return;  // Initialize chart if needed
         aggBucket = null;
+        
+        // Batch-load historical candles
         msg.candles.forEach(c => upsertCandle(aggCandle(c), true));
+        
+        // Flush all candles to chart in one operation
         setTimeout(() => {
           BUB.clear();
-          lwChart.timeScale().fitContent();
+          lwChart.timeScale().fitContent();  // Auto-zoom to show all data
           requestAnimationFrame(() => BUB.draw());
         }, 120);
+        
+        // Update ticker display with latest candle
         updateTicker(msg.candles[msg.candles.length-1], msg.symbol || '');
         document.getElementById('s-iv').textContent = ivLabel(selIv);
       }
     }
 
+    // ── SWITCHING SYMBOLS (transitioning between different instruments) ───
     else if (t === 'switching') {
       clearAlerts();
       if (!initCharts()) return;
@@ -69,6 +105,7 @@ function connectWS() {
       document.getElementById('sym-disp').textContent  = msg.symbol;
     }
 
+    // ── LIVE STATUS UPDATES ────────────────────────────────────────────
     else if (t === 'status') {
       if (msg.status === 'connected') {
         clearAlerts();
@@ -76,34 +113,55 @@ function connectWS() {
         document.getElementById('s-sym').textContent = msg.symbol;
         document.getElementById('s-iv').textContent  = ivLabel(selIv);
         setStatus('live','● LIVE');
-      } else if (msg.status === 'error') {
+      } 
+      else if (msg.status === 'error') {
         showAlert('err','⚠ Feed error: '+msg.message, false);
-      } else if (msg.status === 'auth_error') {
+      } 
+      else if (msg.status === 'auth_error') {
+        // Token expired (usually daily expiry with Upstox)
         setStatus('err','⚠ TOKEN EXPIRED');
         setTok(false,'❌ Token expired — get a new token from developer.upstox.com');
         showAlert('err','🔑 Token rejected (403). Get a fresh token.',false);
-      } else if (msg.status === 'reconnecting') {
+      } 
+      else if (msg.status === 'reconnecting') {
         setStatus('connecting','RECONNECTING…');
         showAlert('warn','🔄 '+msg.message, false);
       }
     }
 
+    // ── LIVE CANDLE (new 1-second candle arriving) ─────────────────────
     else if (t === 'candle') {
       if (!lwChart && !initCharts()) return;
+      
+      // Aggregate raw candle if needed
       const chartCandle = aggCandle(msg.candle);
+      
+      // Add/update chart
       upsertCandle(chartCandle, false);
       updateTicker(chartCandle, msg.instrument);
+      
+      // Feed to bubbles system (for CE/PE calculations)
       BUB.pushSpot5s(msg.candle);
+      
+      // Auto-scroll to latest if in live mode
       if (_atRealTime) lwChart.timeScale().scrollToRealTime();
+      
       requestAnimationFrame(() => BUB.draw());
     }
 
+    // ── TICK (Last Trade Price update, between candles) ────────────────
     else if (t === 'tick') {
       if (!lwChart && !initCharts()) return;
-      updateLTP(msg.ltp);
+      updateLTP(msg.ltp);  // Update single price value
+      
+      // Store LTP for reference (if needed later)
       if (spotInstrKey) lastSpotLtp[spotInstrKey] = msg.ltp;
+      
+      // Update timestamp
       const lastEl = document.getElementById('s-last');
       if (lastEl) lastEl.textContent = fT(msg.ltt);
+      
+      // If mid-candle data available, update display
       if (msg.current_candle) {
         const chartCandle = aggCandle(msg.current_candle);
         upsertCandle(chartCandle, false);
@@ -268,19 +326,28 @@ function loadLocalBubbles(input) {
 }
 
 function disconnectWS() {
+  // Close all three WebSocket connections
   if (ws)   { try { ws.close();   } catch(_){} ws   = null; }
   if (wsCE) { try { wsCE.close(); } catch(_){} wsCE = null; }
   if (wsPE) { try { wsPE.close(); } catch(_){} wsPE = null; }
+  
+  // Reset bubble accumulators
   ce5Bucket   = { cur: null, _last: null };
   pe5Bucket   = { cur: null, _last: null };
   spot5Bucket = { cur: null, _last: null };
+  
+  // Update UI to show disconnected state
   setStatus('idle', 'DISCONNECTED');
   document.getElementById('connectBtn').disabled    = false;
   document.getElementById('disconnectBtn').disabled = true;
   document.getElementById('saveTokenBtn').disabled  = true;
+  
+  // Stop TPS monitoring timer
   if (tpsTmr) { clearInterval(tpsTmr); tpsTmr = null; }
   const tpsEl = document.getElementById('s-tps');
   if (tpsEl) tpsEl.textContent = '—';
+  
+  // Clear auth state
   tokSaved = false;
   setTok(null, 'Disconnected.');
 }
