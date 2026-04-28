@@ -156,6 +156,17 @@ const BUB = {
     ctx.clearRect(0, 0, W, H);
     if (!bubOn || this.items.length === 0) return;
 
+    // ── CLIP to plot area: exclude right price-scale panel ─────────────────
+    // LightweightCharts renders price labels in a fixed-width strip on the
+    // right. Clip the canvas so bubbles can never bleed into that area.
+    let priceScaleW = 0;
+    try { priceScaleW = lwChart.priceScale('right').width(); } catch(_) {}
+    const plotW = W - priceScaleW;
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(0, 0, plotW, H);
+    ctx.clip();
+
     // Read color pickers once per draw
     const clrCEBull = document.getElementById('clr-ce-bull')?.value || '#00e676';
     const clrCEBear = document.getElementById('clr-ce-bear')?.value || '#ff3d5a';
@@ -234,9 +245,9 @@ const BUB = {
         if (candleW > 1) x = x + ((slot + 0.5) / totalSlots - 0.5) * candleW;
       }
 
-      const r    = this._radius(b);
+      const r     = this._radius(b);
       const isHov = this.hovered === b;
-      const rr   = isHov ? r * 1.3 : r;
+      const rr    = isHov ? r * 1.3 : r;
 
       b._x = x; b._y = y; b._r = r;
 
@@ -271,6 +282,9 @@ const BUB = {
         ctx.restore();
       }
     });
+
+    // Restore canvas state (removes clip region)
+    ctx.restore();
   },
 
   // ── Mouse move ─────────────────────────────────────────────────────────────
