@@ -24,34 +24,6 @@ const CONFIG = {
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-// UTILITIES
-// Helper functions used throughout the application
-// ─────────────────────────────────────────────────────────────────────────────
-
-// DEBOUNCE: Delays function execution, canceling previous calls within the timeout
-// Use case: Prevents firing expensive handlers multiple times during rapid events
-// Example: User scrolls 100 times → only last call executes after 50ms pause
-const debounce = (fn, ms) => {
-  let timer; 
-  return (...args) => { 
-    clearTimeout(timer); 
-    timer = setTimeout(() => fn(...args), ms); 
-  };
-};
-
-// SAFE CALL: Wraps function in try-catch to prevent crashes from errors
-// Use case: Non-critical operations that should fail silently with fallback
-// Parameters: fn=function, ctx=context (this), fallback=default return value
-const safeCall = (fn, ctx = null, fallback = null) => {
-  try { 
-    return fn.call(ctx); 
-  } catch (e) { 
-    console.error('Error:', e); 
-    return fallback; 
-  }
-};
-
-// ─────────────────────────────────────────────────────────────────────────────
 // GLOBAL STATE
 // Central state management for the entire application
 // ─────────────────────────────────────────────────────────────────────────────
@@ -102,10 +74,6 @@ let tickCnt=0, tpsTmr=null, bubOn=true;
 // When false: user is manually exploring historical chart data
 let _atRealTime = true;
 
-// ❌ UNUSED: Legacy variable for contract size calculations - never used
-// Safe to delete if not needed in future features
-let LOT_SIZE = 65;
-
 // ── 5-Second Accumulation Buckets ──────────────────────────────────────────
 // For CE, PE, and Spot feeds - accumulates 1s candles into 5s buckets
 // Used by bubbles.js to calculate premium movement ratios
@@ -118,13 +86,6 @@ let spot5Bucket = { cur: null, _last: null };
 // For storing selected CE/PE strikes and their DOM button references
 let selCEKey=null, selPEKey=null, selCEBtn=null, selPEBtn=null;
 let selCEStrike=null, selPEStrike=null;  // numeric strike price e.g. 22900
-
-// ❌ UNUSED: Was meant to track current spot instrument, but feature incomplete
-let spotInstrKey = 'NSE_INDEX|Nifty 50';
-
-// ❌ UNUSED: Stores LTP (Last Trade Price) history but values never read
-// Safe to delete - no feature depends on historical LTP values
-const lastSpotLtp = {};
 
 // ── Option Chain State ─────────────────────────────────────────────────────
 // optUL = Current underlying ('NIFTY', 'BANKNIFTY', 'FINNIFTY')

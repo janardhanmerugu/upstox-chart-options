@@ -155,9 +155,6 @@ function connectWS() {
       if (!lwChart && !initCharts()) return;
       updateLTP(msg.ltp);  // Update single price value
       
-      // Store LTP for reference (if needed later)
-      if (spotInstrKey) lastSpotLtp[spotInstrKey] = msg.ltp;
-      
       // Update timestamp
       const lastEl = document.getElementById('s-last');
       if (lastEl) lastEl.textContent = fT(msg.ltt);
