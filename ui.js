@@ -40,7 +40,6 @@ function saveToken() {
 function clearToken() {
   document.getElementById('token-input').value = '';
   document.getElementById('token-input').className = '';
-  sessionStorage.removeItem('upstox_token');
   tokSaved = false; setTok(null,'Token cleared.');
   document.getElementById('clearTokenBtn').disabled = true;
 }
@@ -52,11 +51,9 @@ function setTok(ok, msg) {
   txt.textContent = msg;
   if (ok === true) {
     dot.className = 'ok'; inp.className = 'tok-ok'; tokSaved = true;
-    sessionStorage.setItem('upstox_token', inp.value.trim());  // persist for page refresh
     document.getElementById('clearTokenBtn').disabled = false;
   } else if (ok === false) {
     dot.className = 'fail'; inp.className = 'tok-fail'; tokSaved = false;
-    sessionStorage.removeItem('upstox_token');  // bad token — don't restore it next time
   } else {
     dot.className = ''; inp.className = '';
   }

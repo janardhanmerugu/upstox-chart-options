@@ -8,15 +8,6 @@ window.addEventListener('DOMContentLoaded', () => {
   // ensuring the spot chart subscription always matches the chosen underlying.
   document.getElementById('opt-chain-status').textContent = 'Connect & authenticate first';
 
-  // ── Restore token from sessionStorage (survives refresh, clears on tab close) ──
-  const savedToken = sessionStorage.getItem('upstox_token');
-  if (savedToken) {
-    const inp = document.getElementById('token-input');
-    inp.value = savedToken;
-    // Show a neutral hint — token is pre-filled but not yet re-validated with server
-    document.getElementById('tok-msg').textContent = 'Token restored — click Connect then Save Token';
-  }
-
   // Date picker init
   const dateEl = document.getElementById('csv-date');
   if (dateEl) {
