@@ -79,7 +79,8 @@ function connectWS() {
         
         // Batch-load historical candles
         msg.candles.forEach(c => upsertCandle(aggCandle(c), true));
-        
+        _flushBulk();  // Push all accumulated candles to chart in one setData() call
+
         // Flush all candles to chart in one operation
         setTimeout(() => {
           BUB.clear();

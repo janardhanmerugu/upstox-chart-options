@@ -143,7 +143,7 @@ const BUB = {
   },
 
   _radius(b) {
-    return Math.min(bubMaxSize, Math.max(this.MIN_R, Math.abs(b.ratio) * bubScale));
+    return Math.min(bubMaxSize, Math.max(this.MIN_R, Math.abs(b.ratio) * bubScale * bubSizeMult));
   },
 
   // ── DRAW ──────────────────────────────────────────────────────────────────
@@ -323,10 +323,13 @@ const BUB = {
     const body  = document.getElementById('btt-body');
     if (!tip || !title || !body) return;
     const isCE = b.optType === 'CE';
-    const d    = new Date((b.time + IST_OFFSET_S) * 1000);
-    const ts   = String(d.getUTCHours()).padStart(2,'0') + ':' +
-                 String(d.getUTCMinutes()).padStart(2,'0') + ':' +
-                 String(d.getUTCSeconds()).padStart(2,'0') + ' IST';
+    const d    = new Date(b.time * 1000);
+    // Apply IST (+5:30) manually via UTC getters to avoid double-shifting
+    const totalMin = d.getUTCHours() * 60 + d.getUTCMinutes() + 330;  // 330 = 5h30m
+    const hh = String(Math.floor(totalMin / 60) % 24).padStart(2,'0');
+    const mm = String(totalMin % 60).padStart(2,'0');
+    const ss = String(d.getUTCSeconds()).padStart(2,'0');
+    const ts   = `${hh}:${mm}:${ss} IST`;
 
     const isGreenTip  = isCE ? (b.ratio > 0) : (b.ratio <= 0);
     title.textContent = isCE
