@@ -325,7 +325,18 @@ function connectPEWS(instrKey) {
   wsPE = _makeOptWS(instrKey, c => BUB.pushPE5s(c));
 }
 
-
+function sanitizeLatin1String(value) {
+  if (typeof value !== 'string') return value;
+  return value
+    .replace(/\u2014/g, '-')
+    .replace(/\u2013/g, '-')
+    .replace(/\u2018/g, "'")
+    .replace(/\u2019/g, "'")
+    .replace(/\u201c/g, '"')
+    .replace(/\u201d/g, '"')
+    .replace(/\u2026/g, '...')
+    .replace(/[^\x00-\xFF]/g, '?');
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // BUBBLE PERSISTENCE — server-side save / load
@@ -475,7 +486,7 @@ function optFetchExpiries() {
   const underlying = OPT_INDEX_KEY[optUL];
   if (!underlying) { showAlert('warn','⚠ Pick an underlying first.'); return; }
   document.getElementById('opt-chain-status').textContent = '⏳ Fetching expiries…';
-  ws.send(JSON.stringify({ type: 'get_option_expiries', underlying }));
+  ws.send(JSON.stringify({ type: 'get_option_expiries', underlying: sanitizeLatin1String(underlying) }));
 }
 
 async function optFetchChain() {
@@ -512,7 +523,12 @@ async function optFetchChain() {
     if (ltpVal > 100) spotHint = ltpVal;
   }
 
-  ws.send(JSON.stringify({ type: 'get_option_chain', underlying: spotKey, expiry: exp, spot_hint: spotHint }));
+  ws.send(JSON.stringify({
+    type: 'get_option_chain',
+    underlying: sanitizeLatin1String(spotKey),
+    expiry: sanitizeLatin1String(exp),
+    spot_hint: spotHint
+  }));
 }
 
 function onOptExpiries(msg) {
