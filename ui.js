@@ -299,6 +299,86 @@ function optSelectStrike(strike, optType, instrKey, btn) {
   }
 }
 
+// ──── Auto Strike Selection ────
+
+// Toggle Auto/Manual mode from button click
+function toggleAutoStrike() {
+  autoStrikeMode = !autoStrikeMode;
+  const btn = document.getElementById('auto-strike-btn');
+  btn.textContent       = autoStrikeMode ? '⚡ Auto' : '✋ Manual';
+  btn.classList.toggle('active', autoStrikeMode);
+
+  if (autoStrikeMode) {
+    // Read threshold from input on enable
+    const inp = document.getElementById('auto-strike-thresh');
+    autoThreshold = parseFloat(inp.value) || 75;
+
+    // Immediately try to select ATM using current spot LTP
+    const spotNow = parseFloat((document.getElementById('t-ltp').textContent || '').replace(/,/g,''));
+    if (spotNow > 100) {
+      autoSelectATM(spotNow);
+    } else {
+      showAlert('warn','⚠ Auto: Waiting for spot price…');
+    }
+  } else {
+    autoRefPrice = null;
+    showAlert('info','✋ Manual mode — auto strike disabled.');
+  }
+}
+
+// Core auto-select logic: compute ATM strike and call optSelectStrike for CE + PE
+function autoSelectATM(spot) {
+  if (!optChain || !optChain.strikes || optChain.strikes.length === 0) {
+    showAlert('warn','⚠ Auto: Load option chain first.');
+    return;
+  }
+
+  // Step size based on current underlying
+  const step = OPT_STEP[optUL] || 50;
+
+  // Round spot to nearest step → ATM strike
+  const atm = Math.round(spot / step) * step;
+
+  // Find matching strike row in optChain
+  const found = optChain.strikes.find(s => s.strike === atm)
+             || optChain.strikes.reduce((best, s) =>
+                  Math.abs(s.strike - atm) < Math.abs(best.strike - atm) ? s : best,
+                  optChain.strikes[0]);
+
+  if (!found) { showAlert('warn','⚠ Auto: ATM strike not found in chain.'); return; }
+
+  // Find the DOM buttons for this strike to pass into optSelectStrike
+  // (optSelectStrike needs the btn reference to mark it active)
+  const rows = document.querySelectorAll('.strike-row');
+  let ceBtn = null, peBtn = null;
+  rows.forEach(row => {
+    const btns = row.querySelectorAll('button');
+    if (btns.length >= 2 && parseInt(btns[0].textContent) === found.strike) {
+      ceBtn = btns[0];
+      peBtn = btns[1];
+    }
+  });
+
+  // Select CE
+  if (found.ce_key) optSelectStrike(found.strike, 'CE', found.ce_key, ceBtn);
+  // Select PE
+  if (found.pe_key) optSelectStrike(found.strike, 'PE', found.pe_key, peBtn);
+
+  // Set new reference price to the ATM strike (not raw spot)
+  autoRefPrice = atm;
+
+  showAlert('ok', `⚡ Auto ATM: ${found.strike}  (Spot: ${spot.toFixed(2)},  Step: ${step})`);
+}
+
+// Called on every spot LTP update — checks if drift ≥ threshold
+function autoStrikeCheck(spot) {
+  if (!autoStrikeMode || autoRefPrice === null) return;
+  if (Math.abs(spot - autoRefPrice) >= autoThreshold) {
+    showAlert('info', `⚡ Auto re-select: spot moved ${(spot - autoRefPrice).toFixed(1)} pts from ${autoRefPrice}`);
+    autoSelectATM(spot);
+  }
+}
+
 // ──── History helpers ────
 function initHistoryDates() {
   const today = new Date();

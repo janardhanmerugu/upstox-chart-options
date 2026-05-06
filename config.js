@@ -95,6 +95,18 @@ let optUL       = 'NIFTY';
 let optExpiries = [];
 let optChain    = null;
 
+// ── Auto Strike Selection State ────────────────────────────────────────────
+// autoStrikeMode = true → auto-select ATM CE/PE and re-select when spot drifts
+// autoRefPrice   = spot price at the time of last auto-selection (reference point)
+// autoThreshold  = points drift required to trigger re-selection (user configurable)
+let autoStrikeMode = false;
+let autoRefPrice   = null;
+let autoThreshold  = 60;
+
+// ── Strike Step Size (auto-detected from optUL) ────────────────────────────
+// NIFTY/FINNIFTY → 50 points, BANKNIFTY → 100 points
+const OPT_STEP = { NIFTY: 50, BANKNIFTY: 100, FINNIFTY: 50 };
+
 // Bubble display config (controlled by sliders/inputs in UI)
 let bubScale        = 1.0;
 let bubSizeMult     = 1.0;

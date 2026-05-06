@@ -154,6 +154,7 @@ function connectWS() {
     else if (t === 'tick') {
       if (!lwChart && !initCharts()) return;
       updateLTP(msg.ltp);  // Update single price value
+      autoStrikeCheck(msg.ltp);  // Auto strike re-select if enabled
       
       // Update timestamp
       const lastEl = document.getElementById('s-last');
