@@ -72,13 +72,6 @@
       <button class="opt-load-btn" id="opt-fetch-btn" onclick="optFetchChain()" disabled>⬇ Load Chain</button>
       <div id="opt-chain-status">Connect &amp; authenticate first</div>
 
-      <!-- Auto Strike Toggle -->
-      <div class="auto-strike-row">
-        <button id="auto-strike-btn" class="auto-strike-btn" onclick="toggleAutoStrike()" title="Auto-select ATM CE+PE and re-select when spot drifts by threshold">✋ Manual</button>
-        <span class="exp-label">Drift pts</span>
-        <input id="auto-strike-thresh" type="number" class="auto-thresh-inp" value="60" min="10" max="500" step="5" title="Re-select ATM when spot moves this many points from last selection" onchange="autoThreshold = parseFloat(this.value)||60">
-      </div>
-
       <!-- Strike grid (populated dynamically) -->
       <div id="opt-strikes-row" style="display:none">
         <div class="strikes-header">
@@ -369,6 +362,8 @@
 
     <!-- COMPACT INFO BAR -->
     <div id="info-bar">
+      <span id="sym-disp">—</span>
+      <div class="bar-sep"></div>
       <div class="ti"><span class="tl">LTP</span>&nbsp;<span class="tv" id="t-ltp">—</span></div>
       <div class="ti"><span class="tl">O</span>&nbsp;<span class="tv" id="t-o">—</span></div>
       <div class="ti"><span class="tl">H</span>&nbsp;<span class="tv" id="t-h">—</span></div>
@@ -399,6 +394,14 @@
       <span class="bc-label">MaxPx</span>
       <input type="number" id="bub-maxsize" class="bc-num" min="1" step="1" value="60"
         oninput="bubMaxSize=Math.max(1,+this.value||60); BUB.draw()"/>
+      <span class="bc-label">🔆</span>
+      <input type="range" id="bub-opacity" class="bc-range" min="5" max="100" step="1" value="60"
+        oninput="bubOpacity=+this.value/100;
+          document.getElementById('bub-opacity-val').textContent=this.value+'%';
+          document.getElementById('bub-opacity2').value=this.value;
+          document.getElementById('bub-opacity-val2').textContent=this.value+'%';
+          BUB.draw()"/>
+      <span id="bub-opacity-val" class="bc-val">60%</span>
       <span id="bub-hover-info"></span>
     </div>
 
