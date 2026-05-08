@@ -404,10 +404,8 @@
       <span class="bc-label">🔆</span>
       <input type="range" id="bub-opacity" class="bc-range" min="5" max="100" step="1" value="60"
         oninput="bubOpacity=+this.value/100;
-          document.getElementById('bub-opacity-val').textContent=this.value+'%';
-          document.getElementById('bub-opacity2').value=this.value;
-          document.getElementById('bub-opacity-val2').textContent=this.value+'%';
-          BUB.draw()"/>
+        document.getElementById('bub-opacity-val').textContent=this.value+'%';
+        BUB.draw()"/>
       <span id="bub-opacity-val" class="bc-val">60%</span>
       <span id="bub-hover-info"></span>
     </div>
