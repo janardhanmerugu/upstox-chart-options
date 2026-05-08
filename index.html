@@ -125,8 +125,6 @@
       </div>
     </div>
 
-
-
     <!-- ── INTERVAL ── -->
     <div class="ds">
       <div class="ds-title"><span class="ds-title-icon">⏱</span><span>Interval</span></div>
@@ -176,17 +174,15 @@
           <span style="font-size:.58rem;color:var(--muted)">0.1× to 10×</span>
         </div>
 
-        <!-- Opacity -->
+        <!-- Opacity (sidebar only) -->
         <div class="bub-cfg-row">
           <span class="bub-cfg-label">Opacity</span>
           <div class="bub-opacity-row" style="flex:1">
-            <input type="range" id="bub-opacity2" min="5" max="100" step="1" value="60"
+            <input type="range" id="bub-opacity" min="5" max="100" step="1" value="60"
               oninput="bubOpacity=+this.value/100;
-                document.getElementById('bub-opacity-val2').textContent=this.value+'%';
-                document.getElementById('bub-opacity').value=this.value;
                 document.getElementById('bub-opacity-val').textContent=this.value+'%';
                 BUB.draw()"/>
-            <span id="bub-opacity-val2" class="bub-opacity-val">60%</span>
+            <span id="bub-opacity-val" class="bub-opacity-val">60%</span>
           </div>
         </div>
 
@@ -209,7 +205,7 @@
           </select>
         </div>
 
-                <!-- CE Bullish -->
+        <!-- CE Bullish -->
         <div class="bub-type-block">
           <div class="bub-type-title">
             <span class="dot" style="background:#00e676"></span>
@@ -292,7 +288,7 @@
       </div>
     </div>
 
-<!-- ── CSV LOADERS ── -->
+    <!-- ── CSV LOADERS ── -->
     <div class="ds">
       <div class="ds-title"><span class="ds-title-icon">📂</span><span>Load Saved Data</span></div>
 
@@ -320,7 +316,6 @@
         <div id="csv-candle-status" style="font-size:.58rem;color:var(--muted);min-height:12px"></div>
       </div>
 
-
       <!-- ── OFFLINE BUBBLES — shares the Date picker above ── -->
       <div style="display:flex;flex-direction:column;gap:.3rem;background:#0a1020;border:1px solid var(--border);border-radius:8px;padding:.45rem .55rem">
         <div style="font-size:.6rem;font-weight:700;color:var(--accent);letter-spacing:.06em">🫧 OFFLINE BUBBLES</div>
@@ -341,9 +336,6 @@
       </div>
 
     </div>
-
-    <!-- ── LOAD BUTTON ── -->
-
 
   </div><!-- /side-drawer -->
 
@@ -401,12 +393,6 @@
       <span class="bc-label">MaxPx</span>
       <input type="number" id="bub-maxsize" class="bc-num" min="1" step="1" value="60"
         oninput="bubMaxSize=Math.max(1,+this.value||60); BUB.draw()"/>
-      <span class="bc-label">🔆</span>
-      <input type="range" id="bub-opacity" class="bc-range" min="5" max="100" step="1" value="60"
-        oninput="bubOpacity=+this.value/100;
-        document.getElementById('bub-opacity-val').textContent=this.value+'%';
-        BUB.draw()"/>
-      <span id="bub-opacity-val" class="bc-val">60%</span>
       <span id="bub-hover-info"></span>
     </div>
 
