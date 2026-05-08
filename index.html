@@ -369,6 +369,8 @@
 
     <!-- COMPACT INFO BAR -->
     <div id="info-bar">
+      <span id="sym-disp">—</span>
+      <div class="bar-sep"></div>
       <div class="ti"><span class="tl">LTP</span>&nbsp;<span class="tv" id="t-ltp">—</span></div>
       <div class="ti"><span class="tl">O</span>&nbsp;<span class="tv" id="t-o">—</span></div>
       <div class="ti"><span class="tl">H</span>&nbsp;<span class="tv" id="t-h">—</span></div>
@@ -399,6 +401,14 @@
       <span class="bc-label">MaxPx</span>
       <input type="number" id="bub-maxsize" class="bc-num" min="1" step="1" value="60"
         oninput="bubMaxSize=Math.max(1,+this.value||60); BUB.draw()"/>
+      <span class="bc-label">🔆</span>
+      <input type="range" id="bub-opacity" class="bc-range" min="5" max="100" step="1" value="60"
+        oninput="bubOpacity=+this.value/100;
+          document.getElementById('bub-opacity-val').textContent=this.value+'%';
+          document.getElementById('bub-opacity2').value=this.value;
+          document.getElementById('bub-opacity-val2').textContent=this.value+'%';
+          BUB.draw()"/>
+      <span id="bub-opacity-val" class="bc-val">60%</span>
       <span id="bub-hover-info"></span>
     </div>
 
