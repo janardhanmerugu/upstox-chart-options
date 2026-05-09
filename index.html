@@ -145,9 +145,9 @@
         <button class="tbtn" id="bubBtn"      onclick="toggleBubbles()">● Bubbles ON</button>
         <button class="tbtn" id="xhair-btn"   onclick="toggleCrosshair()">✥ Free</button>
       </div>
-      <div class="tool-row col2">
-        <button class="tbtn" id="drawline-btn" onclick="toggleDrawLine()" title="Click chart to add · click near line to remove">✏ Draw Line</button>
-        <button class="tbtn off"               onclick="clearAllLines()"  title="Remove all lines">🗑 Clear Lines</button>
+      <div class="tool-row" style="flex-direction:column;gap:.25rem;font-size:.6rem;color:var(--muted);line-height:1.8;padding:.1rem 0">
+        <div><span style="color:var(--accent);font-weight:600">Ctrl + Left-click</span> &nbsp;add / remove line</div>
+        <div><span style="color:var(--accent);font-weight:600">Ctrl + C</span> &nbsp;clear all lines</div>
       </div>
     </div>
 

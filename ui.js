@@ -128,16 +128,9 @@ function loadSym() {
 }
 
 // ──── Line Drawing ────
-let drawLineMode = false;
+// Lines added/removed via Ctrl + Left-click on chart
+// All lines cleared via Ctrl + C
 let hLines = [];
-
-function toggleDrawLine() {
-  drawLineMode = !drawLineMode;
-  const btn = document.getElementById('drawline-btn');
-  btn.textContent = drawLineMode ? '✖ Exit Draw' : '✏ Draw Line';
-  btn.classList.toggle('warn-mode', drawLineMode);
-  if (lwChart) document.getElementById('lw-chart').style.cursor = drawLineMode ? 'crosshair' : '';
-}
 
 function addHLine(price) {
   if (!cSeries) return;

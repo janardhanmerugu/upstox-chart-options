@@ -9,7 +9,7 @@ const BUB = {
   canvas:  null,
   ctx:     null,
   items:   [],      // [{time, open, ratio, optType:'CE'|'PE', optDelta, spotDelta, ...}]
-  MAX:     3600,
+  MAX:     6000,
   MIN_R:   2,
   hovered: null,
 

@@ -32,12 +32,21 @@ window.addEventListener('DOMContentLoaded', () => {
   // History date pickers (function lives in ui.js)
   if (typeof initHistoryDates === 'function') initHistoryDates();
 
-  // Chart click → add/remove horizontal lines
-  document.getElementById('lw-chart').addEventListener('click', e => {
-    if (!drawLineMode || !lwChart || !cSeries) return;
-    const rect  = e.currentTarget.getBoundingClientRect();
+  // Ctrl + Left-click → add / remove nearest horizontal line
+  document.getElementById('chart-con').addEventListener('click', e => {
+    if (!e.ctrlKey || !lwChart || !cSeries) return;
+    const rect  = document.getElementById('lw-chart').getBoundingClientRect();
     const price = cSeries.coordinateToPrice(e.clientY - rect.top);
     if (price == null) return;
     if (!removeNearestHLine(e.clientY, rect)) addHLine(price);
+  });
+
+  // Ctrl + C → clear all horizontal lines
+  document.addEventListener('keydown', e => {
+    if (e.ctrlKey && e.key === 'c') {
+      if (hLines.length === 0) return;
+      e.preventDefault();
+      clearAllLines();
+    }
   });
 });
