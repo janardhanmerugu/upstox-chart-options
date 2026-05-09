@@ -194,15 +194,24 @@ function connectWS() {
       const sel     = document.getElementById('csv-instrument');
       const selDate = document.getElementById('csv-date').value;
       sel.innerHTML = '<option value="">— select instrument —</option>';
+      // Filter to entries for this date that have at least one candle file
       const filtered = (msg.datasets || []).filter(d => d.date === selDate && d.has_candles);
       if (filtered.length === 0) {
         sel.innerHTML = '<option value="">No candles for this date</option>';
       } else {
         filtered.forEach(d => {
-          const opt = document.createElement('option');
-          opt.value = d.instrument;
-          opt.textContent = d.instrument.split('/').pop();
-          sel.appendChild(opt);
+          const instrName = d.instrument.split('/').pop();
+          const files     = d.candle_files || ['candles.csv'];
+          files.forEach(fname => {
+            const opt      = document.createElement('option');
+            // Value encodes both instrument path and filename so loadCandlesCSV can read both
+            opt.value      = JSON.stringify({ instrument: d.instrument, filename: fname });
+            // Show filename suffix only when it differs from the default
+            opt.textContent = fname === 'candles.csv'
+              ? instrName
+              : `${instrName}  [${fname}]`;
+            sel.appendChild(opt);
+          });
         });
       }
     }
@@ -437,7 +446,20 @@ function _ensureWSForCSV(onReady) {
       sel.innerHTML = '<option value="">— select instrument —</option>';
       const filtered = (msg.datasets || []).filter(d => d.date === selDate && d.has_candles);
       if (filtered.length === 0) { sel.innerHTML = '<option value="">No candles for this date</option>'; }
-      else { filtered.forEach(d => { const opt=document.createElement('option'); opt.value=d.instrument; opt.textContent=d.instrument.split('/').pop(); sel.appendChild(opt); }); }
+      else {
+        filtered.forEach(d => {
+          const instrName = d.instrument.split('/').pop();
+          const files     = d.candle_files || ['candles.csv'];
+          files.forEach(fname => {
+            const opt      = document.createElement('option');
+            opt.value      = JSON.stringify({ instrument: d.instrument, filename: fname });
+            opt.textContent = fname === 'candles.csv'
+              ? instrName
+              : `${instrName}  [${fname}]`;
+            sel.appendChild(opt);
+          });
+        });
+      }
     }
     else if (t === 'csv_data') {
       if (!msg.candles || msg.candles.length === 0) { document.getElementById('csv-candle-status').textContent='⚠ No candles found'; return; }
@@ -470,12 +492,22 @@ function csvDateChanged() {
 }
 
 function loadCandlesCSV() {
-  const d = document.getElementById('csv-date').value;
-  const i = document.getElementById('csv-instrument').value;
-  if (!d || !i) { document.getElementById('csv-candle-status').textContent = '⚠ Pick date + instrument'; return; }
+  const d   = document.getElementById('csv-date').value;
+  const raw = document.getElementById('csv-instrument').value;
+  if (!d || !raw) { document.getElementById('csv-candle-status').textContent = '⚠ Pick date + instrument'; return; }
+  let instrument, filename;
+  try {
+    const parsed = JSON.parse(raw);
+    instrument   = parsed.instrument;
+    filename     = parsed.filename || 'candles.csv';
+  } catch(_) {
+    // Fallback: old plain string value (e.g. if page cached old ws.js)
+    instrument = raw;
+    filename   = 'candles.csv';
+  }
   document.getElementById('csv-candle-status').textContent = '⏳ Loading…';
   _ensureWSForCSV(() => {
-    ws.send(JSON.stringify({ type: 'load_csv', date: d, instrument: i, load: 'candles' }));
+    ws.send(JSON.stringify({ type: 'load_csv', date: d, instrument, filename, load: 'candles' }));
   });
 }
 
