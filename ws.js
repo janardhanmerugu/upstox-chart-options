@@ -201,11 +201,13 @@ function connectWS() {
       } else {
         filtered.forEach(d => {
           const instrName = d.instrument.split('/').pop();
+          const instrKey  = d.instrument_key || d.instrument;
           const files     = d.candle_files || ['candles.csv'];
           files.forEach(fname => {
             const opt      = document.createElement('option');
-            // Value encodes both instrument path and filename so loadCandlesCSV can read both
-            opt.value      = JSON.stringify({ instrument: d.instrument, filename: fname });
+            // Send the real Upstox key when available. Index labels like
+            // NSE_INDEX_Nifty_50 cannot always be reverse-mapped after restart.
+            opt.value      = JSON.stringify({ instrument: instrKey, filename: fname });
             // Show filename suffix only when it differs from the default
             opt.textContent = fname === 'candles.csv'
               ? instrName
@@ -449,10 +451,11 @@ function _ensureWSForCSV(onReady) {
       else {
         filtered.forEach(d => {
           const instrName = d.instrument.split('/').pop();
+          const instrKey  = d.instrument_key || d.instrument;
           const files     = d.candle_files || ['candles.csv'];
           files.forEach(fname => {
             const opt      = document.createElement('option');
-            opt.value      = JSON.stringify({ instrument: d.instrument, filename: fname });
+            opt.value      = JSON.stringify({ instrument: instrKey, filename: fname });
             opt.textContent = fname === 'candles.csv'
               ? instrName
               : `${instrName}  [${fname}]`;
