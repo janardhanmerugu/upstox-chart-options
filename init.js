@@ -25,7 +25,7 @@ window.addEventListener('DOMContentLoaded', () => {
     const mm    = String(today.getMonth()+1).padStart(2,'0');
     const dd    = String(today.getDate()).padStart(2,'0');
     dateEl.value = `${yyyy}-${mm}-${dd}`;
-    // Do NOT call csvDateChanged() here — it triggers _ensureWSForCSV()
+    // Do NOT call dbDateChanged() here — it triggers _ensureWSForDB()
     // which auto-connects to the server before the user clicks Connect.
   }
 
