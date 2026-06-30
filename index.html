@@ -381,14 +381,14 @@
       <div class="bar-sep"></div>
       <!-- Bubble controls -->
       <span class="bc-label">Scale</span>
-      <input type="range" id="bub-scale" class="bc-range" min="1" max="100" step="0.1" value="1"
+      <input type="range" id="bub-scale" class="bc-range" min="1" max="100" step="0.1" value="5"
         oninput="bubScale=+this.value; document.getElementById('bub-scale-val').textContent=(+this.value).toFixed(1); BUB.draw()"/>
-      <span id="bub-scale-val" class="bc-val">1.0</span>
+      <span id="bub-scale-val" class="bc-val">5.0</span>
       <span class="bc-label">Min CE</span>
-      <input type="number" id="bub-minrat-ce" class="bc-num" min="0" step="0.1" value="0"
+      <input type="number" id="bub-minrat-ce" class="bc-num" min="0" step="0.1" value="1"
         oninput="bubMinRatioCE=+this.value||0; BUB.draw()" style="border-color:#ff3d5a55"/>
       <span class="bc-label">Min PE</span>
-      <input type="number" id="bub-minrat-pe" class="bc-num" min="0" step="0.1" value="0"
+      <input type="number" id="bub-minrat-pe" class="bc-num" min="0" step="0.1" value="1"
         oninput="bubMinRatioPE=+this.value||0; BUB.draw()" style="border-color:#00e67655"/>
       <span class="bc-label">MaxPx</span>
       <input type="number" id="bub-maxsize" class="bc-num" min="1" step="1" value="60"
