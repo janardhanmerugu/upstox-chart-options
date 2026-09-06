@@ -16,7 +16,7 @@ function connectWS() {
     ws = new WebSocket(CONFIG.WEBSOCKET_URL);
   } catch(e) {
     // Connection creation failed (network issue, etc.)
-    showAlert('err','⚠ WebSocket creation failed: ' + e.message, false);
+    showAlert('err','⚠ WebSocket creation failed: ' + e.message + '\n→ Check the server, cloud URL, and network access.', false);
     setStatus('err','ERROR');
     return;
   }

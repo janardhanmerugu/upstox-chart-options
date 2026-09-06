@@ -17,7 +17,16 @@ const CONFIG = {
   DEBOUNCE_MS:    50,
   
   // Backend WebSocket server URL for real-time data
-  WEBSOCKET_URL:  'ws://localhost:8765',
+  WEBSOCKET_URL: (() => {
+    const override = new URLSearchParams(window.location.search).get('ws');
+    if (override) return override;
+    if (window.location.hostname.endsWith('vercel.app')) {
+      return 'wss://regulation-tones-shadow-stated.trycloudflare.com';
+    }
+    const hostname = window.location.hostname || 'localhost';
+    const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
+    return `${protocol}://${hostname}:8765`;
+  })(),
   
   // Interval for measuring TPS (Ticks Per Second) - displayed in UI
   TPS_INTERVAL_MS: 1000,
