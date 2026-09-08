@@ -43,6 +43,9 @@ function connectWS() {
       if (el) el.textContent = tickCnt;  // Display ticks received in last second
       tickCnt = 0;  // Reset counter for next second
     }, CONFIG.TPS_INTERVAL_MS);
+
+    // Load saved-data selectors only after the main socket owns the connection.
+    if (typeof dbDateChanged === 'function') dbDateChanged();
   };
 
   // ── MESSAGE HANDLER ────────────────────────────────────────────────────
