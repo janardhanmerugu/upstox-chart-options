@@ -26,6 +26,7 @@ function connectWS() {
   // ── CONNECTION ESTABLISHED ────────────────────────────────────────────
   socket.onopen = () => {
     setStatus('authed','● CONNECTED');
+    setTok(null,'✅ Connected! Paste your token and click Save Token.');
     
     // Enable buttons that require connection
     document.getElementById('connectBtn').disabled    = true;
@@ -418,6 +419,7 @@ function _ensureWSForDB(onReady) {
   tmpWS.onopen = () => {
     ws = tmpWS;
     setStatus('authed','● CONNECTED');
+    setTok(null,'✅ Connected! Paste your token and click Save Token.');
     document.getElementById('connectBtn').disabled    = true;
     document.getElementById('disconnectBtn').disabled = false;
     document.getElementById('saveTokenBtn').disabled  = false;
