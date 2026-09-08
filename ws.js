@@ -33,7 +33,7 @@ function connectWS() {
     document.getElementById('disconnectBtn').disabled = false;
     document.getElementById('saveTokenBtn').disabled  = false;
     
-    showAlert('info','✅ Connected! Paste your token and click Save Token.');
+    showAlert('info','✅ Connected! Paste your token and click Save Token.', false);
     
     // Start TPS (Ticks Per Second) monitoring
     // Measures data flow rate from server
@@ -112,8 +112,6 @@ function connectWS() {
     // ── LIVE STATUS UPDATES ────────────────────────────────────────────
     else if (t === 'status') {
       if (msg.status === 'connected') {
-        clearAlerts();
-        showAlert('ok',`✅ Live: ${msg.symbol} @ ${ivLabel(selIv)}`);
         document.getElementById('s-sym').textContent = msg.symbol;
         document.getElementById('s-iv').textContent  = ivLabel(selIv);
         setStatus('live','● LIVE');
