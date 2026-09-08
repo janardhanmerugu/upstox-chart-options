@@ -21,8 +21,10 @@ function connectWS() {
     return;
   }
 
+  const socket = ws;
+
   // ── CONNECTION ESTABLISHED ────────────────────────────────────────────
-  ws.onopen = () => {
+  socket.onopen = () => {
     setStatus('authed','● CONNECTED');
     
     // Enable buttons that require connection
@@ -43,7 +45,7 @@ function connectWS() {
   };
 
   // ── MESSAGE HANDLER ────────────────────────────────────────────────────
-  ws.onmessage = e => {
+  socket.onmessage = e => {
     let msg; 
     try { 
       msg = JSON.parse(e.data); 
@@ -284,12 +286,13 @@ function connectWS() {
     else if (t === 'error') { showAlert('err','⚠ '+msg.message, false); }
   };
 
-  ws.onerror = () => {
+  socket.onerror = () => {
     setStatus('err','ERROR');
     showAlert('err',`⚠ Cannot connect to ${CONFIG.WEBSOCKET_URL}\n→ Start server first, then retry.`, false);
   };
 
-  ws.onclose = () => {
+  socket.onclose = () => {
+    if (ws !== socket) return;
     try {
       setStatus('idle','DISCONNECTED');
       document.getElementById('connectBtn').disabled    = false;
@@ -299,6 +302,7 @@ function connectWS() {
       const tpsEl = document.getElementById('s-tps');
       if (tpsEl) tpsEl.textContent = '—';
       tokSaved = false; setTok(null,'Disconnected.');
+      ws = null;
     } catch(e) { console.error('Disconnect handler error:', e); }
   };
 }
