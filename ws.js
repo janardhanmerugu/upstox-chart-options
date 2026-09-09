@@ -3,6 +3,13 @@
 // Architecture: Single main WebSocket handles multiple message types
 // ─────────────────────────────────────────────────────────────────────────────
 
+function resolvedWebSocketUrl() {
+  const configured = CONFIG.WEBSOCKET_URL;
+  return window.location.protocol === 'https:' && configured.startsWith('ws://')
+    ? 'wss://gem-peas-car-mean.trycloudflare.com/ws'
+    : configured;
+}
+
 function connectWS() {
   clearAlerts();  // Remove any old alert messages
   
@@ -10,10 +17,11 @@ function connectWS() {
   if (ws) ws.close();
   
   setStatus('connecting','CONNECTING…');
+  const socketUrl = resolvedWebSocketUrl();
 
   try {
     // Establish WebSocket to backend server
-    ws = new WebSocket(CONFIG.WEBSOCKET_URL);
+    ws = new WebSocket(socketUrl);
   } catch(e) {
     // Connection creation failed (network issue, etc.)
     showAlert('err','⚠ WebSocket creation failed: ' + e.message + '\n→ Check the server, cloud URL, and network access.', false);
@@ -290,7 +298,7 @@ function connectWS() {
 
   socket.onerror = () => {
     setStatus('err','ERROR');
-    showAlert('err',`⚠ Cannot connect to ${CONFIG.WEBSOCKET_URL}\n→ Start server first, then retry.`, false);
+    showAlert('err',`⚠ Cannot connect to ${socketUrl}\n→ Start server first, then retry.`, false);
   };
 
   socket.onclose = () => {
@@ -314,7 +322,7 @@ function connectWS() {
 // ─────────────────────────────────────────────────────────────────────────────
 function _makeOptWS(instrKey, onCandle) {
   if (!tokSaved || !instrKey) return null;
-  const s = new WebSocket(CONFIG.WEBSOCKET_URL);
+  const s = new WebSocket(resolvedWebSocketUrl());
   s.onopen = () => {
     const tok = document.getElementById('token-input').value.trim();
     s.send(JSON.stringify({ type: 'auth', token: tok }));

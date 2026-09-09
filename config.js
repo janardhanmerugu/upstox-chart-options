@@ -18,14 +18,15 @@ const CONFIG = {
   
   // Backend WebSocket server URL for real-time data
   WEBSOCKET_URL: (() => {
+    const remoteUrl = 'wss://gem-peas-car-mean.trycloudflare.com/ws';
     const override = new URLSearchParams(window.location.search).get('ws');
-    if (override) return override;
-    if (window.location.hostname.endsWith('vercel.app')) {
-      return 'wss://gets-moore-pleased-scanned.trycloudflare.com';
+    if (override && !(window.location.protocol === 'https:' && override.startsWith('ws://'))) {
+      return override;
     }
+    if (window.location.protocol === 'file:' || window.location.hostname.endsWith('vercel.app')) return remoteUrl;
     const hostname = window.location.hostname || 'localhost';
     const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
-    return `${protocol}://${hostname}:8765`;
+    return `${protocol}://${hostname}/ws`;
   })(),
   
   // Interval for measuring TPS (Ticks Per Second) - displayed in UI
