@@ -18,7 +18,7 @@ const CONFIG = {
   
   // Backend WebSocket server URL for real-time data
   WEBSOCKET_URL: (() => {
-    const remoteUrl = 'wss://gem-peas-car-mean.trycloudflare.com/ws';
+    const remoteUrl = 'wss://src-saw-scholarship-trading.trycloudflare.com/ws';
     const override = new URLSearchParams(window.location.search).get('ws');
     if (override && !(window.location.protocol === 'https:' && override.startsWith('ws://'))) {
       return override;

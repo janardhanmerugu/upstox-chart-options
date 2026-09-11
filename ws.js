@@ -6,7 +6,7 @@
 function resolvedWebSocketUrl() {
   const configured = CONFIG.WEBSOCKET_URL;
   return window.location.protocol === 'https:' && configured.startsWith('ws://')
-    ? 'wss://gem-peas-car-mean.trycloudflare.com/ws'
+    ? 'wss://src-saw-scholarship-trading.trycloudflare.com/ws'
     : configured;
 }
 
