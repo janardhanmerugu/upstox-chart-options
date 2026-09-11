@@ -17,15 +17,6 @@ window.addEventListener('DOMContentLoaded', () => {
     document.getElementById('tok-msg').textContent = 'Token restored — click Connect then Save Token';
   }
 
-  // Date picker init
-  const dateEl = document.getElementById('csv-date');
-  if (dateEl) {
-    const today = new Date();
-    const yyyy  = today.getFullYear();
-    const mm    = String(today.getMonth()+1).padStart(2,'0');
-    const dd    = String(today.getDate()).padStart(2,'0');
-    dateEl.value = `${yyyy}-${mm}-${dd}`;
-  }
 
   // History date pickers (function lives in ui.js)
   if (typeof initHistoryDates === 'function') initHistoryDates();

@@ -101,8 +101,6 @@ const BUB = {
     if (this.items.length > this.MAX) this.items.shift();
     const el = document.getElementById('s-bubs');
     if (el) el.textContent = this.items.length;
-    // Auto-save to server for offline replay
-    if (typeof wsSaveBubble === 'function') wsSaveBubble(this.items[this.items.length - 1]);
     this.draw();
   },
 
@@ -189,7 +187,6 @@ const BUB = {
       if (Math.abs(b.ratio) < minRatio) { b._x = undefined; return; }
 
       // Spot delta magnitude filter — only apply when spotDelta is actually stored
-      // (CSV-loaded bubbles have spotDelta=0; skip the filter so they still show)
       if (b.spotDelta > 0 && b.spotDelta < bubSpotDeltaMin) { b._x = undefined; return; }
 
       // ── Classify bubble type & index direction ────────────────────────────

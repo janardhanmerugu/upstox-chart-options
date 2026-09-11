@@ -400,17 +400,6 @@ function loadHistory() {
   ws.send(JSON.stringify({ type:'get_history', symbol:selSym, unit, from_date:fromDate, to_date:toDate }));
 }
 
-// ──── Offline Bubble Loader ────
-function offlineLoadBubbles() {
-  const dateStr = document.getElementById('csv-date').value;
-  const selVal  = document.getElementById('offline-bub-strike').value;
-  if (!dateStr) { showAlert('warn','⚠ Pick a date first.'); return; }
-  if (!selVal)  { showAlert('warn','⚠ Pick a strike first.'); return; }
-  let parsed;
-  try { parsed = JSON.parse(selVal); } catch(_) { showAlert('err','⚠ Invalid selection.'); return; }
-  wsLoadBubbles(dateStr, parsed.opt_type, parsed.strike);
-}
-
 // ──── Bubble Presets ────
 const BUB_PRESETS = {
   smart: {

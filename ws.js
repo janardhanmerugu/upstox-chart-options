@@ -52,8 +52,6 @@ function connectWS() {
       tickCnt = 0;  // Reset counter for next second
     }, CONFIG.TPS_INTERVAL_MS);
 
-    // Load saved-data selectors only after the main socket owns the connection.
-    if (typeof dbDateChanged === 'function') dbDateChanged();
   };
 
   // ── MESSAGE HANDLER ────────────────────────────────────────────────────
@@ -202,97 +200,6 @@ function connectWS() {
     else if (t === 'option_chain')          { onOptChain(msg); }
     else if (t === 'option_chain_error')    { onOptError(msg.message || 'Chain fetch failed'); }
 
-    else if (t === 'sqlite_list') {
-      const sel     = document.getElementById('csv-instrument');
-      const selDate = document.getElementById('csv-date').value;
-      sel.innerHTML = '<option value="">— select instrument —</option>';
-      // Filter to entries for this date that have at least one candle file
-      const filtered = (msg.datasets || []).filter(d => d.date === selDate && d.has_candles);
-      if (filtered.length === 0) {
-        sel.innerHTML = '<option value="">No candles for this date</option>';
-      } else {
-        filtered.forEach(d => {
-          const instrName = d.instrument.split('/').pop();
-          const instrKey  = d.instrument_key || d.instrument;
-          const files = ['candles.csv'];
-          files.forEach(fname => {
-            const opt      = document.createElement('option');
-            // Send the real Upstox key when available. Index labels like
-            // NSE_INDEX_Nifty_50 cannot always be reverse-mapped after restart.
-            opt.value      = JSON.stringify({ instrument: instrKey, filename: fname });
-            // Show filename suffix only when it differs from the default
-            opt.textContent = fname === 'candles.csv'
-              ? instrName
-              : `${instrName}  [${fname}]`;
-            sel.appendChild(opt);
-          });
-        });
-      }
-    }
-
-    else if (t === 'sqlite_data') {
-      if (!msg.candles || msg.candles.length === 0) {
-        document.getElementById('csv-candle-status').textContent = '⚠ No candles found'; return;
-      }
-      if (!lwChart && !initCharts()) return;
-      cData=[]; vData=[]; cMap={};
-      BUB.clear();
-      aggBucket = null;
-      msg.candles.forEach(c => {
-        const agg = aggCandle(c);
-        if (agg) upsertCandle(agg, true);
-      });
-      if (aggBucket) { upsertCandle(aggBucket, true); aggBucket = null; }
-      _flushBulk();
-      setTimeout(() => { lwChart.timeScale().fitContent(); requestAnimationFrame(() => BUB.draw()); }, 100);
-      updateTicker(msg.candles[msg.candles.length-1], msg.label || '');
-      document.getElementById('csv-candle-status').textContent = `✅ ${cData.length} candles (${ivLabel(selIv)})`;
-    }
-
-    else if (t === 'bubble_list') {
-      const files = msg.files || [];
-      const sel   = document.getElementById('offline-bub-strike');
-      if (!sel) return;
-      sel.innerHTML = '<option value="">— select strike —</option>';
-      if (files.length === 0) {
-        sel.innerHTML = '<option value="">No bubble files for this date</option>';
-      } else {
-        files.forEach(f => {
-          const opt = document.createElement('option');
-          opt.value = JSON.stringify({ opt_type: f.opt_type, strike: f.strike });
-          opt.textContent = `${f.opt_type}  ${f.strike}`;
-          sel.appendChild(opt);
-        });
-      }
-      const statusEl = document.getElementById('offline-bub-status');
-      if (statusEl) statusEl.textContent = files.length ? `${files.length} file(s) found` : 'No files';
-    }
-
-    else if (t === 'bubble_data') {
-      const items    = msg.items || [];
-      const statusEl = document.getElementById('offline-bub-status');
-      const append   = document.getElementById('offline-bub-append')?.checked;
-
-      if (!append) BUB.clear();
-
-      items.forEach(item => {
-        // Recalculate chartTime for current selIv
-        item.chartTime = (selIv === 60 || selIv === 300 || selIv === 900)
-          ? Math.floor(item.time / selIv) * selIv
-          : item.time;
-        if (BUB.items.length >= BUB.MAX) BUB.items.shift();
-        BUB.items.push(item);
-      });
-
-      const el = document.getElementById('s-bubs');
-      if (el) el.textContent = BUB.items.length;
-      requestAnimationFrame(() => BUB.draw());
-
-      if (statusEl) statusEl.textContent =
-        `✅ ${items.length} bubbles loaded (${msg.opt_type} ${msg.strike} ${msg.date})`;
-      showAlert('ok', `✅ ${items.length} offline bubbles loaded — ${msg.opt_type} ${msg.strike}`);
-    }
-
     else if (t === 'error') { showAlert('err','⚠ '+msg.message, false); }
   };
 
@@ -364,34 +271,6 @@ function sanitizeLatin1String(value) {
     .replace(/[^\x00-\xFF]/g, '?');
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// BUBBLE PERSISTENCE — server-side save / load
-// ─────────────────────────────────────────────────────────────────────────────
-
-// Called from BUB._pushItem() every time a bubble is emitted during live feed.
-// Sends the item to server for saving to today's SQLite DB.
-// No reply expected — fire and forget.
-function wsSaveBubble(item) {
-  if (!ws || ws.readyState !== WebSocket.OPEN) return;
-  ws.send(JSON.stringify({ type: 'save_bubble', item }));
-}
-
-// Ask server for the list of saved bubble files for a given date.
-// Response arrives as {type:'bubble_list', date, files:[{opt_type,strike,path_rel}]}
-function wsListBubbles(dateStr) {
-  if (!ws || ws.readyState !== WebSocket.OPEN) { showAlert('err','⚠ Connect first.'); return; }
-  ws.send(JSON.stringify({ type: 'list_bubbles', date: dateStr }));
-}
-
-// Load a specific bubble file from server into BUB.items[].
-// opt_type = 'CE'|'PE', strike = filename stem (e.g. 'NSE_FO_52345')
-function wsLoadBubbles(dateStr, optType, strike) {
-  if (!ws || ws.readyState !== WebSocket.OPEN) { showAlert('err','⚠ Connect first.'); return; }
-  const statusEl = document.getElementById('offline-bub-status');
-  if (statusEl) statusEl.textContent = '⏳ Loading…';
-  ws.send(JSON.stringify({ type: 'load_bubbles', date: dateStr, opt_type: optType, strike }));
-}
-
 function disconnectWS() {
   // Close all three WebSocket connections
   if (ws)   { try { ws.close();   } catch(_){} ws   = null; }
@@ -417,116 +296,6 @@ function disconnectWS() {
   // Clear auth state
   tokSaved = false;
   setTok(null, 'Disconnected.');
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// SQLite DB LOADERS — candles only
-// ─────────────────────────────────────────────────────────────────────────────
-function _ensureWSForDB(onReady) {
-  if (ws && ws.readyState === WebSocket.OPEN) { onReady(); return; }
-  const tmpWS = new WebSocket(CONFIG.WEBSOCKET_URL);
-  tmpWS.onopen = () => {
-    ws = tmpWS;
-    setStatus('authed','● CONNECTED');
-    setTok(null,'✅ Connected! Paste your token and click Save Token.');
-    document.getElementById('connectBtn').disabled    = true;
-    document.getElementById('disconnectBtn').disabled = false;
-    document.getElementById('saveTokenBtn').disabled  = false;
-    if (!tpsTmr) tpsTmr = setInterval(() => {
-      const el = document.getElementById('s-tps');
-      if (el) el.textContent = tickCnt; tickCnt = 0;
-    }, 1000);
-    onReady();
-  };
-  tmpWS.onerror = () => {
-    showAlert('err','⚠ Cannot connect to '+CONFIG.WEBSOCKET_URL+'\n→ Start server first.', false);
-  };
-  tmpWS.onclose = () => {
-    if (ws === tmpWS) {
-      ws = null;
-      setStatus('idle','DISCONNECTED');
-      document.getElementById('connectBtn').disabled    = false;
-      document.getElementById('disconnectBtn').disabled = true;
-      document.getElementById('saveTokenBtn').disabled  = true;
-      if (tpsTmr) { clearInterval(tpsTmr); tpsTmr = null; }
-      tokSaved = false;
-      setTok(null, 'Disconnected.');
-    }
-  };
-  tmpWS.onmessage = e => {
-    let msg; try { msg = JSON.parse(e.data); } catch(_) { return; }
-    tickCnt++;
-    const t = msg.type;
-    if (t === 'sqlite_list') {
-      const sel = document.getElementById('csv-instrument');
-      const selDate = document.getElementById('csv-date').value;
-      sel.innerHTML = '<option value="">— select instrument —</option>';
-      const filtered = (msg.datasets || []).filter(d => d.date === selDate && d.has_candles);
-      if (filtered.length === 0) { sel.innerHTML = '<option value="">No candles for this date</option>'; }
-      else {
-        filtered.forEach(d => {
-          const instrName = d.instrument.split('/').pop();
-          const instrKey  = d.instrument_key || d.instrument;
-          const files = ['candles.csv'];
-          files.forEach(fname => {
-            const opt      = document.createElement('option');
-            opt.value      = JSON.stringify({ instrument: instrKey, filename: fname });
-            opt.textContent = fname === 'candles.csv'
-              ? instrName
-              : `${instrName}  [${fname}]`;
-            sel.appendChild(opt);
-          });
-        });
-      }
-    }
-    else if (t === 'sqlite_data') {
-      if (!msg.candles || msg.candles.length === 0) { document.getElementById('csv-candle-status').textContent='⚠ No candles found'; return; }
-      if (!lwChart && !initCharts()) return;
-      cData=[]; vData=[]; cMap={}; BUB.clear(); aggBucket=null;
-      msg.candles.forEach(c => { const agg=aggCandle(c); if(agg) upsertCandle(agg,true); });
-      if (aggBucket) { upsertCandle(aggBucket,true); aggBucket=null; }
-      _flushBulk();
-      setTimeout(() => { lwChart.timeScale().fitContent(); requestAnimationFrame(()=>BUB.draw()); }, 100);
-      updateTicker(msg.candles[msg.candles.length-1], msg.label||'');
-      document.getElementById('csv-candle-status').textContent=`✅ ${cData.length} candles (${ivLabel(selIv)})`;
-    }
-  };
-}
-
-function dbDateChanged() {
-  const d = document.getElementById('csv-date').value;
-  if (!d) return;
-  const candleStatus = document.getElementById('csv-candle-status');
-  if (candleStatus) candleStatus.textContent = '';
-  // Reset bubble strike dropdown when date changes
-  const bubSel = document.getElementById('offline-bub-strike');
-  if (bubSel) bubSel.innerHTML = '<option value="">— loading… —</option>';
-  const bubStatus = document.getElementById('offline-bub-status');
-  if (bubStatus) bubStatus.textContent = '';
-  _ensureWSForDB(() => {
-    ws.send(JSON.stringify({ type: 'list_saved', date: d }));
-    ws.send(JSON.stringify({ type: 'list_bubbles', date: d }));
-  });
-}
-
-function loadCandles() {
-  const d   = document.getElementById('csv-date').value;
-  const raw = document.getElementById('csv-instrument').value;
-  if (!d || !raw) { document.getElementById('csv-candle-status').textContent = '⚠ Pick date + instrument'; return; }
-  let instrument, filename;
-  try {
-    const parsed = JSON.parse(raw);
-    instrument   = parsed.instrument;
-    filename     = parsed.filename || 'candles.csv';
-  } catch(_) {
-    // Fallback: old plain string value (e.g. if page cached old ws.js)
-    instrument = raw;
-    filename   = 'candles.csv';
-  }
-  document.getElementById('csv-candle-status').textContent = '⏳ Loading…';
-  _ensureWSForDB(() => {
-    ws.send(JSON.stringify({ type: 'load_sqlite', date: d, instrument, load: 'candles' }));
-  });
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

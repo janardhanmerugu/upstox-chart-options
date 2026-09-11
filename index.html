@@ -288,55 +288,6 @@
       </div>
     </div>
 
-    <!-- ── CSV LOADERS ── -->
-    <div class="ds">
-      <div class="ds-title"><span class="ds-title-icon">📂</span><span>Load Saved Data</span></div>
-
-      <!-- Date picker shared by both loaders -->
-      <div class="bub-cfg-row" style="gap:.4rem">
-        <span class="bub-cfg-label">Date</span>
-        <input type="date" id="csv-date" style="
-          flex:1;font-family:'JetBrains Mono',monospace;font-size:.7rem;
-          background:#0a1020;border:1px solid var(--border);color:var(--text);
-          border-radius:6px;padding:.28rem .5rem;outline:none;
-        " onchange="dbDateChanged()"/>
-      </div>
-
-      <!-- Candle loader -->
-      <div style="display:flex;flex-direction:column;gap:.3rem;background:#0a1020;border:1px solid var(--border);border-radius:8px;padding:.45rem .55rem">
-        <div style="font-size:.6rem;font-weight:700;color:var(--accent);letter-spacing:.06em">📈 INDEX CANDLES</div>
-        <select id="csv-instrument" style="
-          font-family:'JetBrains Mono',monospace;font-size:.68rem;
-          background:#060a11;border:1px solid var(--border);color:var(--text);
-          border-radius:6px;padding:.26rem .4rem;outline:none;width:100%;
-        ">
-          <option value="">— pick date first —</option>
-        </select>
-        <button class="tbtn" onclick="loadCandles()" style="font-size:.65rem">⬆ Load Candles</button>
-        <div id="csv-candle-status" style="font-size:.58rem;color:var(--muted);min-height:12px"></div>
-      </div>
-
-      <!-- ── OFFLINE BUBBLES — shares the Date picker above ── -->
-      <div style="display:flex;flex-direction:column;gap:.3rem;background:#0a1020;border:1px solid var(--border);border-radius:8px;padding:.45rem .55rem">
-        <div style="font-size:.6rem;font-weight:700;color:var(--accent);letter-spacing:.06em">🫧 OFFLINE BUBBLES</div>
-        <select id="offline-bub-strike" style="
-          font-family:'JetBrains Mono',monospace;font-size:.68rem;
-          background:#060a11;border:1px solid var(--border);color:var(--text);
-          border-radius:6px;padding:.26rem .4rem;outline:none;width:100%;
-        ">
-          <option value="">— pick date first —</option>
-        </select>
-        <div style="display:flex;gap:.3rem;align-items:center">
-          <label style="font-size:.62rem;color:var(--muted);cursor:pointer;display:flex;align-items:center;gap:.25rem">
-            <input type="checkbox" id="offline-bub-append">Append
-          </label>
-          <button class="tbtn" onclick="offlineLoadBubbles()" style="flex:1;font-size:.65rem">⬆ Load Bubbles</button>
-        </div>
-        <div id="offline-bub-status" style="font-size:.58rem;color:var(--muted);min-height:12px"></div>
-      </div>
-
-    </div>
-
   </div><!-- /side-drawer -->
 
   <!-- DRAWER TOGGLE TAB -->
