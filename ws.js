@@ -72,10 +72,6 @@ function connectWS() {
       setStatus('live','● READY');
       showAlert('ok','✅ Token saved! Pick underlying & click ⬇ Load Chain');
       
-      // Enable history button now that auth is successful
-      const histBtn = document.getElementById('hist-btn');
-      if (histBtn) histBtn.disabled = false;
-      
       optOnAuthOk();  // Trigger option chain UI updates
     }
     else if (t === 'auth_fail') { 
@@ -176,23 +172,6 @@ function connectWS() {
         upsertCandle(chartCandle, false);
         updateTicker(chartCandle, msg.instrument);
       }
-    }
-
-    else if (t === 'history_loading') {
-      clearAlerts();
-      if (!initCharts()) return;
-      BUB.clear();
-      const histStatus = document.getElementById('hist-status');
-      if (histStatus) histStatus.textContent = '⏳ Fetching…';
-      showAlert('info',`🔄 Loading history: ${msg.symbol} @ ${msg.unit}…`);
-    }
-    else if (t === 'history_data')  { renderHistory(msg.candles, msg.symbol, msg.unit); }
-    else if (t === 'history_error') {
-      const histStatus = document.getElementById('hist-status');
-      if (histStatus) histStatus.textContent = '⚠ Error';
-      const histBtn = document.getElementById('hist-btn');
-      if (histBtn) histBtn.disabled = false;
-      showAlert('err','⚠ '+msg.message, false);
     }
 
     else if (t === 'option_expiries')       { onOptExpiries(msg); }

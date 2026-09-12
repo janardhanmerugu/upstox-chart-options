@@ -372,34 +372,6 @@ function autoStrikeCheck(spot) {
   }
 }
 
-// ──── History helpers ────
-function initHistoryDates() {
-  const today = new Date();
-  const yyyy  = today.getFullYear();
-  const mm    = String(today.getMonth()+1).padStart(2,'0');
-  const dd    = String(today.getDate()).padStart(2,'0');
-  const todayStr = `${yyyy}-${mm}-${dd}`;
-  const weekAgo  = new Date(today); weekAgo.setDate(today.getDate()-7);
-  const wy = weekAgo.getFullYear(), wm = String(weekAgo.getMonth()+1).padStart(2,'0'), wd = String(weekAgo.getDate()).padStart(2,'0');
-  const fromStr = `${wy}-${wm}-${wd}`;
-  const hFrom = document.getElementById('hist-from');
-  const hTo   = document.getElementById('hist-to');
-  if (hFrom) { hFrom.value = fromStr; hFrom.max = todayStr; }
-  if (hTo)   { hTo.value   = todayStr; hTo.max  = todayStr; }
-}
-
-function loadHistory() {
-  if (!ws || ws.readyState !== WebSocket.OPEN) { showAlert('err','⚠ Connect first.'); return; }
-  if (!selSym) { showAlert('warn','⚠ Pick a symbol first.'); return; }
-  const unit     = document.getElementById('hist-unit').value;
-  const fromDate = document.getElementById('hist-from').value;
-  const toDate   = document.getElementById('hist-to').value;
-  if (!fromDate || !toDate) { showAlert('warn','⚠ Set from/to dates.'); return; }
-  document.getElementById('hist-status').textContent = '⏳ Loading…';
-  document.getElementById('hist-btn').disabled = true;
-  ws.send(JSON.stringify({ type:'get_history', symbol:selSym, unit, from_date:fromDate, to_date:toDate }));
-}
-
 // ──── Bubble Presets ────
 const BUB_PRESETS = {
   smart: {

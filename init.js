@@ -18,9 +18,6 @@ window.addEventListener('DOMContentLoaded', () => {
   }
 
 
-  // History date pickers (function lives in ui.js)
-  if (typeof initHistoryDates === 'function') initHistoryDates();
-
   // Ctrl + Left-click → add / remove nearest horizontal line
   document.getElementById('chart-con').addEventListener('click', e => {
     if (!e.ctrlKey || !lwChart || !cSeries) return;

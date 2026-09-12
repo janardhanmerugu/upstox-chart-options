@@ -235,33 +235,3 @@ function _flushBulk() {
   document.getElementById('s-bars').textContent = cData.length;
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// HISTORY LOADER
-// ─────────────────────────────────────────────────────────────────────────────
-function renderHistory(candles, symbol, unit) {
-  if (!candles || candles.length === 0) {
-    showAlert('warn','⚠ No candles returned.', false);
-    document.getElementById('hist-status').textContent = '0 candles';
-    document.getElementById('hist-btn').disabled = false;
-    return;
-  }
-  if (!lwChart && !initCharts()) return;
-
-  cData=[]; vData=[]; cMap={};
-  BUB.clear(); aggBucket = null;
-  candles.forEach(c => upsertCandle(c, true));  // accumulate only — no setData yet
-  _flushBulk();                                  // single setData call
-
-  setTimeout(() => {
-    lwChart.timeScale().fitContent();
-    requestAnimationFrame(() => BUB.draw());
-  }, 100);
-
-  updateTicker(candles[candles.length-1], symbol);
-  document.getElementById('s-sym').textContent    = symbol;
-  document.getElementById('s-iv').textContent     = unit;
-  document.getElementById('sym-disp').textContent = symbol;
-  document.getElementById('hist-status').textContent = `✅ ${candles.length} candles`;
-  document.getElementById('hist-btn').disabled = false;
-  showAlert('ok', `✅ Loaded ${candles.length} ${unit} candles for ${symbol}`);
-}
