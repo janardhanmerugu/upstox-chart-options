@@ -174,6 +174,35 @@ function aggCandle(raw) {
   return aggBucket;
 }
 
+function chartIntervalSeconds() {
+  return Math.max(1, Number(selIv) || 1);
+}
+
+function addWhitespacePoint(time) {
+  if (cMap[time] !== undefined) return;
+  cMap[time] = cData.length;
+  cData.push({ time });
+  vData.push({ time });
+}
+
+function isMarketSessionTime(time) {
+  const date = new Date(time * 1000);
+  const day = date.getUTCDay();
+  const minutes = date.getUTCHours() * 60 + date.getUTCMinutes();
+  return day >= 1 && day <= 5 && minutes >= 9 * 60 + 15 && minutes < 15 * 60 + 30;
+}
+
+function addMissingPoints(lastTime, nextTime) {
+  const interval = chartIntervalSeconds();
+  for (let time = lastTime + interval; time < nextTime; time += interval) {
+    if (isMarketSessionTime(time)) addWhitespacePoint(time);
+  }
+}
+
+function candleCount(data) {
+  return data.reduce((count, item) => count + (item.open == null ? 0 : 1), 0);
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // UPSERT CANDLE
 // Adds or updates a candle in the chart
@@ -195,6 +224,18 @@ function upsertCandle(c, bulk) {
     value: c.volume, 
     color: c.close >= c.open ? '#26a69a44' : '#7b5ea744'  // Green if up, purple if down
   };
+
+  const lastTime = cData[cData.length - 1]?.time;
+  if (lastTime != null && t > lastTime + chartIntervalSeconds()) {
+    const previousLength = cData.length;
+    addMissingPoints(lastTime, t);
+    if (!bulk) {
+      for (let index = previousLength; index < cData.length; index++) {
+        cSeries.update(cData[index]);
+        vSeries.update(vData[index]);
+      }
+    }
+  }
   
   // Check if this candle already exists (update vs insert)
   if (cMap[t] !== undefined) { 
@@ -215,7 +256,7 @@ function upsertCandle(c, bulk) {
     vSeries.update(vd);
     
     // Update UI with current candle count
-    document.getElementById('s-bars').textContent = cData.length;
+    document.getElementById('s-bars').textContent = candleCount(cData);
     
     // Schedule bubble redraw on next frame (smooth animation)
     requestAnimationFrame(() => BUB.draw());
@@ -232,6 +273,6 @@ function _flushBulk() {
   vSeries.setData(vData);
   
   // Update UI
-  document.getElementById('s-bars').textContent = cData.length;
+  document.getElementById('s-bars').textContent = candleCount(cData);
 }
 
