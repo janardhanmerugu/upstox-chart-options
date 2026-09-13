@@ -102,12 +102,47 @@ function connectWS() {
       }
     }
 
+    // ── HISTORY-FIRST INDEX LOAD ────────────────────────────────────────
+    // Render stored candles before opening the live subscription. The server
+    // already exposes this endpoint for the futures chart workflow.
+    else if (t === 'symbol_history') {
+      if (msg.instrument !== selSym) return;
+      if (!lwChart && !initCharts()) return;
+
+      aggBucket = null;
+      BUB.clear();
+      cData = []; vData = []; cMap = {};
+      msg.candles.forEach(c => upsertCandle(aggCandle(c), true));
+      _flushBulk();
+
+      if (msg.candles.length > 0) {
+        updateTicker(msg.candles[msg.candles.length - 1], msg.instrument);
+      }
+      historyReadyForSubscribe = true;
+      ws.send(JSON.stringify({
+        type: 'subscribe', symbol: selSym,
+        interval: msg.interval, display_interval: selIv,
+      }));
+      setLiveMode(true);
+      document.getElementById('s-iv').textContent = ivLabel(selIv);
+      setTimeout(() => {
+        if (lwChart) {
+          lwChart.timeScale().fitContent();
+          requestAnimationFrame(() => BUB.draw());
+        }
+      }, 120);
+    }
+
     // ── SWITCHING SYMBOLS (transitioning between different instruments) ───
     else if (t === 'switching') {
       clearAlerts();
-      if (!initCharts()) return;
-      BUB.clear();
-      aggBucket = null;
+      if (!lwChart && !initCharts()) return;
+      if (historyReadyForSubscribe) {
+        historyReadyForSubscribe = false;
+      } else {
+        BUB.clear();
+        aggBucket = null;
+      }
       showAlert('info',`🔄 Switching to ${msg.symbol} @ ${ivLabel(selIv)}…`);
       document.getElementById('s-sym').textContent     = msg.symbol;
       document.getElementById('s-iv').textContent      = ivLabel(selIv);
@@ -194,6 +229,7 @@ function connectWS() {
       document.getElementById('connectBtn').disabled    = false;
       document.getElementById('disconnectBtn').disabled = true;
       document.getElementById('saveTokenBtn').disabled  = true;
+      document.getElementById('index-load-btn').disabled = true;
       if (tpsTmr) { clearInterval(tpsTmr); tpsTmr = null; }
       const tpsEl = document.getElementById('s-tps');
       if (tpsEl) tpsEl.textContent = '—';
@@ -266,6 +302,7 @@ function disconnectWS() {
   document.getElementById('connectBtn').disabled    = false;
   document.getElementById('disconnectBtn').disabled = true;
   document.getElementById('saveTokenBtn').disabled  = true;
+  document.getElementById('index-load-btn').disabled = true;
   
   // Stop TPS monitoring timer
   if (tpsTmr) { clearInterval(tpsTmr); tpsTmr = null; }
@@ -359,6 +396,7 @@ function onOptError(msg) {
 }
 
 function optOnAuthOk() {
+  document.getElementById('index-load-btn').disabled = false;
   document.getElementById('opt-chain-status').textContent = 'Token ready → select underlying & Load Chain';
   optFetchExpiries();
 }

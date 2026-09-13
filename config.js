@@ -66,6 +66,7 @@ let cData=[], vData=[], cMap={};
 // selIv = Display interval: 1=1s, 60=1m, 300=5m, 900=15m
 // tokSaved = Whether user's auth token was successfully validated
 let selSym=null, selIv=60, tokSaved=false;
+let historyReadyForSubscribe = false;
 
 // ── Candle Aggregation ─────────────────────────────────────────────────────
 // When selIv > 1, raw 1s candles are grouped into larger timeframes

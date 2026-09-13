@@ -124,7 +124,8 @@ function loadSym() {
   aggBucket = null;
   BUB.clear();
   const backendIv = (selIv === 60 || selIv === 300 || selIv === 900) ? 1 : selIv;
-  ws.send(JSON.stringify({ type: 'subscribe', symbol: selSym, interval: backendIv, display_interval: selIv }));
+  historyReadyForSubscribe = false;
+  ws.send(JSON.stringify({ type: 'load_symbol_history', instrument: selSym, interval: backendIv }));
 }
 
 // ──── Line Drawing ────
@@ -178,6 +179,19 @@ function optPickUL(ul, btn) {
   if (tokSaved && ws && ws.readyState === WebSocket.OPEN) {
     optFetchExpiries();
   }
+}
+
+function loadIndexChart() {
+  if (!tokSaved) { showAlert('err','⚠ Save your Access Token first.'); return; }
+  if (!ws || ws.readyState !== WebSocket.OPEN) { showAlert('err','⚠ Not connected. Click Connect.'); return; }
+
+  const indexKey = OPT_INDEX_KEY[optUL];
+  if (!indexKey) { showAlert('warn','⚠ Pick an index first.'); return; }
+
+  selSym = indexKey;
+  BUB.clear();
+  loadSym();
+  showAlert('info', `Loading ${optUL} index chart...`);
 }
 
 function optOnExpiry() {
