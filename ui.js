@@ -113,6 +113,53 @@ function toggleDrawer() {
 function pickIv(v) {
   selIv = v;
   document.querySelectorAll('.ivbtn').forEach(b => b.classList.toggle('active', +b.dataset.iv === v));
+  const intervalEl = document.getElementById('oi-interval');
+  if (intervalEl) intervalEl.textContent = ivLabel(v);
+  if (oiBubOn) loadOpenInterest();
+}
+
+function openInterestTypes() {
+  return ['CE', 'PE'].filter(type => document.getElementById(`oi-${type.toLowerCase()}`)?.checked);
+}
+
+function loadOpenInterest() {
+  if (!ws || ws.readyState !== WebSocket.OPEN) {
+    showAlert('err', '⚠ Connect to server first.');
+    return;
+  }
+  const startDate = document.getElementById('oi-from').value;
+  const endDate = document.getElementById('oi-to').value;
+  const optionTypes = openInterestTypes();
+  if (!startDate || !endDate || !optionTypes.length) {
+    showAlert('warn', '⚠ Choose a date range and at least one option type.');
+    return;
+  }
+  oiBubbleRadiusMultiplier = Math.max(0.000001, Number(document.getElementById('oi-radius').value) || 0.001);
+  const indexKey = OPT_INDEX_KEY[document.getElementById('oi-index').value];
+  if (selSym !== indexKey) {
+    selSym = indexKey;
+    BUB.clear();
+    loadSym();
+  }
+  OIB.clear();
+  document.getElementById('oi-status').textContent = 'Loading Open Interest…';
+  ws.send(JSON.stringify({
+    type: 'get_open_interest',
+    index: indexKey,
+    start_date: startDate,
+    end_date: endDate,
+    interval: chartIntervalSeconds(),
+    option_types: optionTypes,
+  }));
+}
+
+function toggleOpenInterest() {
+  oiBubOn = !oiBubOn;
+  const button = document.getElementById('oi-toggle');
+  button.textContent = oiBubOn ? '● ON' : '○ OFF';
+  button.classList.toggle('off', !oiBubOn);
+  if (oiBubOn) loadOpenInterest();
+  else { OIB.clear(); BUB.draw(); }
 }
 
 // ──── Symbol loader ────

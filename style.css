@@ -242,6 +242,16 @@ body{font-family:'JetBrains Mono',monospace;background:var(--bg);color:var(--tex
 .ivbtn:hover{border-color:var(--accent);color:var(--accent)}
 .ivbtn.active{background:#00d4ff15;border-color:var(--accent);color:var(--accent);font-weight:700;box-shadow:0 0 6px #00d4ff22}
 
+.oi-panel{background:#0b111d}
+.oi-control-row,.oi-control-grid,.oi-checks{display:flex;align-items:center;gap:.45rem}
+.oi-control-row{justify-content:space-between;font-size:.62rem;color:var(--muted)}
+.oi-control-grid{display:grid;grid-template-columns:1fr 1fr}
+.oi-control-grid label{display:flex;flex-direction:column;gap:.2rem;font-size:.58rem;color:var(--muted)}
+.oi-input{min-width:0;font:600 .68rem 'JetBrains Mono',monospace;background:#0a1020;border:1px solid var(--border);border-radius:6px;color:var(--text);padding:.28rem .4rem}
+.oi-input:focus{outline:none;border-color:var(--accent)}
+.oi-checks label{font-size:.64rem;color:var(--text);margin-right:.7rem;cursor:pointer}
+.oi-toggle-row{margin-top:.1rem}
+
 /* Tool buttons (bubbles / crosshair / draw) */
 .tool-row{display:grid;gap:.3rem}
 .tool-row.col2{grid-template-columns:1fr 1fr}

@@ -79,6 +79,10 @@ function connectWS() {
       showAlert('err','⚠ '+msg.message, false); 
     }
 
+    else if (t === 'open_interest_data') {
+      OIB.setData(msg.bubbles || []);
+    }
+
     // ── INITIAL DATA LOAD (called when new symbol subscribed) ────────────
     else if (t === 'init') {
       if (msg.candles && msg.candles.length > 0) {

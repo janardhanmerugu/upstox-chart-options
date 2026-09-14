@@ -152,7 +152,10 @@ const BUB = {
     const W   = this.canvas.width;
     const H   = this.canvas.height;
     ctx.clearRect(0, 0, W, H);
-    if (!bubOn || this.items.length === 0) return;
+    if (!bubOn || this.items.length === 0) {
+      OIB.draw(ctx, W, H);
+      return;
+    }
 
     // ── CLIP to plot area: exclude right price-scale panel ─────────────────
     // LightweightCharts renders price labels in a fixed-width strip on the
@@ -282,6 +285,7 @@ const BUB = {
 
     // Restore canvas state (removes clip region)
     ctx.restore();
+    OIB.draw(ctx, W, H);
   },
 
   // ── Mouse move ─────────────────────────────────────────────────────────────
@@ -364,6 +368,7 @@ const BUB = {
   clear() {
     this.items   = [];
     this.hovered = null;
+    if (typeof OIB !== 'undefined') OIB.items = [];
     this._hideTip();
     if (this.ctx && this.canvas)
       this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
@@ -372,6 +377,57 @@ const BUB = {
     ce5Bucket   = { cur: null, _last: null };
     pe5Bucket   = { cur: null, _last: null };
     spot5Bucket = { cur: null, _last: null };
+  },
+};
+
+const OIB = {
+  items: [],
+  clear() {
+    this.items = [];
+    const status = document.getElementById('oi-status');
+    if (status) status.textContent = `Uses the chart interval: ${ivLabel(selIv)}`;
+    BUB.draw();
+  },
+  setData(items) {
+    this.items = items || [];
+    const status = document.getElementById('oi-status');
+    if (status) {
+      status.textContent = this.items.length
+        ? `${this.items.length} OI bubbles @ ${ivLabel(selIv)}`
+        : `No OI rows found @ ${ivLabel(selIv)}. Check dates and stored candles.`;
+    }
+    BUB.draw();
+  },
+  draw(ctx, width, height) {
+    if (!oiBubOn || !lwChart || !cSeries) return;
+    const showCE = document.getElementById('oi-ce')?.checked ?? true;
+    const showPE = document.getElementById('oi-pe')?.checked ?? true;
+    const radius = Math.max(0.000001, Number(document.getElementById('oi-radius')?.value) || oiBubbleRadiusMultiplier);
+    const maxRadius = 60;
+    this.items.forEach(item => {
+      if ((item.option_type === 'CE' && !showCE) || (item.option_type === 'PE' && !showPE)) return;
+      const chartTime = (selIv === 60 || selIv === 300 || selIv === 900)
+        ? Math.floor(item.time / selIv) * selIv
+        : item.time;
+      const chartCandle = cData[cMap[chartTime + IST_OFFSET_S]];
+      const indexPrice = chartCandle?.close ?? item.index_close;
+      const point = BUB.toXY(chartTime, indexPrice);
+      if (!point) return;
+      const bubbleRadius = Math.min(maxRadius, Math.max(2, Math.abs(item.oi_change) * radius));
+      if (point.x + bubbleRadius < 0 || point.x - bubbleRadius > width ||
+          point.y + bubbleRadius < 0 || point.y - bubbleRadius > height) return;
+      const positive = item.oi_change > 0;
+      const color = item.option_type === 'CE'
+        ? (positive ? '#00e676' : '#ff3d5a')
+        : (positive ? '#ffd166' : '#00b4d8');
+      ctx.beginPath();
+      ctx.arc(point.x, point.y, bubbleRadius, 0, Math.PI * 2);
+      ctx.fillStyle = `${color}99`;
+      ctx.fill();
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 1;
+      ctx.stroke();
+    });
   },
 };
 
