@@ -6,7 +6,7 @@
 function resolvedWebSocketUrl() {
   const configured = CONFIG.WEBSOCKET_URL;
   return window.location.protocol === 'https:' && configured.startsWith('ws://')
-    ? 'wss://src-saw-scholarship-trading.trycloudflare.com/ws'
+    ? 'wss://actors-balloon-tend-world.trycloudflare.com/ws'
     : configured;
 }
 
@@ -77,6 +77,10 @@ function connectWS() {
     else if (t === 'auth_fail') { 
       setTok(false,'❌ '+msg.message); 
       showAlert('err','⚠ '+msg.message, false); 
+    }
+
+    else if (t === 'open_interest_data') {
+      OIB.setData(msg.bubbles || []);
     }
 
     // ── INITIAL DATA LOAD (called when new symbol subscribed) ────────────

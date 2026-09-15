@@ -141,6 +141,58 @@
       </div>
     </div>
 
+    <!-- ── OPEN INTEREST BUBBLES ── -->
+    <div class="ds oi-panel">
+      <div class="ds-title"><span class="ds-title-icon">◉</span><span>Open Interest</span></div>
+      <div class="oi-selected-index">Using chain index: <strong id="oi-selected-index">NIFTY</strong></div>
+      <div class="oi-control-grid">
+        <label>From<input id="oi-from" class="oi-input" type="date"></label>
+        <label>To<input id="oi-to" class="oi-input" type="date"></label>
+      </div>
+      <div class="oi-control-row">
+        <label for="oi-radius">Bubble Radius</label>
+        <input id="oi-radius" class="oi-input" type="number" min="0.001" max="1" step="0.001" value="0.2" oninput="oiBubbleRadiusMultiplier=Math.max(0.001,Number(this.value)||0.001); BUB.draw()">
+      </div>
+      <div class="oi-checks">
+        <label><input id="oi-ce" type="checkbox" checked onchange="BUB.draw()"> CE</label>
+        <label><input id="oi-pe" type="checkbox" checked onchange="BUB.draw()"> PE</label>
+      </div>
+      <div class="oi-control-row oi-toggle-row">
+        <span>Open Interest Bubbles</span>
+        <button id="oi-toggle" class="tbtn off" type="button" onclick="toggleOpenInterest()">○ OFF</button>
+      </div>
+      <button class="opt-load-btn" type="button" onclick="loadOpenInterest()">Load Open Interest</button>
+
+      <div class="oi-legend" aria-label="Open Interest bubble legend">
+        <div class="oi-legend-title">OI Legend</div>
+        <div class="oi-legend-row"><span class="oi-dot ce-up"></span> CE OI ↑</div>
+        <div class="oi-legend-row"><span class="oi-dot ce-down"></span> CE OI ↓</div>
+        <div class="oi-legend-row"><span class="oi-dot pe-up"></span> PE OI ↑</div>
+        <div class="oi-legend-row"><span class="oi-dot pe-down"></span> PE OI ↓</div>
+      </div>
+
+      <div class="oi-color-grid" aria-label="Open Interest custom colors">
+        <div class="oi-color-row">
+          <span class="oi-color-label">CE ↑</span>
+          <input id="oi-ce-rise-color" type="color" value="#00e676" title="Choose CE OI increase color" oninput="BUB.draw()">
+        </div>
+        <div class="oi-color-row">
+          <span class="oi-color-label">CE ↓</span>
+          <input id="oi-ce-fall-color" type="color" value="#ff3d5a" title="Choose CE OI decrease color" oninput="BUB.draw()">
+        </div>
+        <div class="oi-color-row">
+          <span class="oi-color-label">PE ↑</span>
+          <input id="oi-pe-rise-color" type="color" value="#00b4d8" title="Choose PE OI increase color" oninput="BUB.draw()">
+        </div>
+        <div class="oi-color-row">
+          <span class="oi-color-label">PE ↓</span>
+          <input id="oi-pe-fall-color" type="color" value="#ffd166" title="Choose PE OI decrease color" oninput="BUB.draw()">
+        </div>
+      </div>
+
+      <div id="oi-status" class="tip">Uses the chart interval: <span id="oi-interval">1m</span></div>
+    </div>
+
     <!-- ── CHART TOOLS ── -->
     <div class="ds">
       <div class="ds-title"><span class="ds-title-icon">🛠</span><span>Chart Tools</span></div>
@@ -355,6 +407,15 @@
     </div>
 
   </div><!-- /main-content -->
+
+  <!-- RIGHT DRAWER: Open Interest and bubble controls are moved here on load. -->
+  <aside id="right-drawer">
+    <div id="right-drawer-top">
+      <div id="right-drawer-title"><span>◉</span><span>OPTION BUBBLES</span></div>
+    </div>
+    <div id="right-drawer-content"></div>
+  </aside>
+  <button id="right-drawer-toggle" onclick="toggleRightDrawer()" title="Toggle option bubble panel">›</button>
 
 </div><!-- /app-shell -->
 

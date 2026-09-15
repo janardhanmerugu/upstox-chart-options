@@ -109,10 +109,76 @@ function toggleDrawer() {
   }, 280);
 }
 
+function toggleRightDrawer() {
+  const drawer = document.getElementById('right-drawer');
+  const toggle = document.getElementById('right-drawer-toggle');
+  const open = drawer.classList.toggle('collapsed');
+  toggle.classList.toggle('collapsed', open);
+  toggle.textContent = open ? '‹' : '›';
+  setTimeout(() => {
+    if (lwChart) {
+      const con = document.getElementById('chart-con');
+      lwChart.resize(Math.max(con.clientWidth, 200), Math.max(con.clientHeight, 200));
+      BUB.sync(); BUB.draw();
+    }
+  }, 280);
+}
+
 // ──── Interval picker ────
 function pickIv(v) {
   selIv = v;
   document.querySelectorAll('.ivbtn').forEach(b => b.classList.toggle('active', +b.dataset.iv === v));
+  const intervalEl = document.getElementById('oi-interval');
+  if (intervalEl) intervalEl.textContent = ivLabel(v);
+  if (oiBubOn) loadOpenInterest();
+}
+
+function openInterestTypes() {
+  return ['CE', 'PE'].filter(type => document.getElementById(`oi-${type.toLowerCase()}`)?.checked);
+}
+
+function loadOpenInterest() {
+  if (!ws || ws.readyState !== WebSocket.OPEN) {
+    showAlert('err', '⚠ Connect to server first.');
+    return;
+  }
+  const startDate = document.getElementById('oi-from').value;
+  const endDate = document.getElementById('oi-to').value;
+  const optionTypes = openInterestTypes();
+  if (!startDate || !endDate || !optionTypes.length) {
+    showAlert('warn', '⚠ Choose a date range and at least one option type.');
+    return;
+  }
+  oiBubbleRadiusMultiplier = Math.max(0.0001, Number(document.getElementById('oi-radius').value) || 0.001);
+  const indexKey = OPT_INDEX_KEY[optUL];
+  if (!indexKey) {
+    showAlert('warn', '⚠ Select an index in the Option Chain first.');
+    return;
+  }
+  if (selSym !== indexKey) {
+    selSym = indexKey;
+    BUB.clear();
+    loadSym();
+  }
+  OIB.clear();
+  document.getElementById('oi-status').textContent = 'Loading Open Interest…';
+  ws.send(JSON.stringify({
+    type: 'get_open_interest',
+    index: indexKey,
+    start_date: startDate,
+    end_date: endDate,
+    interval: chartIntervalSeconds(),
+    option_types: optionTypes,
+  }));
+}
+
+function toggleOpenInterest() {
+  oiBubOn = !oiBubOn;
+  const button = document.getElementById('oi-toggle');
+  button.textContent = oiBubOn ? '● ON' : '○ OFF';
+  button.classList.toggle('off', !oiBubOn);
+  if (oiBubOn) loadOpenInterest();
+  else { OIB.clear(); BUB.draw(); }
 }
 
 // ──── Symbol loader ────
@@ -162,6 +228,8 @@ function clearAllLines() {
 // ──── Option Chain UI ────
 function optPickUL(ul, btn) {
   optUL = ul;
+  const oiIndex = document.getElementById('oi-selected-index');
+  if (oiIndex) oiIndex.textContent = ul;
   document.querySelectorAll('.opt-ul-btn').forEach(b => b.classList.remove('active'));
   if (btn) btn.classList.add('active');
   // NOTE: do NOT set selSym here — selSym is only updated when the spot chart

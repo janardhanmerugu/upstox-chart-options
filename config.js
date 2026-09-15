@@ -18,7 +18,7 @@ const CONFIG = {
   
   // Backend WebSocket server URL for real-time data
   WEBSOCKET_URL: (() => {
-    const remoteUrl = 'wss://src-saw-scholarship-trading.trycloudflare.com/ws';
+    const remoteUrl = 'wss://actors-balloon-tend-world.trycloudflare.com/ws';
     const override = new URLSearchParams(window.location.search).get('ws');
     if (override && !(window.location.protocol === 'https:' && override.startsWith('ws://'))) {
       return override;
@@ -79,6 +79,7 @@ let aggBucket = null;
 // tpsTmr = Timer ID for the TPS interval (used to clear it later)
 // bubOn = Whether bubble visualization is enabled/disabled by user
 let tickCnt=0, tpsTmr=null, bubOn=true;
+let oiBubOn=false, oiBubbleRadiusMultiplier=0.001;
 
 // ── Real-time Mode Flag ────────────────────────────────────────────────────
 // When true: chart auto-scrolls to show latest data (live mode)

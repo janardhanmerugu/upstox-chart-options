@@ -3,10 +3,26 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 window.addEventListener('DOMContentLoaded', () => {
+  const rightContent = document.getElementById('right-drawer-content');
+  const oiPanel = document.querySelector('.oi-panel');
+  const bubbleConfig = [...document.querySelectorAll('#side-drawer>.ds')]
+    .find(section => section.querySelector('.ds-title')?.textContent.includes('Bubble Config'));
+  if (rightContent) {
+    if (oiPanel) rightContent.appendChild(oiPanel);
+    if (bubbleConfig) rightContent.appendChild(bubbleConfig);
+  }
+
   // selSym is intentionally NOT set here.
   // It gets assigned in optSelectStrike() when the user picks a CE/PE strike,
   // ensuring the spot chart subscription always matches the chosen underlying.
   document.getElementById('opt-chain-status').textContent = 'Connect & authenticate first';
+
+  const today = new Date();
+  const weekAgo = new Date(today);
+  weekAgo.setDate(today.getDate() - 7);
+  const dateValue = date => date.toISOString().slice(0, 10);
+  document.getElementById('oi-from').value = dateValue(weekAgo);
+  document.getElementById('oi-to').value = dateValue(today);
 
   // ── Restore token from sessionStorage (survives refresh, clears on tab close) ──
   const defaultToken = 'eyJ0eXAiOiJKV1QiLCJrZXlfaWQiOiJza192MS4wIiwiYWxnIjoiSFMyNTYifQ.eyJzdWIiOiJCTTY3OTIiLCJqdGkiOiI2YTMwYzU3ZmY4NWUzZTY2MTgwNmM4N2UiLCJpc011bHRpQ2xpZW50IjpmYWxzZSwiaXNQbHVzUGxhbiI6dHJ1ZSwiaXNFeHRlbmRlZCI6dHJ1ZSwiaWF0IjoxNzgxNTgxMTgzLCJpc3MiOiJ1ZGFwaS1nYXRld2F5LXNlcnZpY2UiLCJleHAiOjE4MTMxODMyMDB9.XujS7CgYRW1uCm_zhdhHza9rrCD1BBE4vG03lPglqz8';
