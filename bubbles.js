@@ -402,6 +402,13 @@ const OIB = {
     if (!oiBubOn || !lwChart || !cSeries) return;
     const showCE = document.getElementById('oi-ce')?.checked ?? true;
     const showPE = document.getElementById('oi-pe')?.checked ?? true;
+    let priceScaleW = 0;
+    try { priceScaleW = lwChart.priceScale('right').width(); } catch(_) {}
+    const plotW = Math.max(0, width - priceScaleW);
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(0, 0, plotW, height);
+    ctx.clip();
     const radius = Math.max(0.000001, Number(document.getElementById('oi-radius')?.value) || oiBubbleRadiusMultiplier);
     const maxRadius = 60;
     const defaultColors = {
@@ -439,6 +446,7 @@ const OIB = {
       ctx.lineWidth = 1;
       ctx.stroke();
     });
+    ctx.restore();
   },
 };
 
