@@ -109,6 +109,21 @@ function toggleDrawer() {
   }, 280);
 }
 
+function toggleRightDrawer() {
+  const drawer = document.getElementById('right-drawer');
+  const toggle = document.getElementById('right-drawer-toggle');
+  const open = drawer.classList.toggle('collapsed');
+  toggle.classList.toggle('collapsed', open);
+  toggle.textContent = open ? '‹' : '›';
+  setTimeout(() => {
+    if (lwChart) {
+      const con = document.getElementById('chart-con');
+      lwChart.resize(Math.max(con.clientWidth, 200), Math.max(con.clientHeight, 200));
+      BUB.sync(); BUB.draw();
+    }
+  }, 280);
+}
+
 // ──── Interval picker ────
 function pickIv(v) {
   selIv = v;
@@ -135,7 +150,11 @@ function loadOpenInterest() {
     return;
   }
   oiBubbleRadiusMultiplier = Math.max(0.000001, Number(document.getElementById('oi-radius').value) || 0.001);
-  const indexKey = OPT_INDEX_KEY[document.getElementById('oi-index').value];
+  const indexKey = OPT_INDEX_KEY[optUL];
+  if (!indexKey) {
+    showAlert('warn', '⚠ Select an index in the Option Chain first.');
+    return;
+  }
   if (selSym !== indexKey) {
     selSym = indexKey;
     BUB.clear();
@@ -209,6 +228,8 @@ function clearAllLines() {
 // ──── Option Chain UI ────
 function optPickUL(ul, btn) {
   optUL = ul;
+  const oiIndex = document.getElementById('oi-selected-index');
+  if (oiIndex) oiIndex.textContent = ul;
   document.querySelectorAll('.opt-ul-btn').forEach(b => b.classList.remove('active'));
   if (btn) btn.classList.add('active');
   // NOTE: do NOT set selSym here — selSym is only updated when the spot chart

@@ -3,6 +3,15 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 window.addEventListener('DOMContentLoaded', () => {
+  const rightContent = document.getElementById('right-drawer-content');
+  const oiPanel = document.querySelector('.oi-panel');
+  const bubbleConfig = [...document.querySelectorAll('#side-drawer>.ds')]
+    .find(section => section.querySelector('.ds-title')?.textContent.includes('Bubble Config'));
+  if (rightContent) {
+    if (oiPanel) rightContent.appendChild(oiPanel);
+    if (bubbleConfig) rightContent.appendChild(bubbleConfig);
+  }
+
   // selSym is intentionally NOT set here.
   // It gets assigned in optSelectStrike() when the user picks a CE/PE strike,
   // ensuring the spot chart subscription always matches the chosen underlying.

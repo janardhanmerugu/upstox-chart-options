@@ -404,6 +404,17 @@ const OIB = {
     const showPE = document.getElementById('oi-pe')?.checked ?? true;
     const radius = Math.max(0.000001, Number(document.getElementById('oi-radius')?.value) || oiBubbleRadiusMultiplier);
     const maxRadius = 60;
+    const defaultColors = {
+      ceRise: '#00e676',
+      ceFall: '#ff3d5a',
+      peRise: '#00b4d8',
+      peFall: '#ffd166',
+    };
+    const ceRiseColor = document.getElementById('oi-ce-rise-color')?.value || defaultColors.ceRise;
+    const ceFallColor = document.getElementById('oi-ce-fall-color')?.value || defaultColors.ceFall;
+    const peRiseColor = document.getElementById('oi-pe-rise-color')?.value || defaultColors.peRise;
+    const peFallColor = document.getElementById('oi-pe-fall-color')?.value || defaultColors.peFall;
+
     this.items.forEach(item => {
       if ((item.option_type === 'CE' && !showCE) || (item.option_type === 'PE' && !showPE)) return;
       const chartTime = (selIv === 60 || selIv === 300 || selIv === 900)
@@ -413,13 +424,13 @@ const OIB = {
       const indexPrice = chartCandle?.close ?? item.index_close;
       const point = BUB.toXY(chartTime, indexPrice);
       if (!point) return;
-      const bubbleRadius = Math.min(maxRadius, Math.max(2, Math.abs(item.oi_change) * radius));
+      const bubbleRadius = Math.min(maxRadius, Math.max(2, Math.sqrt(Math.abs(item.oi_change)) * radius));
       if (point.x + bubbleRadius < 0 || point.x - bubbleRadius > width ||
           point.y + bubbleRadius < 0 || point.y - bubbleRadius > height) return;
       const positive = item.oi_change > 0;
       const color = item.option_type === 'CE'
-        ? (positive ? '#00e676' : '#ff3d5a')
-        : (positive ? '#ffd166' : '#00b4d8');
+        ? (positive ? ceRiseColor : ceFallColor)
+        : (positive ? peRiseColor : peFallColor);
       ctx.beginPath();
       ctx.arc(point.x, point.y, bubbleRadius, 0, Math.PI * 2);
       ctx.fillStyle = `${color}99`;
