@@ -273,10 +273,10 @@ body{font-family:'JetBrains Mono',monospace;background:var(--bg);color:var(--tex
 .oi-legend-title{font-size:.56rem;color:var(--muted);text-transform:uppercase;letter-spacing:.1em}
 .oi-legend-row{display:flex;align-items:center;gap:.45rem;font-size:.62rem;color:var(--text)}
 .oi-dot{width:10px;height:10px;border-radius:50%;display:inline-block;border:1px solid rgba(255,255,255,0.35)}
-.oi-dot.ce-up{background:#00e676}
-.oi-dot.ce-down{background:#ff3d5a}
-.oi-dot.pe-up{background:#00b4d8}
-.oi-dot.pe-down{background:#ffd166}
+.oi-dot.ce-up{background:#C8191E}
+.oi-dot.ce-down{background:#A5D6A7}
+.oi-dot.pe-up{background:#14C823}
+.oi-dot.pe-down{background:#EF9A9A}
 .oi-color-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.35rem;margin-top:.2rem}
 .oi-color-row{display:flex;align-items:center;justify-content:space-between;gap:.35rem;padding:.28rem .4rem;border:1px solid var(--border);border-radius:6px;background:#0a1020}
 .oi-color-label{font-size:.58rem;color:var(--muted);white-space:nowrap}

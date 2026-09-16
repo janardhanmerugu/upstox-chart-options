@@ -412,10 +412,10 @@ const OIB = {
     const radius = Math.max(0.000001, Number(document.getElementById('oi-radius')?.value) || oiBubbleRadiusMultiplier);
     const maxRadius = 60;
     const defaultColors = {
-      ceRise: '#00e676',
-      ceFall: '#ff3d5a',
-      peRise: '#00b4d8',
-      peFall: '#ffd166',
+      ceRise: '#C8191E',
+      ceFall: '#A5D6A7',
+      peRise: '#14C823',
+      peFall: '#EF9A9A',
     };
     const ceRiseColor = document.getElementById('oi-ce-rise-color')?.value || defaultColors.ceRise;
     const ceFallColor = document.getElementById('oi-ce-fall-color')?.value || defaultColors.ceFall;
