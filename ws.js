@@ -94,7 +94,7 @@ function connectWS() {
         // Flush all candles to chart in one operation
         setTimeout(() => {
           BUB.clear();
-          lwChart.timeScale().fitContent();  // Auto-zoom to show all data
+          fitChartContent();  // Fit time range and restore price autoscale
           requestAnimationFrame(() => BUB.draw());
         }, 120);
         
@@ -129,7 +129,7 @@ function connectWS() {
       document.getElementById('s-iv').textContent = ivLabel(selIv);
       setTimeout(() => {
         if (lwChart) {
-          lwChart.timeScale().fitContent();
+          fitChartContent();
           requestAnimationFrame(() => BUB.draw());
         }
       }, 120);

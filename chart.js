@@ -276,3 +276,9 @@ function _flushBulk() {
   document.getElementById('s-bars').textContent = candleCount(cData);
 }
 
+function fitChartContent() {
+  if (!lwChart || !cSeries) return;
+  cSeries.priceScale().applyOptions({ autoScale: true });
+  lwChart.timeScale().fitContent();
+}
+
