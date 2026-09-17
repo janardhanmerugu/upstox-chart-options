@@ -57,6 +57,44 @@ https://example-name.trycloudflare.com
 
 The tunnel terminal must remain open. A new quick tunnel gets a new random hostname, and the old hostname stops working when its tunnel process exits.
 
+## Prevent Changing Tunnel URLs
+
+For regular use, create a named tunnel instead of using `cloudflared tunnel --url`. A named tunnel needs a domain managed by Cloudflare, but its hostname stays stable.
+
+One-time setup:
+
+```powershell
+cloudflared tunnel login
+cloudflared tunnel create upstox-chart
+cloudflared tunnel route dns upstox-chart ws.your-domain.com
+```
+
+Create `%USERPROFILE%\.cloudflared\config.yml`:
+
+```yaml
+tunnel: upstox-chart
+credentials-file: C:\Users\YOUR_USER\.cloudflared\TUNNEL_ID.json
+
+ingress:
+    - hostname: ws.your-domain.com
+        service: http://127.0.0.1:8765
+    - service: http_status:404
+```
+
+Run it whenever the server is running:
+
+```powershell
+cloudflared tunnel run upstox-chart
+```
+
+Use this permanent WebSocket URL in the frontend:
+
+```text
+wss://ws.your-domain.com/ws
+```
+
+This avoids changing source files whenever a quick tunnel expires. Keep `server.py` and the named tunnel process running, or install the tunnel as a Windows service for automatic startup.
+
 ## Connect Through the Tunnel
 
 Append the generated WebSocket URL as the `ws` query parameter:
