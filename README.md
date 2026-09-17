@@ -34,6 +34,28 @@ file:///D:/upstox-chart/upstox-chart-options/index.html?ws=ws%3A%2F%2F127.0.0.1%
 
 Then click **Connect** and authenticate with a valid Upstox token.
 
+## Vercel Custom Domain
+
+Use this domain for the deployed Options frontend:
+
+```text
+https://options.tradingcharts.win
+```
+
+In Vercel, add `options.tradingcharts.win` under **Settings -> Domains**. In Cloudflare DNS, add the exact CNAME target Vercel provides with:
+
+```text
+Type: CNAME
+Name: options
+Proxy: DNS only
+```
+
+Keep `tradingcharts.win` reserved for the WebSocket tunnel:
+
+```text
+wss://tradingcharts.win/ws
+```
+
 ## Oracle Cloud Deployment
 
 The production WebSocket server runs on the Oracle Cloud VM at `/opt/upstox-chart`.

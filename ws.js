@@ -5,9 +5,7 @@
 
 function resolvedWebSocketUrl() {
   const configured = CONFIG.WEBSOCKET_URL;
-  return window.location.protocol === 'https:' && configured.startsWith('ws://')
-    ? 'wss://chronicle-expect-something-administered.trycloudflare.com/ws'
-    : configured;
+  return configured;
 }
 
 function connectWS() {
