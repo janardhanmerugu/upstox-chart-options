@@ -206,9 +206,9 @@
       </div>
     </div>
 
-    <!-- ── BUBBLE CONFIG ── -->
+    <!-- ── DELTA CHANGE ── -->
     <div class="ds">
-      <div class="ds-title"><span class="ds-title-icon">🫧</span><span>Bubble Config</span></div>
+      <div class="ds-title"><span class="ds-title-icon">🫧</span><span>Delta Change</span></div>
       <div class="bub-cfg">
 
         <!-- Spot Delta Min -->
@@ -371,21 +371,30 @@
       <div class="ti"><span class="tl">TPS</span>&nbsp;<span class="tv" id="s-tps">—</span></div>
       <div class="ti"><span class="tl">Last</span>&nbsp;<span class="tv" id="s-last">—</span></div>
       <div class="bar-sep"></div>
-      <!-- Bubble controls -->
-      <span class="bc-label">Scale</span>
-      <input type="range" id="bub-scale" class="bc-range" min="1" max="100" step="0.1" value="5"
-        oninput="bubScale=+this.value; document.getElementById('bub-scale-val').textContent=(+this.value).toFixed(1); BUB.draw()"/>
-      <span id="bub-scale-val" class="bc-val">5.0</span>
-      <span class="bc-label">Min CE</span>
-      <input type="number" id="bub-minrat-ce" class="bc-num" min="0" step="0.1" value="1"
-        oninput="bubMinRatioCE=+this.value||0; BUB.draw()" style="border-color:#ff3d5a55"/>
-      <span class="bc-label">Min PE</span>
-      <input type="number" id="bub-minrat-pe" class="bc-num" min="0" step="0.1" value="1"
-        oninput="bubMinRatioPE=+this.value||0; BUB.draw()" style="border-color:#00e67655"/>
-      <span class="bc-label">MaxPx</span>
-      <input type="number" id="bub-maxsize" class="bc-num" min="1" step="1" value="60"
-        oninput="bubMaxSize=Math.max(1,+this.value||60); BUB.draw()"/>
-      <span id="bub-hover-info"></span>
+      <div id="bubble-filter-controls">
+        <div class="bubble-filter-row">
+          <span class="bc-label">Scale</span>
+          <input type="range" id="bub-scale" class="bc-range" min="1" max="100" step="0.1" value="5"
+            oninput="bubScale=+this.value; document.getElementById('bub-scale-val').textContent=(+this.value).toFixed(1); BUB.draw()"/>
+          <span id="bub-scale-val" class="bc-val">5.0</span>
+        </div>
+        <div class="bubble-filter-row">
+          <span class="bc-label">Min CE</span>
+          <input type="number" id="bub-minrat-ce" class="bc-num" min="0" step="0.1" value="1"
+            oninput="bubMinRatioCE=+this.value||0; BUB.draw()" style="border-color:#ff3d5a55"/>
+        </div>
+        <div class="bubble-filter-row">
+          <span class="bc-label">Min PE</span>
+          <input type="number" id="bub-minrat-pe" class="bc-num" min="0" step="0.1" value="1"
+            oninput="bubMinRatioPE=+this.value||0; BUB.draw()" style="border-color:#00e67655"/>
+        </div>
+        <div class="bubble-filter-row">
+          <span class="bc-label">MaxPx</span>
+          <input type="number" id="bub-maxsize" class="bc-num" min="1" step="1" value="60"
+            oninput="bubMaxSize=Math.max(1,+this.value||60); BUB.draw()"/>
+        </div>
+        <span id="bub-hover-info"></span>
+      </div>
     </div>
 
     <div id="alerts"></div>
@@ -410,10 +419,15 @@
 
   <!-- RIGHT DRAWER: Open Interest and bubble controls are moved here on load. -->
   <aside id="right-drawer" class="collapsed">
-    <div id="right-drawer-top">
+    <div id="right-drawer-top" title="Option bubble controls">
       <div id="right-drawer-title"><span>◉</span><span>OPTION BUBBLES</span></div>
     </div>
-    <div id="right-drawer-content"></div>
+    <div id="right-drawer-content">
+      <div class="ds" id="bubble-filter-panel">
+        <div class="ds-title"><span class="ds-title-icon">◌</span><span>Bubble Filters</span></div>
+        <div id="bubble-filter-body"></div>
+      </div>
+    </div>
   </aside>
   <button id="right-drawer-toggle" class="collapsed" onclick="toggleRightDrawer()" title="Toggle option bubble panel">‹</button>
 

@@ -5,11 +5,15 @@
 window.addEventListener('DOMContentLoaded', () => {
   const rightContent = document.getElementById('right-drawer-content');
   const oiPanel = document.querySelector('.oi-panel');
+  const bubbleFilters = document.getElementById('bubble-filter-controls');
+  const bubbleFilterBody = document.getElementById('bubble-filter-body');
   const bubbleConfig = [...document.querySelectorAll('#side-drawer>.ds')]
-    .find(section => section.querySelector('.ds-title')?.textContent.includes('Bubble Config'));
+    .find(section => section.querySelector('.ds-title')?.textContent.includes('Delta Change'));
   if (rightContent) {
+    if (bubbleFilters && bubbleFilterBody) bubbleFilterBody.appendChild(bubbleFilters);
     if (oiPanel) rightContent.appendChild(oiPanel);
     if (bubbleConfig) rightContent.appendChild(bubbleConfig);
+    setupRightDrawerAccordion(rightContent);
   }
 
   // selSym is intentionally NOT set here.
@@ -55,3 +59,39 @@ window.addEventListener('DOMContentLoaded', () => {
 
   connectWS();
 });
+
+function setupRightDrawerAccordion(container) {
+  const sections = [...container.querySelectorAll('.ds')];
+  sections.forEach((section, index) => {
+    const title = section.querySelector('.ds-title');
+    if (!title) return;
+
+    section.classList.add('accordion-section');
+    title.classList.add('accordion-trigger');
+    title.setAttribute('role', 'button');
+    title.setAttribute('tabindex', '0');
+    title.setAttribute('aria-expanded', index === 0 ? 'true' : 'false');
+    title.setAttribute('aria-controls', `right-section-${index}`);
+
+    const body = document.createElement('div');
+    body.className = 'accordion-body';
+    body.id = `right-section-${index}`;
+    while (title.nextSibling) body.appendChild(title.nextSibling);
+    section.appendChild(body);
+
+    const toggle = () => {
+      const expanded = section.classList.toggle('expanded');
+      title.setAttribute('aria-expanded', String(expanded));
+    };
+
+    title.addEventListener('click', toggle);
+    title.addEventListener('keydown', event => {
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        toggle();
+      }
+    });
+
+    if (index === 0) section.classList.add('expanded');
+  });
+}
