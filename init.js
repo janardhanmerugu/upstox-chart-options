@@ -5,12 +5,10 @@
 window.addEventListener('DOMContentLoaded', () => {
   const rightContent = document.getElementById('right-drawer-content');
   const oiPanel = document.querySelector('.oi-panel');
-  const bubbleFilters = document.getElementById('bubble-filter-controls');
-  const bubbleFilterBody = document.getElementById('bubble-filter-body');
   const bubbleConfig = [...document.querySelectorAll('#side-drawer>.ds')]
     .find(section => section.querySelector('.ds-title')?.textContent.includes('Delta Change'));
+
   if (rightContent) {
-    if (bubbleFilters && bubbleFilterBody) bubbleFilterBody.appendChild(bubbleFilters);
     if (oiPanel) rightContent.appendChild(oiPanel);
     if (bubbleConfig) rightContent.appendChild(bubbleConfig);
     setupRightDrawerAccordion(rightContent);
