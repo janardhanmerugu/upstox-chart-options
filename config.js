@@ -18,7 +18,7 @@ const CONFIG = {
   
   // Backend WebSocket server URL for real-time data
   WEBSOCKET_URL: (() => {
-    const remoteUrl = 'wss://tradingcharts.win/ws';
+    const remoteUrl = 'wss://socket.tradingcharts.win/ws';
     const override = new URLSearchParams(window.location.search).get('ws');
     if (override && !(window.location.protocol === 'https:' && override.startsWith('ws://'))) {
       return override;
