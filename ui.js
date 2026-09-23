@@ -189,7 +189,7 @@ function loadSym() {
   clearAlerts();
   aggBucket = null;
   BUB.clear();
-  const backendIv = (selIv === 60 || selIv === 300 || selIv === 900) ? 1 : selIv;
+  const backendIv = (selIv === 5 || selIv === 15 || selIv === 30 || selIv === 60 || selIv === 300 || selIv === 900) ? 1 : selIv;
   historyReadyForSubscribe = false;
   ws.send(JSON.stringify({ type: 'load_symbol_history', instrument: selSym, interval: backendIv }));
 }

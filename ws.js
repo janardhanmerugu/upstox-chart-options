@@ -254,7 +254,7 @@ function _makeOptWS(instrKey, onCandle) {
   s.onmessage = e => {
     let msg; try { msg = JSON.parse(e.data); } catch(_) { return; }
     if (msg.type === 'auth_ok') {
-      const backendIv = (selIv === 60 || selIv === 300 || selIv === 900) ? 1 : selIv;
+      const backendIv = (selIv === 5 || selIv === 15 || selIv === 30 || selIv === 60 || selIv === 300 || selIv === 900) ? 1 : selIv;
       s.send(JSON.stringify({ type: 'subscribe', symbol: instrKey, interval: backendIv }));
     } else if (msg.type === 'candle') {
       onCandle(msg.candle);

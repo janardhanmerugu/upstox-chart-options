@@ -36,7 +36,9 @@ const BUB = {
   },
 
   _chartTime(t5s) {
-    if (selIv === 60 || selIv === 300 || selIv === 900) return Math.floor(t5s / selIv) * selIv;
+    if (selIv === 5 || selIv === 15 || selIv === 30 || selIv === 60 || selIv === 300 || selIv === 900) {
+      return Math.floor(t5s / selIv) * selIv;
+    }
     return t5s;
   },
 
@@ -227,7 +229,7 @@ const BUB = {
       else                  hexColor = clrPEBear;
 
       // Recalculate chartTime based on current selIv
-      b.chartTime = (selIv === 60 || selIv === 300 || selIv === 900)
+      b.chartTime = (selIv === 5 || selIv === 15 || selIv === 30 || selIv === 60 || selIv === 300 || selIv === 900)
         ? Math.floor(b.time / selIv) * selIv
         : b.time;
 
@@ -237,7 +239,7 @@ const BUB = {
       let { x, y } = pt;
 
       // Spread bubbles within candle bar for aggregated timeframes
-      if (selIv === 60 || selIv === 300 || selIv === 900) {
+      if (selIv === 5 || selIv === 15 || selIv === 30 || selIv === 60 || selIv === 300 || selIv === 900) {
         const slot       = Math.round((b.time - b.chartTime) / 5);
         const totalSlots = selIv / 5;
         const x2         = lwChart.timeScale().timeToCoordinate(b.chartTime + selIv + IST_OFFSET_S);
@@ -424,7 +426,7 @@ const OIB = {
 
     this.items.forEach(item => {
       if ((item.option_type === 'CE' && !showCE) || (item.option_type === 'PE' && !showPE)) return;
-      const chartTime = (selIv === 60 || selIv === 300 || selIv === 900)
+      const chartTime = (selIv === 5 || selIv === 15 || selIv === 30 || selIv === 60 || selIv === 300 || selIv === 900)
         ? Math.floor(item.time / selIv) * selIv
         : item.time;
       const chartCandle = cData[cMap[chartTime + IST_OFFSET_S]];
