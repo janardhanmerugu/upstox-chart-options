@@ -161,6 +161,15 @@
         <span>Open Interest Bubbles</span>
         <button id="oi-toggle" class="tbtn off" type="button" onclick="toggleOpenInterest()">○ OFF</button>
       </div>
+      <div id="oi-symbols" class="oi-symbols" aria-live="polite">
+        <div class="oi-symbols-label">Symbols by date</div>
+        <div class="oi-symbols-table-wrap">
+          <table class="oi-symbols-table">
+            <thead><tr><th>Date</th><th>Time</th><th>Symbol</th><th>Show</th></tr></thead>
+            <tbody class="oi-symbols-list"><tr><td colspan="4">—</td></tr></tbody>
+          </table>
+        </div>
+      </div>
       <button class="opt-load-btn" type="button" onclick="loadOpenInterest()">Load Open Interest</button>
 
       <div class="oi-legend" aria-label="Open Interest bubble legend">

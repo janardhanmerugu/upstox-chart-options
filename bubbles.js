@@ -384,14 +384,80 @@ const BUB = {
 
 const OIB = {
   items: [],
+  selectedRows: null,
+  _dateTime(time) {
+    const date = new Date((Number(time) + IST_OFFSET_S) * 1000);
+    return {
+      date: date.toISOString().slice(0, 10),
+      time: date.toISOString().slice(11, 19),
+    };
+  },
+  _rowKey(item) {
+    const instrumentId = item.instrument_id ?? item.instrumentId ?? item.symbol ?? '';
+    return `${this._dateTime(item.time).date}|${String(instrumentId).trim()}`;
+  },
+  updateSymbols() {
+    const list = document.querySelector('#oi-symbols .oi-symbols-list');
+    if (!list) return;
+    const rows = new Map();
+    this.items.forEach(item => {
+      const symbol = typeof item.symbol === 'string' ? item.symbol.trim() : '';
+      const instrumentId = item.instrument_id ?? item.instrumentId ?? symbol;
+      if (!symbol || !instrumentId || item.time == null) return;
+      const key = this._rowKey(item);
+      if (!rows.has(key)) rows.set(key, {
+        key,
+        symbol,
+        instrumentId: String(instrumentId),
+        timestamp: Number(item.time),
+        ...this._dateTime(item.time),
+      });
+    });
+    list.textContent = '';
+    if (!rows.size) {
+      const empty = document.createElement('tr');
+      empty.innerHTML = '<td colspan="4">—</td>';
+      list.appendChild(empty);
+      return;
+    }
+    [...rows.values()].sort((a, b) => b.timestamp - a.timestamp).forEach(row => {
+      const tr = document.createElement('tr');
+      [row.date, row.time, row.symbol].forEach((value, index) => {
+        const cell = document.createElement('td');
+        cell.textContent = value;
+        if (index === 2) cell.title = row.symbol;
+        tr.appendChild(cell);
+      });
+      const checkCell = document.createElement('td');
+      const checkbox = document.createElement('input');
+      checkbox.type = 'checkbox';
+      checkbox.checked = this.selectedRows === null || this.selectedRows.has(row.key);
+      checkbox.setAttribute('aria-label', `Show ${row.symbol} on ${row.date}`);
+      checkbox.onchange = () => {
+        if (this.selectedRows === null) {
+          this.selectedRows = new Set(rows.keys());
+        }
+        if (checkbox.checked) this.selectedRows.add(row.key);
+        else this.selectedRows.delete(row.key);
+        BUB.draw();
+      };
+      checkCell.appendChild(checkbox);
+      tr.appendChild(checkCell);
+      list.appendChild(tr);
+    });
+  },
   clear() {
     this.items = [];
+    this.selectedRows = null;
+    this.updateSymbols();
     const status = document.getElementById('oi-status');
     if (status) status.textContent = `Uses the chart interval: ${ivLabel(selIv)}`;
     BUB.draw();
   },
   setData(items) {
     this.items = items || [];
+    this.selectedRows = null;
+    this.updateSymbols();
     const status = document.getElementById('oi-status');
     if (status) {
       status.textContent = this.items.length
@@ -426,6 +492,7 @@ const OIB = {
 
     this.items.forEach(item => {
       if ((item.option_type === 'CE' && !showCE) || (item.option_type === 'PE' && !showPE)) return;
+      if (this.selectedRows && !this.selectedRows.has(this._rowKey(item))) return;
       const chartTime = (selIv === 5 || selIv === 15 || selIv === 30 || selIv === 60 || selIv === 300 || selIv === 900)
         ? Math.floor(item.time / selIv) * selIv
         : item.time;
