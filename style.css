@@ -292,13 +292,12 @@ body{font-family:'JetBrains Mono',monospace;background:var(--bg);color:var(--tex
 .oi-checks label{font-size:.64rem;color:var(--text);margin-right:.7rem;cursor:pointer}
 .oi-toggle-row{margin-top:.1rem;padding:.4rem .5rem;border:1px solid #1b2b42;border-radius:6px;background:#09111d}
 .oi-symbols{display:flex;flex-direction:column;gap:.2rem;margin-top:.3rem;padding:.4rem .5rem;border:1px solid #1b2b42;border-radius:6px;background:#09111d;min-width:0}
-.oi-symbols-label{font-size:.56rem;color:var(--muted);text-transform:uppercase;letter-spacing:.1em}
 .oi-symbols-table-wrap{max-height:12rem;overflow:auto}
 .oi-symbols-table{width:100%;border-collapse:collapse;table-layout:fixed;font:600 .58rem 'JetBrains Mono',monospace;color:var(--text)}
 .oi-symbols-table th{position:sticky;top:0;background:#09111d;color:var(--muted);font-size:.5rem;font-weight:500;text-align:left;text-transform:uppercase;letter-spacing:.04em}
 .oi-symbols-table th,.oi-symbols-table td{padding:.2rem .15rem;border-bottom:1px solid #17263a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .oi-symbols-table th{width:25%}
-.oi-symbol-date-row td{color:var(--muted);font-size:.55rem}
+.oi-symbol-date-row td{color:#fff;font-size:.55rem}
 .oi-symbol-entry-row td:first-child{color:var(--accent);white-space:normal;overflow-wrap:anywhere}
 .oi-symbol-entry-row td:last-child{text-align:center}
 .oi-symbol-entry-row td{border-bottom-color:#263a55}
