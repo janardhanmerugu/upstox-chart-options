@@ -151,7 +151,8 @@
       </div>
       <div class="oi-control-row">
         <label for="oi-radius">Bubble Radius</label>
-        <input id="oi-radius" class="oi-input" type="number" min="0.001" max="1" step="0.001" value="0.2" oninput="oiBubbleRadiusMultiplier=Math.max(0.001,Number(this.value)||0.001); BUB.draw()">
+        <input id="oi-radius" class="oi-radius-range" type="range" min="0.01" max="0.5" step="0.01" value="0.10" oninput="oiBubbleRadiusMultiplier=Number(this.value); document.getElementById('oi-radius-value').textContent=Number(this.value).toFixed(2); BUB.draw()">
+        <output id="oi-radius-value">0.10</output>
       </div>
       <div class="oi-control-row">
         <label for="oi-min-change">Min OI Change</label>

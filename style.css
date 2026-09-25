@@ -287,6 +287,8 @@ body{font-family:'JetBrains Mono',monospace;background:var(--bg);color:var(--tex
 .oi-control-grid label{display:flex;flex-direction:column;gap:.2rem;font-size:.58rem;color:var(--muted)}
 .oi-input{min-width:0;font:600 .68rem 'JetBrains Mono',monospace;background:#0a1020;border:1px solid var(--border);border-radius:6px;color:var(--text);padding:.28rem .4rem}
 .oi-input:focus{outline:none;border-color:var(--accent)}
+.oi-radius-range{width:6.5rem;accent-color:var(--accent);cursor:pointer}
+#oi-radius-value{min-width:2.2rem;color:var(--accent);font:600 .62rem 'JetBrains Mono',monospace;text-align:right}
 .oi-selected-index{font-size:.61rem;color:var(--muted);padding:.1rem 0}
 .oi-selected-index strong{color:var(--accent);font-weight:700}
 .oi-checks label{font-size:.64rem;color:var(--text);margin-right:.7rem;cursor:pointer}
