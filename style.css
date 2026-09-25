@@ -297,9 +297,11 @@ body{font-family:'JetBrains Mono',monospace;background:var(--bg);color:var(--tex
 .oi-symbols-table{width:100%;border-collapse:collapse;table-layout:fixed;font:600 .58rem 'JetBrains Mono',monospace;color:var(--text)}
 .oi-symbols-table th{position:sticky;top:0;background:#09111d;color:var(--muted);font-size:.5rem;font-weight:500;text-align:left;text-transform:uppercase;letter-spacing:.04em}
 .oi-symbols-table th,.oi-symbols-table td{padding:.2rem .15rem;border-bottom:1px solid #17263a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.oi-symbols-table th,.oi-symbols-table td{width:25%}
-.oi-symbols-table td:nth-child(3){color:var(--accent);white-space:normal;overflow-wrap:anywhere}
-.oi-symbols-table th:nth-child(4),.oi-symbols-table td:nth-child(4){text-align:center}
+.oi-symbols-table th{width:25%}
+.oi-symbol-date-row td{color:var(--muted);font-size:.55rem}
+.oi-symbol-entry-row td:first-child{color:var(--accent);white-space:normal;overflow-wrap:anywhere}
+.oi-symbol-entry-row td:last-child{text-align:center}
+.oi-symbol-entry-row td{border-bottom-color:#263a55}
 .oi-symbols-table input{margin:0;accent-color:var(--accent);cursor:pointer}
 .oi-legend{margin-top:.2rem;padding:.45rem .5rem;border:1px solid var(--border);border-radius:8px;background:#0a1020;display:flex;flex-direction:column;gap:.28rem}
 .oi-legend-title{font-size:.56rem;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;padding-bottom:.3rem;border-bottom:1px solid #1a2a40}

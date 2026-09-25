@@ -420,30 +420,47 @@ const OIB = {
       list.appendChild(empty);
       return;
     }
-    [...rows.values()].sort((a, b) => b.timestamp - a.timestamp).forEach(row => {
-      const tr = document.createElement('tr');
-      [row.date, row.time, row.symbol].forEach((value, index) => {
-        const cell = document.createElement('td');
-        cell.textContent = value;
-        if (index === 2) cell.title = row.symbol;
-        tr.appendChild(cell);
+    const groups = new Map();
+    rows.forEach(row => {
+      if (!groups.has(row.date)) groups.set(row.date, { date: row.date, latest: row.timestamp, rows: [] });
+      const group = groups.get(row.date);
+      group.latest = Math.max(group.latest, row.timestamp);
+      group.rows.push(row);
+    });
+    const allRowKeys = new Set(rows.keys());
+    [...groups.values()].sort((a, b) => b.latest - a.latest).forEach(group => {
+      const dateRow = document.createElement('tr');
+      dateRow.className = 'oi-symbol-date-row';
+      const dateCell = document.createElement('td');
+      dateCell.colSpan = 3;
+      dateCell.textContent = group.date;
+      const timeCell = document.createElement('td');
+      timeCell.textContent = this._dateTime(group.latest).time;
+      dateRow.append(dateCell, timeCell);
+      list.appendChild(dateRow);
+
+      group.rows.sort((a, b) => b.timestamp - a.timestamp).forEach(row => {
+        const symbolRow = document.createElement('tr');
+        symbolRow.className = 'oi-symbol-entry-row';
+        const symbolCell = document.createElement('td');
+        symbolCell.colSpan = 3;
+        symbolCell.textContent = row.symbol;
+        symbolCell.title = row.symbol;
+        const checkCell = document.createElement('td');
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.checked = this.selectedRows === null || this.selectedRows.has(row.key);
+        checkbox.setAttribute('aria-label', `Show ${row.symbol} on ${row.date}`);
+        checkbox.onchange = () => {
+          if (this.selectedRows === null) this.selectedRows = new Set(allRowKeys);
+          if (checkbox.checked) this.selectedRows.add(row.key);
+          else this.selectedRows.delete(row.key);
+          BUB.draw();
+        };
+        checkCell.appendChild(checkbox);
+        symbolRow.append(symbolCell, checkCell);
+        list.appendChild(symbolRow);
       });
-      const checkCell = document.createElement('td');
-      const checkbox = document.createElement('input');
-      checkbox.type = 'checkbox';
-      checkbox.checked = this.selectedRows === null || this.selectedRows.has(row.key);
-      checkbox.setAttribute('aria-label', `Show ${row.symbol} on ${row.date}`);
-      checkbox.onchange = () => {
-        if (this.selectedRows === null) {
-          this.selectedRows = new Set(rows.keys());
-        }
-        if (checkbox.checked) this.selectedRows.add(row.key);
-        else this.selectedRows.delete(row.key);
-        BUB.draw();
-      };
-      checkCell.appendChild(checkbox);
-      tr.appendChild(checkCell);
-      list.appendChild(tr);
     });
   },
   clear() {
