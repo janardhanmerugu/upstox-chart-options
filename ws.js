@@ -186,6 +186,7 @@ function connectWS() {
       
       // Feed to bubbles system (for CE/PE calculations)
       BUB.pushSpot5s(msg.candle);
+      OIB.updateLiveSpot(msg.candle);
       
       // Auto-scroll to latest if in live mode
       if (_atRealTime) lwChart.timeScale().scrollToRealTime();
@@ -208,6 +209,7 @@ function connectWS() {
         const chartCandle = aggCandle(msg.current_candle);
         upsertCandle(chartCandle, false);
         updateTicker(chartCandle, msg.instrument);
+        OIB.updateLiveSpot(msg.current_candle);
       }
     }
 
@@ -244,7 +246,7 @@ function connectWS() {
 // ─────────────────────────────────────────────────────────────────────────────
 // CE / PE WEBSOCKETS — separate connections feeding ce5Bucket and pe5Bucket
 // ─────────────────────────────────────────────────────────────────────────────
-function _makeOptWS(instrKey, onCandle) {
+function _makeOptWS(instrKey, onCandle, optionType) {
   if (!tokSaved || !instrKey) return null;
   const s = new WebSocket(resolvedWebSocketUrl());
   s.onopen = () => {
@@ -258,6 +260,10 @@ function _makeOptWS(instrKey, onCandle) {
       s.send(JSON.stringify({ type: 'subscribe', symbol: instrKey, interval: backendIv }));
     } else if (msg.type === 'candle') {
       onCandle(msg.candle);
+      OIB.pushLive(optionType, instrKey, msg.candle);
+    } else if (msg.type === 'tick' && msg.current_candle) {
+      onCandle(msg.current_candle);
+      OIB.pushLive(optionType, instrKey, msg.current_candle);
     }
   };
   s.onerror = () => {};
@@ -267,12 +273,12 @@ function _makeOptWS(instrKey, onCandle) {
 
 function connectCEWS(instrKey) {
   if (wsCE) { try { wsCE.close(); } catch(_){} wsCE = null; }
-  wsCE = _makeOptWS(instrKey, c => BUB.pushCE5s(c));
+  wsCE = _makeOptWS(instrKey, c => BUB.pushCE5s(c), 'CE');
 }
 
 function connectPEWS(instrKey) {
   if (wsPE) { try { wsPE.close(); } catch(_){} wsPE = null; }
-  wsPE = _makeOptWS(instrKey, c => BUB.pushPE5s(c));
+  wsPE = _makeOptWS(instrKey, c => BUB.pushPE5s(c), 'PE');
 }
 
 function sanitizeLatin1String(value) {

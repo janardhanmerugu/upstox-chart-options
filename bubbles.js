@@ -385,6 +385,35 @@ const BUB = {
 const OIB = {
   items: [],
   selectedRows: null,
+  liveEnabled: false,
+  liveOi: new Map(),
+  liveIndexClose: null,
+  updateLiveSpot(candle) {
+    if (candle?.close != null) this.liveIndexClose = Number(candle.close);
+  },
+  pushLive(optionType, instrument, candle) {
+    if (!this.liveEnabled || !instrument || !candle) return;
+    const oi = Number(candle.open_interest);
+    if (!Number.isFinite(oi)) return;
+    const previous = this.liveOi.get(instrument);
+    this.liveOi.set(instrument, oi);
+    if (previous == null || oi === previous || !Number.isFinite(this.liveIndexClose)) return;
+
+    const item = {
+      time: Number(candle.time),
+      index_close: this.liveIndexClose,
+      option_type: optionType,
+      symbol: instrument,
+      strike: null,
+      oi_change: oi - previous,
+      instrument_id: instrument,
+      live: true,
+    };
+    this.items.push(item);
+    if (this.selectedRows) this.selectedRows.add(this._rowKey(item));
+    this.updateSymbols();
+    this.draw();
+  },
   _dateTime(time) {
     const date = new Date((Number(time) + IST_OFFSET_S) * 1000);
     return {
@@ -466,6 +495,9 @@ const OIB = {
   clear() {
     this.items = [];
     this.selectedRows = null;
+    this.liveEnabled = false;
+    this.liveOi.clear();
+    this.liveIndexClose = null;
     this.updateSymbols();
     const status = document.getElementById('oi-status');
     if (status) status.textContent = `Uses the chart interval: ${ivLabel(selIv)}`;
@@ -474,6 +506,8 @@ const OIB = {
   setData(items) {
     this.items = items || [];
     this.selectedRows = null;
+    this.liveEnabled = true;
+    this.liveOi.clear();
     this.updateSymbols();
     const status = document.getElementById('oi-status');
     if (status) {
