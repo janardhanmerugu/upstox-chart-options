@@ -529,6 +529,7 @@ const OIB = {
     ctx.rect(0, 0, plotW, height);
     ctx.clip();
     const radius = Math.max(0.000001, Number(document.getElementById('oi-radius')?.value) || oiBubbleRadiusMultiplier);
+    const minOiChange = Math.max(0, Number(document.getElementById('oi-min-change')?.value) || 0);
     const maxRadius = 60;
     const defaultColors = {
       ceRise: '#C8191E',
@@ -544,6 +545,7 @@ const OIB = {
     this.items.forEach(item => {
       if ((item.option_type === 'CE' && !showCE) || (item.option_type === 'PE' && !showPE)) return;
       if (this.selectedRows && !this.selectedRows.has(this._rowKey(item))) return;
+      if (Math.abs(Number(item.oi_change) || 0) < minOiChange) return;
       const chartTime = (selIv === 5 || selIv === 15 || selIv === 30 || selIv === 60 || selIv === 300 || selIv === 900)
         ? Math.floor(item.time / selIv) * selIv
         : item.time;

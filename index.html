@@ -153,6 +153,10 @@
         <label for="oi-radius">Bubble Radius</label>
         <input id="oi-radius" class="oi-input" type="number" min="0.001" max="1" step="0.001" value="0.2" oninput="oiBubbleRadiusMultiplier=Math.max(0.001,Number(this.value)||0.001); BUB.draw()">
       </div>
+      <div class="oi-control-row">
+        <label for="oi-min-change">Min OI Change</label>
+        <input id="oi-min-change" class="oi-input" type="number" min="0" step="1" value="0" oninput="BUB.draw()">
+      </div>
       <div class="oi-checks">
         <label><input id="oi-ce" type="checkbox" checked onchange="BUB.draw()"> CE</label>
         <label><input id="oi-pe" type="checkbox" checked onchange="BUB.draw()"> PE</label>
