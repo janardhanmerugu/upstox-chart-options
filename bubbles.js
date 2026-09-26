@@ -9,6 +9,8 @@ const BUB = {
   canvas:  null,
   ctx:     null,
   items:   [],      // [{time, open, ratio, optType:'CE'|'PE', optDelta, spotDelta, ...}]
+  strikeRows: new Map(),
+  selectedStrikes: null,
   MAX:     6000,
   MIN_R:   2,
   hovered: null,
@@ -101,9 +103,93 @@ const BUB = {
       optDelta, spotDelta, ratio, optType, strike, strikeLabel,
     });
     if (this.items.length > this.MAX) this.items.shift();
+    this.updateStrikeRows();
     const el = document.getElementById('s-bubs');
     if (el) el.textContent = this.items.length;
     this.draw();
+  },
+
+  _strikeKey(item) {
+    return String(item.strikeLabel ?? item.instrument ?? item.strike ?? item.optType ?? '');
+  },
+
+  _dateTime(time) {
+    const date = new Date((Number(time) + IST_OFFSET_S) * 1000);
+    return {
+      date: date.toISOString().slice(0, 10),
+      time: date.toISOString().slice(11, 19),
+    };
+  },
+
+  _strikeRowKey(item) {
+    return `${this._dateTime(item.time).date}|${this._strikeKey(item)}`;
+  },
+
+  updateStrikeRows() {
+    const list = document.getElementById('bub-strikes-list');
+    if (!list) return;
+    const groups = new Map();
+    this.items.forEach(item => {
+      const dateTime = this._dateTime(item.time);
+      const strikeKey = this._strikeKey(item);
+      if (!strikeKey) return;
+      if (!groups.has(dateTime.date)) {
+        groups.set(dateTime.date, { date: dateTime.date, latest: Number(item.time), rows: new Map() });
+      }
+      const group = groups.get(dateTime.date);
+      group.latest = Math.max(group.latest, Number(item.time));
+      const key = `${dateTime.date}|${strikeKey}`;
+      if (!group.rows.has(key)) group.rows.set(key, strikeKey.replace(/_/g, ' '));
+    });
+    const rows = new Map();
+    groups.forEach(group => group.rows.forEach((label, key) => rows.set(key, label)));
+    if (this.selectedStrikes) {
+      rows.forEach((_, key) => {
+        if (!this.strikeRows.has(key)) this.selectedStrikes.add(key);
+      });
+    }
+    this.strikeRows = rows;
+    list.textContent = '';
+    if (!rows.size) {
+      const empty = document.createElement('tr');
+      empty.innerHTML = '<td colspan="4">—</td>';
+      list.appendChild(empty);
+      return;
+    }
+    [...groups.values()].sort((a, b) => b.latest - a.latest).forEach(group => {
+      const dateRow = document.createElement('tr');
+      dateRow.className = 'oi-symbol-date-row';
+      const dateCell = document.createElement('td');
+      dateCell.colSpan = 3;
+      dateCell.textContent = group.date;
+      const timeCell = document.createElement('td');
+      timeCell.textContent = this._dateTime(group.latest).time;
+      dateRow.append(dateCell, timeCell);
+      list.appendChild(dateRow);
+
+      [...group.rows.entries()].sort((a, b) => a[1].localeCompare(b[1])).forEach(([key, label]) => {
+        const row = document.createElement('tr');
+        row.className = 'oi-symbol-entry-row';
+        const strikeCell = document.createElement('td');
+        strikeCell.colSpan = 3;
+        strikeCell.textContent = label;
+        strikeCell.title = label;
+        const checkCell = document.createElement('td');
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.checked = this.selectedStrikes === null || this.selectedStrikes.has(key);
+        checkbox.setAttribute('aria-label', `Show ${label} bubbles on ${group.date}`);
+        checkbox.onchange = () => {
+          if (this.selectedStrikes === null) this.selectedStrikes = new Set(this.strikeRows.keys());
+          if (checkbox.checked) this.selectedStrikes.add(key);
+          else this.selectedStrikes.delete(key);
+          this.draw();
+        };
+        checkCell.appendChild(checkbox);
+        row.append(strikeCell, checkCell);
+        list.appendChild(row);
+      });
+    });
   },
 
   // ── Called with each raw candle from CE feed ──────────────────────────────
@@ -190,6 +276,7 @@ const BUB = {
       // Per-type min ratio filter
       const minRatio = b.optType === 'CE' ? bubMinRatioCE : bubMinRatioPE;
       if (Math.abs(b.ratio) < minRatio) { b._x = undefined; return; }
+      if (this.selectedStrikes && !this.selectedStrikes.has(this._strikeRowKey(b))) { b._x = undefined; return; }
 
       // Spot delta magnitude filter — only apply when spotDelta is actually stored
       if (b.spotDelta > 0 && b.spotDelta < bubSpotDeltaMin) { b._x = undefined; return; }
@@ -370,6 +457,9 @@ const BUB = {
   clear() {
     this.items   = [];
     this.hovered = null;
+    this.strikeRows = new Map();
+    this.selectedStrikes = null;
+    this.updateStrikeRows();
     if (typeof OIB !== 'undefined') OIB.items = [];
     this._hideTip();
     if (this.ctx && this.canvas)

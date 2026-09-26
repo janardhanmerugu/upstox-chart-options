@@ -242,6 +242,7 @@ function mergeDeltaChangeHistory(bubbles) {
   });
 
   while (BUB.items.length > BUB.MAX) BUB.items.shift();
+  BUB.updateStrikeRows();
   const count = document.getElementById('s-bubs');
   if (count) count.textContent = BUB.items.length;
   BUB.draw();
