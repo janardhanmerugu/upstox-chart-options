@@ -196,6 +196,8 @@ function loadDeltaChangeHistory() {
   }
 
   const requestId = ++deltaChangeHistoryRequestId;
+  const minRatioCE = Math.max(0, Number(document.getElementById('bub-minrat-ce').value) || 0);
+  const minRatioPE = Math.max(0, Number(document.getElementById('bub-minrat-pe').value) || 0);
   const status = document.getElementById('delta-history-status');
   if (status) status.textContent = `Loading ${startDate} to ${endDate}…`;
   ws.send(JSON.stringify({
@@ -203,6 +205,8 @@ function loadDeltaChangeHistory() {
     instrument: indexKey,
     start_date: startDate,
     end_date: endDate,
+    min_ratio_ce: minRatioCE,
+    min_ratio_pe: minRatioPE,
     request_id: requestId,
   }));
 }
