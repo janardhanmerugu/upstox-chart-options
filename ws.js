@@ -80,6 +80,18 @@ function connectWS() {
     else if (t === 'open_interest_data') {
       OIB.setData(msg.bubbles || []);
     }
+    else if (t === 'delta_change_history') {
+      if (msg.instrument !== OPT_INDEX_KEY[optUL] ||
+          msg.request_id !== deltaChangeHistoryRequestId) return;
+      const added = mergeDeltaChangeHistory(msg.bubbles || []);
+      const status = document.getElementById('delta-history-status');
+      if (status) status.textContent = `${added} stored bubbles loaded.`;
+    }
+    else if (t === 'delta_change_history_error') {
+      if (msg.request_id !== deltaChangeHistoryRequestId) return;
+      const status = document.getElementById('delta-history-status');
+      if (status) status.textContent = msg.message || 'Failed to load stored Delta Change bubbles.';
+    }
 
     // ── INITIAL DATA LOAD (called when new symbol subscribed) ────────────
     else if (t === 'init') {

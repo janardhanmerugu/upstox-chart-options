@@ -25,6 +25,12 @@ window.addEventListener('DOMContentLoaded', () => {
   const dateValue = date => date.toISOString().slice(0, 10);
   document.getElementById('oi-from').value = dateValue(weekAgo);
   document.getElementById('oi-to').value = dateValue(today);
+  const localDateValue = date => {
+    const localDate = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
+    return localDate.toISOString().slice(0, 10);
+  };
+  document.getElementById('delta-history-from').value = localDateValue(weekAgo);
+  document.getElementById('delta-history-to').value = localDateValue(today);
 
   // ── Restore token from sessionStorage (survives refresh, clears on tab close) ──
   const defaultToken = 'eyJ0eXAiOiJKV1QiLCJrZXlfaWQiOiJza192MS4wIiwiYWxnIjoiSFMyNTYifQ.eyJzdWIiOiJCTTY3OTIiLCJqdGkiOiI2YTMwYzU3ZmY4NWUzZTY2MTgwNmM4N2UiLCJpc011bHRpQ2xpZW50IjpmYWxzZSwiaXNQbHVzUGxhbiI6dHJ1ZSwiaXNFeHRlbmRlZCI6dHJ1ZSwiaWF0IjoxNzgxNTgxMTgzLCJpc3MiOiJ1ZGFwaS1nYXRld2F5LXNlcnZpY2UiLCJleHAiOjE4MTMxODMyMDB9.XujS7CgYRW1uCm_zhdhHza9rrCD1BBE4vG03lPglqz8';

@@ -2,6 +2,8 @@
 // UI CONTROLS and BUTTONS 
 // ─────────────────────────────────────────────────────────────────────────────
 
+let deltaChangeHistoryRequestId = 0;
+
 // ──── Bubbles toggle ────
 function toggleBubbles() {
   bubOn = !bubOn;
@@ -170,6 +172,76 @@ function loadOpenInterest() {
     interval: chartIntervalSeconds(),
     option_types: optionTypes,
   }));
+}
+
+function loadDeltaChangeHistory() {
+  if (!ws || ws.readyState !== WebSocket.OPEN || !tokSaved) {
+    showAlert('err', '⚠ Connect and authenticate with the server first.');
+    return;
+  }
+  const startDate = document.getElementById('delta-history-from').value;
+  const endDate = document.getElementById('delta-history-to').value;
+  if (!startDate || !endDate || startDate > endDate) {
+    showAlert('warn', '⚠ Choose a valid Delta Change history date range.');
+    return;
+  }
+  const indexKey = OPT_INDEX_KEY[optUL];
+  if (!indexKey) {
+    showAlert('warn', '⚠ Select an underlying first.');
+    return;
+  }
+  if (selSym !== indexKey || !lwChart) {
+    selSym = indexKey;
+    loadSym();
+  }
+
+  const requestId = ++deltaChangeHistoryRequestId;
+  const status = document.getElementById('delta-history-status');
+  if (status) status.textContent = `Loading ${startDate} to ${endDate}…`;
+  ws.send(JSON.stringify({
+    type: 'load_delta_change_history',
+    instrument: indexKey,
+    start_date: startDate,
+    end_date: endDate,
+    request_id: requestId,
+  }));
+}
+
+function mergeDeltaChangeHistory(bubbles) {
+  if (!Array.isArray(bubbles)) return 0;
+
+  BUB.items = BUB.items.filter(item => !item._deltaHistory);
+  const keyOf = item => `${item.instrument || item.strike || item.strikeLabel || ''}|${item.optType}|${item.time}`;
+  const seen = new Set(BUB.items.map(keyOf));
+  let added = 0;
+
+  bubbles.forEach(raw => {
+    if (!raw || !['CE', 'PE'].includes(raw.optType)) return;
+    const item = {
+      ...raw,
+      time: Number(raw.time),
+      open: Number(raw.open),
+      spotClose: Number(raw.spotClose),
+      optDelta: Number(raw.optDelta),
+      spotDelta: Number(raw.spotDelta),
+      ratio: Number(raw.ratio),
+      _deltaHistory: true,
+    };
+    if (!Number.isFinite(item.time) || !Number.isFinite(item.open) ||
+        !Number.isFinite(item.spotClose) || !Number.isFinite(item.optDelta) ||
+        !Number.isFinite(item.spotDelta) || !Number.isFinite(item.ratio)) return;
+    const key = keyOf(item);
+    if (seen.has(key)) return;
+    seen.add(key);
+    BUB.items.push(item);
+    added++;
+  });
+
+  while (BUB.items.length > BUB.MAX) BUB.items.shift();
+  const count = document.getElementById('s-bubs');
+  if (count) count.textContent = BUB.items.length;
+  BUB.draw();
+  return added;
 }
 
 function toggleOpenInterest() {

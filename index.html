@@ -222,6 +222,12 @@
     <!-- ── DELTA CHANGE ── -->
     <div class="ds">
       <div class="ds-title"><span class="ds-title-icon">🫧</span><span>Delta Change</span></div>
+      <div class="oi-control-grid">
+        <label>History from<input id="delta-history-from" class="oi-input" type="date"></label>
+        <label>To<input id="delta-history-to" class="oi-input" type="date"></label>
+      </div>
+      <button class="opt-load-btn" id="delta-history-load" type="button" onclick="loadDeltaChangeHistory()">Load Stored Delta Bubbles</button>
+      <div id="delta-history-status" class="tip">Choose dates to load stored option bubbles.</div>
       <div class="bub-cfg">
 
         <!-- Spot Delta Min -->
