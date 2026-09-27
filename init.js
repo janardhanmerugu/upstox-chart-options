@@ -29,6 +29,8 @@ window.addEventListener('DOMContentLoaded', () => {
     const localDate = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
     return localDate.toISOString().slice(0, 10);
   };
+  document.getElementById('index-history-from').value = localDateValue(weekAgo);
+  document.getElementById('index-history-to').value = localDateValue(today);
   document.getElementById('delta-history-from').value = localDateValue(weekAgo);
   document.getElementById('delta-history-to').value = localDateValue(today);
 

@@ -267,8 +267,13 @@ function loadSym() {
   aggBucket = null;
   BUB.clear();
   const backendIv = (selIv === 5 || selIv === 15 || selIv === 30 || selIv === 60 || selIv === 300 || selIv === 900) ? 1 : selIv;
+  const startDate = document.getElementById('index-history-from')?.value;
+  const endDate = document.getElementById('index-history-to')?.value;
   historyReadyForSubscribe = false;
-  ws.send(JSON.stringify({ type: 'load_symbol_history', instrument: selSym, interval: backendIv }));
+  ws.send(JSON.stringify({
+    type: 'load_symbol_history', instrument: selSym, interval: backendIv,
+    start_date: startDate, end_date: endDate,
+  }));
 }
 
 // ──── Line Drawing ────
@@ -329,6 +334,12 @@ function optPickUL(ul, btn) {
 function loadIndexChart() {
   if (!tokSaved) { showAlert('err','⚠ Save your Access Token first.'); return; }
   if (!ws || ws.readyState !== WebSocket.OPEN) { showAlert('err','⚠ Not connected. Click Connect.'); return; }
+
+  const startDate = document.getElementById('index-history-from').value;
+  const endDate = document.getElementById('index-history-to').value;
+  if (!startDate || !endDate || startDate > endDate) {
+    showAlert('warn','⚠ Choose a valid index history date range.'); return;
+  }
 
   const indexKey = OPT_INDEX_KEY[optUL];
   if (!indexKey) { showAlert('warn','⚠ Pick an index first.'); return; }
