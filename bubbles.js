@@ -639,9 +639,7 @@ const OIB = {
       const chartTime = (selIv === 5 || selIv === 15 || selIv === 30 || selIv === 60 || selIv === 300 || selIv === 900)
         ? Math.floor(item.time / selIv) * selIv
         : item.time;
-      const chartCandle = cData[cMap[chartTime + IST_OFFSET_S]];
-      const indexPrice = chartCandle?.close ?? item.index_close;
-      const point = BUB.toXY(chartTime, indexPrice);
+      const point = BUB.toXY(chartTime, item.index_close);
       if (!point) return;
       const bubbleRadius = Math.min(maxRadius, Math.max(2, Math.sqrt(Math.abs(item.oi_change)) * radius));
       if (point.x + bubbleRadius < 0 || point.x - bubbleRadius > width ||
