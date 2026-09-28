@@ -213,8 +213,7 @@
     <!-- ── CHART TOOLS ── -->
     <div class="ds">
       <div class="ds-title"><span class="ds-title-icon">🛠</span><span>Chart Tools</span></div>
-      <div class="tool-row col2">
-        <button class="tbtn" id="delta-drawer-btn" type="button" onclick="toggleRightDrawer()" title="Toggle Delta Change drawer">Delta Change</button>
+      <div class="tool-row">
         <button class="tbtn" id="xhair-btn"   onclick="toggleCrosshair()">✥ Free</button>
       </div>
       <div class="tool-row" style="flex-direction:column;gap:.25rem;font-size:.6rem;color:var(--muted);line-height:1.8;padding:.1rem 0">
@@ -260,7 +259,7 @@
           <span style="font-size:.58rem;color:var(--muted)">0.1× to 10×</span>
         </div>
 
-        <!-- Opacity (sidebar only) -->
+        <!-- Bubble opacity -->
         <div class="bub-cfg-row">
           <span class="bub-cfg-label">Opacity</span>
           <div class="bub-opacity-row" style="flex:1">
@@ -270,6 +269,10 @@
                 BUB.draw()"/>
             <span id="bub-opacity-val" class="bub-opacity-val">60%</span>
           </div>
+        </div>
+        <div class="bub-cfg-row">
+          <span class="bub-cfg-label">Bubbles</span>
+          <button class="tbtn" id="bubBtn" type="button" onclick="toggleBubbles()">● Bubbles ON</button>
         </div>
 
         <!-- Preset dropdown -->

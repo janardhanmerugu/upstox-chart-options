@@ -4,6 +4,15 @@
 
 let deltaChangeHistoryRequestId = 0;
 
+// ──── Bubbles toggle ────
+function toggleBubbles() {
+  bubOn = !bubOn;
+  const btn = document.getElementById('bubBtn');
+  btn.textContent = bubOn ? '● Bubbles ON' : '○ Bubbles OFF';
+  btn.classList.toggle('off', !bubOn);
+  BUB.draw();
+}
+
 // ──── Crosshair / magnet mode ────
 let crosshairMagnet = false;
 function toggleCrosshair() {
