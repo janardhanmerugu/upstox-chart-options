@@ -198,7 +198,6 @@ function connectWS() {
       
       // Feed to bubbles system (for CE/PE calculations)
       BUB.pushSpot5s(msg.candle);
-      OIB.updateLiveSpot(msg.candle);
       
       // Auto-scroll to latest if in live mode
       if (_atRealTime) lwChart.timeScale().scrollToRealTime();
@@ -210,6 +209,7 @@ function connectWS() {
     else if (t === 'tick') {
       if (!lwChart && !initCharts()) return;
       updateLTP(msg.ltp);  // Update single price value
+      OIB.updateLivePrice(msg.ltp);
       autoStrikeCheck(msg.ltp);  // Auto strike re-select if enabled
       
       // Update timestamp
@@ -221,7 +221,6 @@ function connectWS() {
         const chartCandle = aggCandle(msg.current_candle);
         upsertCandle(chartCandle, false);
         updateTicker(chartCandle, msg.instrument);
-        OIB.updateLiveSpot(msg.current_candle);
       }
     }
 
