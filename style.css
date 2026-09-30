@@ -10,8 +10,9 @@
 }
 
 /* ══ RESET + BODY ══════════════════════════════════════════════════════════ */
-body{font-family:'JetBrains Mono',monospace;background:var(--bg);color:var(--text);height:100vh;display:flex;flex-direction:column;overflow:hidden}
-#app-shell{display:flex;flex:1;min-height:0;overflow:hidden;position:relative}
+html,body{height:100%;min-height:100%}
+body{font-family:'JetBrains Mono',monospace;background:var(--bg);color:var(--text);min-height:100dvh;display:flex;flex-direction:column;overflow:hidden;padding-bottom:env(safe-area-inset-bottom,0px)}
+#app-shell{display:flex;flex:1;min-height:0;overflow:hidden;position:relative;padding-bottom:env(safe-area-inset-bottom,0px)}
 
 /* ══ SCROLLBAR ═════════════════════════════════════════════════════════════ */
 ::-webkit-scrollbar{width:3px;height:3px}
@@ -36,9 +37,10 @@ body{font-family:'JetBrains Mono',monospace;background:var(--bg);color:var(--tex
   left:300px;z-index:100;
   background:#0d1828;border:1px solid var(--border);border-left:none;
   color:var(--accent);cursor:pointer;
-  padding:.5rem .22rem;border-radius:0 8px 8px 0;font-size:.8rem;line-height:1;
+  padding:.5rem .45rem;border-radius:0 8px 8px 0;font-size:.9rem;line-height:1;
   transition:left .28s cubic-bezier(.4,0,.2,1),background .15s;
-  display:flex;align-items:center;
+  display:flex;align-items:center;justify-content:center;
+  height:52px;min-width:24px;touch-action:manipulation;
 }
 #drawer-toggle:hover{background:var(--accent);color:#000}
 #drawer-toggle.collapsed{left:0}
@@ -78,9 +80,45 @@ body{font-family:'JetBrains Mono',monospace;background:var(--bg);color:var(--tex
 .bubble-filter-row .bc-num{width:62px;justify-self:end;background:#070d16;text-align:center}
 .bubble-filter-row .bc-val{min-width:34px;text-align:right;color:var(--accent);font-size:.6rem}
 #bubble-filter-controls #bub-hover-info{margin:.05rem 0 0;color:var(--accent);font-size:.59rem;min-height:14px;text-align:right}
-#right-drawer-toggle{position:absolute;top:50%;right:312px;z-index:100;background:#0d1828;border:1px solid var(--border);border-right:none;color:var(--accent);cursor:pointer;padding:.5rem .22rem;border-radius:8px 0 0 8px;font-size:.8rem;line-height:1;transition:right .28s cubic-bezier(.4,0,.2,1),background .15s;display:flex;align-items:center}
+#right-drawer-toggle{
+  position:absolute;top:50%;right:312px;z-index:100;background:#0d1828;border:1px solid var(--border);border-right:none;color:var(--accent);cursor:pointer;
+  padding:.5rem .45rem;border-radius:8px 0 0 8px;font-size:.9rem;line-height:1;transition:right .28s cubic-bezier(.4,0,.2,1),background .15s;
+  display:flex;align-items:center;justify-content:center;height:52px;min-width:24px;touch-action:manipulation;
+}
 #right-drawer-toggle:hover{background:var(--accent);color:#000}
 #right-drawer-toggle.collapsed{right:0}
+
+@media (max-width: 980px) {
+  #side-drawer{width:250px;min-width:250px;max-width:250px}
+  #drawer-toggle{left:250px}
+  #right-drawer{width:280px;min-width:280px;max-width:280px}
+  #right-drawer-toggle{right:280px}
+}
+
+@media (max-width: 760px) {
+  body{touch-action:manipulation;padding-bottom:calc(env(safe-area-inset-bottom, 0px) + 12px)}
+  #app-shell{padding-bottom:calc(env(safe-area-inset-bottom, 0px) + 12px)}
+  #side-drawer{
+    position:absolute;top:0;left:0;bottom:0;width:min(82vw,300px);min-width:min(82vw,300px);max-width:min(82vw,300px);box-shadow:12px 0 32px rgba(0,0,0,.38);z-index:90
+  }
+  #side-drawer.collapsed{transform:translateX(-110%);width:0;min-width:0}
+  #drawer-toggle{left:0;top:50%;transform:translateY(-50%);height:56px;min-width:28px;padding:.45rem .55rem}
+  #right-drawer{
+    position:absolute;top:0;right:0;bottom:0;width:min(84vw,320px);min-width:min(84vw,320px);max-width:min(84vw,320px);box-shadow:-12px 0 32px rgba(0,0,0,.38);z-index:90
+  }
+  #right-drawer.collapsed{transform:translateX(120%);width:0;min-width:0}
+  #right-drawer-toggle{right:0;top:50%;transform:translateY(-50%);height:56px;min-width:28px;padding:.45rem .55rem}
+  #info-bar{overflow-x:auto;-webkit-overflow-scrolling:touch;flex-wrap:nowrap;padding:.3rem .45rem}
+  #chart-wrap{padding:.25rem}
+}
+
+@media (max-width: 520px) {
+  #sidebar-brand{font-size:.82rem}
+  #sidebar-conn{flex-wrap:wrap}
+  #sidebar-conn .hbtn{flex:1 1 100%}
+  #opt-load-btn{padding:.38rem .7rem}
+  .ivbtn{padding:.25rem .45rem}
+}
 
 /* ══ SECTION BLOCK (reusable drawer section wrapper) ═══════════════════════ */
 .ds{border-bottom:1px solid var(--border);padding:.65rem .85rem;display:flex;flex-direction:column;gap:.45rem}

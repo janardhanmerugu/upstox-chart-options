@@ -111,6 +111,40 @@ function toggleDrawer() {
   }, 280);
 }
 
+function applyResponsiveLayout() {
+  const mobile = window.matchMedia('(max-width: 760px)').matches;
+  const drawer = document.getElementById('side-drawer');
+  const drawerToggle = document.getElementById('drawer-toggle');
+  const rightDrawer = document.getElementById('right-drawer');
+  const rightDrawerToggle = document.getElementById('right-drawer-toggle');
+
+  if (!drawer || !drawerToggle || !rightDrawer || !rightDrawerToggle) return;
+
+  if (mobile) {
+    drawer.classList.add('collapsed');
+    drawerToggle.classList.add('collapsed');
+    drawerToggle.textContent = '›';
+    rightDrawer.classList.add('collapsed');
+    rightDrawerToggle.classList.add('collapsed');
+    rightDrawerToggle.textContent = '‹';
+  } else {
+    drawer.classList.remove('collapsed');
+    drawerToggle.classList.remove('collapsed');
+    drawerToggle.textContent = '‹';
+    rightDrawer.classList.remove('collapsed');
+    rightDrawerToggle.classList.remove('collapsed');
+    rightDrawerToggle.textContent = '›';
+  }
+
+  setTimeout(() => {
+    const con = document.getElementById('chart-con');
+    if (lwChart && con) {
+      lwChart.resize(Math.max(con.clientWidth, 200), Math.max(con.clientHeight, 100));
+    }
+    if (typeof BUB !== 'undefined') BUB.draw();
+  }, 50);
+}
+
 function toggleRightDrawer() {
   const drawer = document.getElementById('right-drawer');
   const toggle = document.getElementById('right-drawer-toggle');
@@ -125,6 +159,9 @@ function toggleRightDrawer() {
     }
   }, 280);
 }
+
+window.addEventListener('resize', applyResponsiveLayout);
+document.addEventListener('DOMContentLoaded', applyResponsiveLayout);
 
 // ──── Interval picker ────
 function pickIv(v) {
