@@ -9,6 +9,8 @@ const BUB = {
   canvas:  null,
   ctx:     null,
   items:   [],      // [{time, open, ratio, optType:'CE'|'PE', optDelta, spotDelta, ...}]
+  ceBuckets: new Map(),
+  peBuckets: new Map(),
   strikeRows: new Map(),
   selectedStrikes: null,
   MAX:     6000,
@@ -62,7 +64,7 @@ const BUB = {
 
   // ── CE bubble: ratio = ceDelta / spotAbs  →  +ve = premium rose, −ve = premium fell
   // ── color: ratio > 0 → green, ratio ≤ 0 → red
-  _tryEmitCE(ceBucket, spotBucket) {
+  _tryEmitCE(ceBucket, spotBucket, instrumentKey) {
     if (!ceBucket || !spotBucket) return;
     if (ceBucket.time !== spotBucket.time) return;
     const ceDelta   = ceBucket.close - ceBucket.open;
@@ -72,11 +74,11 @@ const BUB = {
     const ratio = ceDelta / spotAbs;
     if (Math.abs(ratio) < bubMinRatioCE) return;
     if (spotDelta < bubSpotDeltaMin) return;
-    this._pushItem(spotBucket, ceDelta, spotDelta, ratio, 'CE');
+    this._pushItem(spotBucket, ceDelta, spotDelta, ratio, 'CE', instrumentKey);
   },
 
   // ── PE bubble: color: ratio > 0 → red (premium rose = bearish), ratio ≤ 0 → green
-  _tryEmitPE(peBucket, spotBucket) {
+  _tryEmitPE(peBucket, spotBucket, instrumentKey) {
     if (!peBucket || !spotBucket) return;
     if (peBucket.time !== spotBucket.time) return;
     const peDelta   = peBucket.close - peBucket.open;
@@ -86,15 +88,16 @@ const BUB = {
     const ratio = peDelta / spotAbs;
     if (Math.abs(ratio) < bubMinRatioPE) return;
     if (spotDelta < bubSpotDeltaMin) return;
-    this._pushItem(spotBucket, peDelta, spotDelta, ratio, 'PE');
+    this._pushItem(spotBucket, peDelta, spotDelta, ratio, 'PE', instrumentKey);
   },
 
-  _pushItem(spotBucket, optDelta, spotDelta, ratio, optType) {
-    const strike      = optType === 'CE' ? selCEKey    : selPEKey;
-    const strikePrice = optType === 'CE' ? selCEStrike : selPEStrike;
+  _pushItem(spotBucket, optDelta, spotDelta, ratio, optType, instrumentKey) {
+    const selected = optionSubscriptions.find(item => item.key === instrumentKey);
+    const strike = instrumentKey || (optType === 'CE' ? selCEKey : selPEKey);
+    const strikePrice = selected?.strike ?? (optType === 'CE' ? selCEStrike : selPEStrike);
     // strikeLabel is what gets used as the filename: e.g. "NIFTY_22900_CE"
     const strikeLabel = strikePrice
-      ? `${optUL}_${strikePrice}_${optType}`
+      ? `${optUL}_${selected?.expiry || ''}_${strikePrice}_${optType}`
       : strike.replace(/[|/ ]/g, '_');
     this.items.push({
       time:      spotBucket.time,
@@ -193,17 +196,21 @@ const BUB = {
   },
 
   // ── Called with each raw candle from CE feed ──────────────────────────────
-  pushCE5s(raw) {
+  pushCE5s(raw, instrumentKey = '__legacy_CE__') {
     if (!raw) return;
-    const flushed = this._acc5s(ce5Bucket, raw);
-    if (flushed) { this._tryEmitCE(flushed, spot5Bucket._last); ce5Bucket._last = flushed; }
+    const bucket = this.ceBuckets.get(instrumentKey) || { cur: null, _last: null };
+    const flushed = this._acc5s(bucket, raw);
+    if (flushed) { this._tryEmitCE(flushed, spot5Bucket._last, instrumentKey); bucket._last = flushed; }
+    this.ceBuckets.set(instrumentKey, bucket);
   },
 
   // ── Called with each raw candle from PE feed ──────────────────────────────
-  pushPE5s(raw) {
+  pushPE5s(raw, instrumentKey = '__legacy_PE__') {
     if (!raw) return;
-    const flushed = this._acc5s(pe5Bucket, raw);
-    if (flushed) { this._tryEmitPE(flushed, spot5Bucket._last); pe5Bucket._last = flushed; }
+    const bucket = this.peBuckets.get(instrumentKey) || { cur: null, _last: null };
+    const flushed = this._acc5s(bucket, raw);
+    if (flushed) { this._tryEmitPE(flushed, spot5Bucket._last, instrumentKey); bucket._last = flushed; }
+    this.peBuckets.set(instrumentKey, bucket);
   },
 
   // ── Called with each raw candle from SPOT feed ────────────────────────────
@@ -211,10 +218,20 @@ const BUB = {
     if (!raw) return;
     const flushed = this._acc5s(spot5Bucket, raw);
     if (flushed) {
-      this._tryEmitCE(ce5Bucket._last, flushed);
-      this._tryEmitPE(pe5Bucket._last, flushed);
+      this.ceBuckets.forEach((bucket, instrumentKey) => this._tryEmitCE(bucket._last, flushed, instrumentKey));
+      this.peBuckets.forEach((bucket, instrumentKey) => this._tryEmitPE(bucket._last, flushed, instrumentKey));
       spot5Bucket._last = flushed;
     }
+  },
+
+  clearOptionBucket(optionType, instrumentKey) {
+    const buckets = optionType === 'CE' ? this.ceBuckets : this.peBuckets;
+    buckets.delete(instrumentKey);
+  },
+
+  clearOptionBuckets() {
+    this.ceBuckets.clear();
+    this.peBuckets.clear();
   },
 
   // ── Map (time, price) → canvas pixel ──────────────────────────────────────
@@ -466,8 +483,7 @@ const BUB = {
       this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
     const el = document.getElementById('s-bubs');
     if (el) el.textContent = '0';
-    ce5Bucket   = { cur: null, _last: null };
-    pe5Bucket   = { cur: null, _last: null };
+    this.clearOptionBuckets();
     spot5Bucket = { cur: null, _last: null };
   },
 };

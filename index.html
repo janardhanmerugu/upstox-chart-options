@@ -96,38 +96,14 @@
         <div id="opt-strikes"></div>
       </div>
 
-      <!-- Selected info card -->
+      <!-- Active option subscriptions -->
       <div id="opt-info-row" style="display:none">
         <div id="opt-info-strip">
-          <div style="font-size:.58rem;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:.1rem">Selected Strikes</div>
-          <div id="oi-ce-wrap" style="display:none">
-            <div class="oi-row">
-              <div class="oi-chip">
-                <span style="color:var(--ce);font-size:.7rem">▲</span>
-                <span class="oi-lbl">CE</span>
-                <span class="oi-val oi-ce" id="oi-ce-strike">—</span>
-              </div>
-              <div class="oi-chip">
-                <span class="oi-lbl">Exp</span>
-                <span class="oi-val" id="oi-ce-expiry" style="font-size:.63rem">—</span>
-              </div>
-            </div>
-            <div style="font-size:.56rem;color:var(--muted);margin-top:.15rem;padding:0 .1rem" id="oi-ce-key">—</div>
+          <div class="opt-subscriptions-heading">
+            <span>Live option instruments</span>
+            <span id="opt-subscription-count">0 / 4</span>
           </div>
-          <div id="oi-pe-wrap" style="display:none;margin-top:.25rem">
-            <div class="oi-row">
-              <div class="oi-chip">
-                <span style="color:var(--pe);font-size:.7rem">▼</span>
-                <span class="oi-lbl">PE</span>
-                <span class="oi-val oi-pe" id="oi-pe-strike">—</span>
-              </div>
-              <div class="oi-chip">
-                <span class="oi-lbl">Exp</span>
-                <span class="oi-val" id="oi-pe-expiry" style="font-size:.63rem">—</span>
-              </div>
-            </div>
-            <div style="font-size:.56rem;color:var(--muted);margin-top:.15rem;padding:0 .1rem" id="oi-pe-key">—</div>
-          </div>
+          <div id="opt-subscribed-list" aria-live="polite"></div>
         </div>
       </div>
     </div>

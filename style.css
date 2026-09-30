@@ -290,6 +290,18 @@ body{font-family:'JetBrains Mono',monospace;background:var(--bg);color:var(--tex
   display:inline-flex;align-items:center;gap:.3rem;
   background:#0d1525;border-radius:5px;padding:.2rem .5rem;
 }
+.opt-subscriptions-heading{display:flex;justify-content:space-between;gap:.5rem;color:var(--muted);font-size:.58rem;text-transform:uppercase}
+#opt-subscription-count{color:var(--accent);font-family:'JetBrains Mono',monospace}
+#opt-subscribed-list{display:flex;flex-direction:column;gap:.3rem;min-width:0}
+.opt-subscription-row{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:.4rem;padding:.35rem .4rem;background:#0d1525;border:1px solid var(--border);border-radius:5px}
+.opt-subscription-details{display:flex;flex-direction:column;gap:.12rem;min-width:0}
+.opt-subscription-title{font-size:.65rem;font-weight:700;white-space:nowrap}
+.opt-subscription-title.ce{color:var(--ce)}
+.opt-subscription-title.pe{color:var(--pe)}
+.opt-subscription-key{color:var(--muted);font:.53rem 'JetBrains Mono',monospace;overflow-wrap:anywhere}
+.opt-unsubscribe-btn{font-size:.57rem;padding:.25rem .4rem;border:1px solid var(--border);border-radius:4px;background:transparent;color:var(--muted);cursor:pointer;white-space:nowrap}
+.opt-unsubscribe-btn:hover{border-color:var(--pe);color:var(--pe)}
+.opt-subscriptions-empty{font-size:.6rem;color:var(--muted);padding:.25rem 0}
 
 /* ══ SYM / INTERVAL / TOOLS SECTION ═══════════════════════════════════════ */
 #sym-panel{

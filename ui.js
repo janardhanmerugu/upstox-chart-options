@@ -422,6 +422,7 @@ function optBuildStrikes() {
     ceBtn.className   = 'ce-btn';
     ceBtn.textContent = s.strike;
     ceBtn.title       = `CE  ${s.ce_key}`;
+    ceBtn.dataset.instrumentKey = s.ce_key;
     ceBtn.onclick     = () => optSelectStrike(s.strike, 'CE', s.ce_key, ceBtn);
 
     const lbl = document.createElement('div');
@@ -433,6 +434,7 @@ function optBuildStrikes() {
     peBtn.className   = 'pe-btn';
     peBtn.textContent = s.strike;
     peBtn.title       = `PE  ${s.pe_key}`;
+    peBtn.dataset.instrumentKey = s.pe_key;
     peBtn.onclick     = () => optSelectStrike(s.strike, 'PE', s.pe_key, peBtn);
 
     row.appendChild(ceBtn);
@@ -452,38 +454,26 @@ function optBuildStrikes() {
   document.getElementById('opt-strikes-row').style.display = 'flex';
   document.getElementById('opt-chain-status').textContent  =
     `✅ ${sub.length} strikes loaded  |  Spot: ${spot ? spot.toFixed(2) : '—'}`;
+  renderOptionSubscriptions();
 }
 
-function optSelectStrike(strike, optType, instrKey, btn) {
+function optSelectStrike(strike, optType, instrKey, btn, replaceOldest = false) {
   if (!instrKey) { showAlert('warn','⚠ No instrument key for this strike.'); return; }
   const expiry = document.getElementById('opt-expiry').value;
+  const subscription = subscribeOptionInstrument({
+    key: instrKey, optionType: optType, strike, expiry, replaceOldest,
+  });
+  if (!subscription) return;
+  BUB.clearOptionBucket(optType, instrKey);
+  if (btn) btn.classList.add('active');
 
   if (optType === 'CE') {
-    if (selCEBtn) selCEBtn.classList.remove('active');
-    selCEBtn = btn; selCEKey = instrKey; selCEStrike = strike;
-    btn.classList.add('active');
-    document.getElementById('oi-ce-strike').textContent = strike;
-    document.getElementById('oi-ce-expiry').textContent = expiry;
-    document.getElementById('oi-ce-key').textContent    = instrKey;
-    document.getElementById('oi-ce-wrap').style.display = 'block';
-    ce5Bucket = { cur: null, _last: null };
-    connectCEWS(instrKey);
+    selCEKey = instrKey; selCEStrike = strike;
     showAlert('info',`🔴 CE: ${optUL} ${strike}  |  Expiry: ${expiry}`);
   } else {
-    if (selPEBtn) selPEBtn.classList.remove('active');
-    selPEBtn = btn; selPEKey = instrKey; selPEStrike = strike;
-    btn.classList.add('active');
-    document.getElementById('oi-pe-strike').textContent = strike;
-    document.getElementById('oi-pe-expiry').textContent = expiry;
-    document.getElementById('oi-pe-key').textContent    = instrKey;
-    document.getElementById('oi-pe-wrap').style.display = 'block';
-    pe5Bucket = { cur: null, _last: null };
-    connectPEWS(instrKey);
+    selPEKey = instrKey; selPEStrike = strike;
     showAlert('info',`🟢 PE: ${optUL} ${strike}  |  Expiry: ${expiry}`);
   }
-
-  document.getElementById('opt-info-strip') && (document.getElementById('opt-info-strip').style.display = 'flex');
-  document.getElementById('opt-info-row').style.display = 'flex';
 
   // Load spot chart — always use the correct index key for the current underlying.
   // selSym drives the spot WebSocket subscription; set it here (not in optPickUL).
@@ -560,9 +550,9 @@ function autoSelectATM(spot) {
   });
 
   // Select CE
-  if (found.ce_key) optSelectStrike(found.strike, 'CE', found.ce_key, ceBtn);
+  if (found.ce_key) optSelectStrike(found.strike, 'CE', found.ce_key, ceBtn, true);
   // Select PE
-  if (found.pe_key) optSelectStrike(found.strike, 'PE', found.pe_key, peBtn);
+  if (found.pe_key) optSelectStrike(found.strike, 'PE', found.pe_key, peBtn, true);
 
   // Set new reference price to the ATM strike (not raw spot)
   autoRefPrice = atm;

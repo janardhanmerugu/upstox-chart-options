@@ -43,10 +43,8 @@ const IST_OFFSET_S  = CONFIG.IST_OFFSET_S;
 const IST_OFFSET_MS = CONFIG.IST_OFFSET_MS;
 
 // ── WebSocket Connections ──────────────────────────────────────────────────
-// ws = Main connection for authentication, spot data, option chains
-// wsCE = Dedicated CE (Call) option feed
-// wsPE = Dedicated PE (Put) option feed
-let ws=null, wsCE=null, wsPE=null;
+// ws = Main connection for authentication, spot data, and option chains
+let ws=null;
 
 // ── Chart Objects ──────────────────────────────────────────────────────────
 // lwChart = LightweightCharts instance (the main chart)
@@ -87,16 +85,13 @@ let oiBubOn=false, oiBubbleRadiusMultiplier=0.001;
 let _atRealTime = true;
 
 // ── 5-Second Accumulation Buckets ──────────────────────────────────────────
-// For CE, PE, and Spot feeds - accumulates 1s candles into 5s buckets
-// Used by bubbles.js to calculate premium movement ratios
-// Structure: { cur: {current 5s bucket}, _last: {previous 5s bucket} }
-let ce5Bucket   = { cur: null, _last: null };
-let pe5Bucket   = { cur: null, _last: null };
+// Spot feed bucket; option buckets are tracked per instrument in bubbles.js.
 let spot5Bucket = { cur: null, _last: null };
 
 // ── Option Chain UI State ──────────────────────────────────────────────────
-// For storing selected CE/PE strikes and their DOM button references
-let selCEKey=null, selPEKey=null, selCEBtn=null, selPEBtn=null;
+// Selected option streams; capped at two CE and two PE instruments.
+let optionSubscriptions = [];
+let selCEKey=null, selPEKey=null;
 let selCEStrike=null, selPEStrike=null;  // numeric strike price e.g. 22900
 
 // ── Option Chain State ─────────────────────────────────────────────────────

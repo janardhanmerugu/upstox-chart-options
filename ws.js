@@ -71,6 +71,7 @@ function connectWS() {
       showAlert('ok','✅ Token saved! Pick underlying & click ⬇ Load Chain');
       
       optOnAuthOk();  // Trigger option chain UI updates
+      reconnectOptionSubscriptions();
     }
     else if (t === 'auth_fail') { 
       setTok(false,'❌ '+msg.message); 
@@ -255,10 +256,10 @@ function connectWS() {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// CE / PE WEBSOCKETS — separate connections feeding ce5Bucket and pe5Bucket
+// OPTION WEBSOCKETS — one connection per selected instrument
 // ─────────────────────────────────────────────────────────────────────────────
-function _makeOptWS(instrKey, onCandle, optionType) {
-  if (!tokSaved || !instrKey) return null;
+function _makeOptWS(subscription) {
+  if (!tokSaved || !subscription.key) return null;
   const s = new WebSocket(resolvedWebSocketUrl());
   s.onopen = () => {
     const tok = document.getElementById('token-input').value.trim();
@@ -268,28 +269,142 @@ function _makeOptWS(instrKey, onCandle, optionType) {
     let msg; try { msg = JSON.parse(e.data); } catch(_) { return; }
     if (msg.type === 'auth_ok') {
       const backendIv = (selIv === 5 || selIv === 15 || selIv === 30 || selIv === 60 || selIv === 300 || selIv === 900) ? 1 : selIv;
-      s.send(JSON.stringify({ type: 'subscribe', symbol: instrKey, interval: backendIv }));
+      subscription.status = 'SUBSCRIBING';
+      s.send(JSON.stringify({ type: 'subscribe', symbol: subscription.key, interval: backendIv }));
+      renderOptionSubscriptions();
     } else if (msg.type === 'candle') {
-      onCandle(msg.candle);
-      OIB.pushLive(optionType, instrKey, msg.candle);
+      if (subscription.optionType === 'CE') BUB.pushCE5s(msg.candle, subscription.key);
+      else BUB.pushPE5s(msg.candle, subscription.key);
+      OIB.pushLive(subscription.optionType, subscription.key, msg.candle);
     } else if (msg.type === 'tick' && msg.current_candle) {
-      onCandle(msg.current_candle);
-      OIB.pushLive(optionType, instrKey, msg.current_candle);
+      if (subscription.optionType === 'CE') BUB.pushCE5s(msg.current_candle, subscription.key);
+      else BUB.pushPE5s(msg.current_candle, subscription.key);
+      OIB.pushLive(subscription.optionType, subscription.key, msg.current_candle);
+    } else if (msg.type === 'status') {
+      subscription.status = msg.status === 'connected' ? 'LIVE' :
+        (msg.status === 'auth_error' || msg.status === 'error' ? 'ERROR' : msg.status.toUpperCase());
+      renderOptionSubscriptions();
     }
   };
-  s.onerror = () => {};
-  s.onclose = () => {};
+  s.onerror = () => {
+    subscription.status = 'ERROR';
+    renderOptionSubscriptions();
+  };
+  s.onclose = () => {
+    if (optionSubscriptions.includes(subscription)) {
+      subscription.socket = null;
+      subscription.status = 'OFFLINE';
+      renderOptionSubscriptions();
+    }
+  };
   return s;
 }
 
-function connectCEWS(instrKey) {
-  if (wsCE) { try { wsCE.close(); } catch(_){} wsCE = null; }
-  wsCE = _makeOptWS(instrKey, c => BUB.pushCE5s(c), 'CE');
+function subscribeOptionInstrument(details) {
+  const existing = optionSubscriptions.find(item => item.key === details.key);
+  if (existing) return existing;
+
+  const sameType = optionSubscriptions.filter(item => item.optionType === details.optionType);
+  if (sameType.length >= 2) {
+    if (!details.replaceOldest) {
+      showAlert('warn', `⚠ You can subscribe to only two ${details.optionType} instruments.`);
+      return null;
+    }
+    unsubscribeOptionInstrument(sameType[0].key);
+  }
+
+  if (!tokSaved) {
+    showAlert('warn', '⚠ Save your token before subscribing to options.');
+    return null;
+  }
+
+  const subscription = { ...details, socket: null, status: 'CONNECTING' };
+  optionSubscriptions.push(subscription);
+  subscription.socket = _makeOptWS(subscription);
+  renderOptionSubscriptions();
+  return subscription;
 }
 
-function connectPEWS(instrKey) {
-  if (wsPE) { try { wsPE.close(); } catch(_){} wsPE = null; }
-  wsPE = _makeOptWS(instrKey, c => BUB.pushPE5s(c), 'PE');
+function renderOptionSubscriptions() {
+  const list = document.getElementById('opt-subscribed-list');
+  const count = document.getElementById('opt-subscription-count');
+  const row = document.getElementById('opt-info-row');
+  if (!list || !count || !row) return;
+
+  count.textContent = `${optionSubscriptions.length} / 4`;
+  row.style.display = optionSubscriptions.length ? 'flex' : 'none';
+  list.replaceChildren();
+
+  if (!optionSubscriptions.length) {
+    const empty = document.createElement('div');
+    empty.className = 'opt-subscriptions-empty';
+    empty.textContent = 'No option instruments selected';
+    list.appendChild(empty);
+  }
+
+  optionSubscriptions.forEach(subscription => {
+    const item = document.createElement('div');
+    item.className = 'opt-subscription-row';
+    const details = document.createElement('div');
+    details.className = 'opt-subscription-details';
+    const title = document.createElement('div');
+    title.className = `opt-subscription-title ${subscription.optionType.toLowerCase()}`;
+    title.textContent = `${subscription.optionType} ${subscription.strike} · ${subscription.expiry} · ${subscription.status}`;
+    const key = document.createElement('div');
+    key.className = 'opt-subscription-key';
+    key.textContent = subscription.key;
+    details.append(title, key);
+
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'opt-unsubscribe-btn';
+    button.textContent = 'Unsubscribe';
+    button.title = `Unsubscribe ${subscription.optionType} ${subscription.strike}`;
+    button.onclick = () => unsubscribeOptionInstrument(subscription.key);
+    item.append(details, button);
+    list.appendChild(item);
+  });
+
+  document.querySelectorAll('#opt-strikes button[data-instrument-key]').forEach(button => {
+    button.classList.toggle('active', optionSubscriptions.some(item => item.key === button.dataset.instrumentKey));
+  });
+}
+
+function unsubscribeOptionInstrument(instrumentKey) {
+  const index = optionSubscriptions.findIndex(item => item.key === instrumentKey);
+  if (index < 0) return;
+  if (!ws || ws.readyState !== WebSocket.OPEN) {
+    showAlert('warn', '⚠ Connect to the server to unsubscribe this instrument.');
+    return;
+  }
+
+  ws.send(JSON.stringify({ type: 'unsubscribe', symbol: instrumentKey }));
+  const [subscription] = optionSubscriptions.splice(index, 1);
+  if (subscription.socket) {
+    subscription.socket.onclose = null;
+    try { subscription.socket.close(); } catch(_) {}
+  }
+  BUB.clearOptionBucket(subscription.optionType, instrumentKey);
+
+  const remaining = optionSubscriptions.filter(item => item.optionType === subscription.optionType).at(-1);
+  if (subscription.optionType === 'CE') {
+    selCEKey = remaining?.key || null;
+    selCEStrike = remaining?.strike || null;
+  } else {
+    selPEKey = remaining?.key || null;
+    selPEStrike = remaining?.strike || null;
+  }
+  renderOptionSubscriptions();
+}
+
+function reconnectOptionSubscriptions() {
+  optionSubscriptions.forEach(subscription => {
+    if (!subscription.socket || subscription.socket.readyState === WebSocket.CLOSED) {
+      subscription.status = 'CONNECTING';
+      subscription.socket = _makeOptWS(subscription);
+    }
+  });
+  renderOptionSubscriptions();
 }
 
 function sanitizeLatin1String(value) {
@@ -306,14 +421,20 @@ function sanitizeLatin1String(value) {
 }
 
 function disconnectWS() {
-  // Close all three WebSocket connections
+  // Close browser connections without sending provider unsubscribe requests.
   if (ws)   { try { ws.close();   } catch(_){} ws   = null; }
-  if (wsCE) { try { wsCE.close(); } catch(_){} wsCE = null; }
-  if (wsPE) { try { wsPE.close(); } catch(_){} wsPE = null; }
+  optionSubscriptions.forEach(subscription => {
+    if (subscription.socket) {
+      subscription.socket.onclose = null;
+      try { subscription.socket.close(); } catch(_) {}
+      subscription.socket = null;
+      subscription.status = 'OFFLINE';
+    }
+  });
+  renderOptionSubscriptions();
   
   // Reset bubble accumulators
-  ce5Bucket   = { cur: null, _last: null };
-  pe5Bucket   = { cur: null, _last: null };
+  BUB.clearOptionBuckets();
   spot5Bucket = { cur: null, _last: null };
   
   // Update UI to show disconnected state
