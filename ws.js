@@ -349,16 +349,20 @@ function renderOptionSubscriptions() {
     details.className = 'opt-subscription-details';
     const title = document.createElement('div');
     title.className = `opt-subscription-title ${subscription.optionType.toLowerCase()}`;
-    title.textContent = `${subscription.optionType} ${subscription.strike} · ${subscription.expiry} · ${subscription.status}`;
+    title.textContent = `${subscription.optionType} ${subscription.strike}`;
+    const meta = document.createElement('div');
+    meta.className = 'opt-subscription-meta';
+    meta.textContent = `${subscription.expiry} · ${subscription.status}`;
     const key = document.createElement('div');
     key.className = 'opt-subscription-key';
     key.textContent = subscription.key;
-    details.append(title, key);
+    details.append(title, meta, key);
 
     const button = document.createElement('button');
     button.type = 'button';
     button.className = 'opt-unsubscribe-btn';
-    button.textContent = 'Unsubscribe';
+    button.textContent = '×';
+    button.setAttribute('aria-label', `Unsubscribe ${subscription.optionType} ${subscription.strike}`);
     button.title = `Unsubscribe ${subscription.optionType} ${subscription.strike}`;
     button.onclick = () => unsubscribeOptionInstrument(subscription.key);
     item.append(details, button);
