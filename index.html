@@ -58,6 +58,17 @@
         <label>History from<input id="index-history-from" class="oi-input" type="date"></label>
         <label>To<input id="index-history-to" class="oi-input" type="date"></label>
       </div>
+      <div class="index-interval">
+        <div class="ds-title"><span class="ds-title-icon">⏱</span><span>Interval</span></div>
+        <div class="iv-group">
+          <button class="ivbtn"        data-iv="1"   onclick="pickIv(1)">1s</button>
+          <button class="ivbtn"        data-iv="5"   onclick="pickIv(5)">5s</button>
+          <button class="ivbtn"        data-iv="30"  onclick="pickIv(30)">30s</button>
+          <button class="ivbtn active" data-iv="60"  onclick="pickIv(60)">1m</button>
+          <button class="ivbtn"        data-iv="300" onclick="pickIv(300)">5m</button>
+          <button class="ivbtn"        data-iv="900" onclick="pickIv(900)">15m</button>
+        </div>
+      </div>
       <button class="opt-load-btn" id="index-load-btn" onclick="loadIndexChart()" disabled>▶ Load Index</button>
 
       <!-- Expiry + ATM range -->
@@ -105,19 +116,6 @@
           </div>
           <div id="opt-subscribed-list" aria-live="polite"></div>
         </div>
-      </div>
-    </div>
-
-    <!-- ── INTERVAL ── -->
-    <div class="ds">
-      <div class="ds-title"><span class="ds-title-icon">⏱</span><span>Interval</span></div>
-      <div class="iv-group">
-        <button class="ivbtn"        data-iv="1"   onclick="pickIv(1)">1s</button>
-        <button class="ivbtn"        data-iv="5"   onclick="pickIv(5)">5s</button>
-        <button class="ivbtn"        data-iv="30"  onclick="pickIv(30)">30s</button>
-        <button class="ivbtn active" data-iv="60"  onclick="pickIv(60)">1m</button>
-        <button class="ivbtn"        data-iv="300" onclick="pickIv(300)">5m</button>
-        <button class="ivbtn"        data-iv="900" onclick="pickIv(900)">15m</button>
       </div>
     </div>
 
