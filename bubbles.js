@@ -635,7 +635,7 @@ const OIB = {
     ctx.beginPath();
     ctx.rect(0, 0, plotW, height);
     ctx.clip();
-    const radius = Math.max(0.000001, Number(document.getElementById('oi-radius')?.value) || oiBubbleRadiusMultiplier);
+    const radius = Math.max(0.001, Number(document.getElementById('oi-radius')?.value) / 1000 || oiBubbleRadiusMultiplier);
     const minOiChange = Math.max(0, Number(document.getElementById('oi-min-change')?.value) || 0);
     const maxRadius = 60;
     const defaultColors = {

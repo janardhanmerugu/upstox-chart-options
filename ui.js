@@ -188,7 +188,7 @@ function loadOpenInterest() {
     showAlert('warn', '⚠ Choose a date range and at least one option type.');
     return;
   }
-  oiBubbleRadiusMultiplier = Math.max(0.0001, Number(document.getElementById('oi-radius').value) || 0.001);
+  oiBubbleRadiusMultiplier = Math.max(0.001, Number(document.getElementById('oi-radius').value) / 1000 || 0.001);
   const indexKey = OPT_INDEX_KEY[optUL];
   if (!indexKey) {
     showAlert('warn', '⚠ Select an index in the Option Chain first.');
