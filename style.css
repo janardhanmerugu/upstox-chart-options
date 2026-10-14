@@ -108,7 +108,8 @@ body{font-family:'JetBrains Mono',monospace;background:var(--bg);color:var(--tex
   }
   #right-drawer.collapsed{transform:translateX(120%);width:0;min-width:0}
   #right-drawer-toggle{right:0;top:50%;transform:translateY(-50%);height:56px;min-width:28px;padding:.45rem .55rem}
-  #info-bar{overflow-x:auto;-webkit-overflow-scrolling:touch;flex-wrap:nowrap;padding:.3rem .45rem}
+  #info-bar{overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;flex-wrap:nowrap !important;white-space:nowrap !important;padding:.3rem .45rem}
+  #info-bar > *{flex:0 0 auto !important}
   #chart-wrap{padding:.25rem}
 }
 
@@ -118,6 +119,8 @@ body{font-family:'JetBrains Mono',monospace;background:var(--bg);color:var(--tex
   #sidebar-conn .hbtn{flex:1 1 100%}
   #opt-load-btn{padding:.38rem .7rem}
   .ivbtn{padding:.25rem .45rem}
+  #info-bar{overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;flex-wrap:nowrap !important;white-space:nowrap !important}
+  #info-bar > *{flex:0 0 auto !important}
 }
 
 /* ══ SECTION BLOCK (reusable drawer section wrapper) ═══════════════════════ */
