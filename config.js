@@ -115,8 +115,8 @@ let autoThreshold  = 60;
 const OPT_STEP = { NIFTY: 50, BANKNIFTY: 100, FINNIFTY: 50 };
 
 // Bubble display config (controlled by sliders/inputs in UI)
-let bubScale        = 1.0;
-let bubSizeMult     = 1.0;
+let bubScale        = 40.0;
+let bubRadiusFactor = 0.10;
 let bubMaxSize      = 60;
 let bubMinRatioCE   = 1;
 let bubMinRatioPE   = 1;

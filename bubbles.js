@@ -246,7 +246,7 @@ const BUB = {
   },
 
   _radius(b) {
-    return Math.min(bubMaxSize, Math.max(this.MIN_R, Math.abs(b.ratio) * bubScale * bubSizeMult));
+    return Math.min(bubMaxSize, Math.max(this.MIN_R, Math.abs(b.ratio) * bubScale * bubRadiusFactor));
   },
 
   // ── DRAW ──────────────────────────────────────────────────────────────────
