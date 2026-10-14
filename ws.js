@@ -469,7 +469,7 @@ function optFetchExpiries() {
   ws.send(JSON.stringify({ type: 'get_option_expiries', underlying: sanitizeLatin1String(underlying) }));
 }
 
-async function optFetchChain() {
+async function optFetchChain(refreshOi = false) {
   if (!ws || ws.readyState !== WebSocket.OPEN || !tokSaved) {
     showAlert('err','⚠ Connect & save token first.'); return;
   }
@@ -477,9 +477,14 @@ async function optFetchChain() {
   if (!exp) { showAlert('warn','⚠ Select an expiry first.'); return; }
 
   document.getElementById('opt-fetch-btn').disabled = true;
-  document.getElementById('opt-chain-status').textContent = '⏳ Loading option chain…';
-  document.getElementById('opt-strikes').innerHTML = '';
-  document.getElementById('opt-strikes-row').style.display = 'none';
+  const refreshOiBtn = document.getElementById('opt-refresh-oi-btn');
+  refreshOiBtn.disabled = true;
+  document.getElementById('opt-chain-status').textContent =
+    refreshOi ? '⏳ Updating option-chain OI…' : '⏳ Loading option chain…';
+  if (!refreshOi) {
+    document.getElementById('opt-strikes').innerHTML = '';
+    document.getElementById('opt-strikes-row').style.display = 'none';
+  }
 
   // Fetch live spot from Upstox REST
   const spotKey = OPT_INDEX_KEY[optUL] || selSym;
@@ -523,6 +528,9 @@ function onOptExpiries(msg) {
   });
   if (expiries.length > 0) sel.value = expiries[0];
   document.getElementById('opt-fetch-btn').disabled = false;
+  const refreshOiBtn = document.getElementById('opt-refresh-oi-btn');
+  refreshOiBtn.disabled = !optChain;
+  refreshOiBtn.hidden = !optChain;
   document.getElementById('opt-chain-status').textContent =
     `${expiries.length} expiries loaded  →  Click ⬇ Load Chain`;
 }
@@ -530,11 +538,17 @@ function onOptExpiries(msg) {
 function onOptChain(msg) {
   optChain = msg;
   document.getElementById('opt-fetch-btn').disabled = false;
+  const refreshOiBtn = document.getElementById('opt-refresh-oi-btn');
+  refreshOiBtn.disabled = false;
+  refreshOiBtn.hidden = false;
   optBuildStrikes();
 }
 
 function onOptError(msg) {
   document.getElementById('opt-fetch-btn').disabled = false;
+  const refreshOiBtn = document.getElementById('opt-refresh-oi-btn');
+  refreshOiBtn.disabled = !optChain;
+  refreshOiBtn.hidden = !optChain;
   document.getElementById('opt-chain-status').textContent = '⚠ ' + msg;
   showAlert('err','⚠ Option chain error: ' + msg, false);
 }

@@ -358,6 +358,9 @@ function optPickUL(ul, btn) {
   optExpiries = [];
   const exp = document.getElementById('opt-expiry');
   exp.innerHTML = '<option value="">— load chain —</option>';
+  const refreshOiBtn = document.getElementById('opt-refresh-oi-btn');
+  refreshOiBtn.disabled = true;
+  refreshOiBtn.hidden = true;
   document.getElementById('opt-strikes-row').style.display = 'none';
   document.getElementById('opt-info-row').style.display    = 'none';
   document.getElementById('opt-strikes').innerHTML         = '';
@@ -391,6 +394,9 @@ function optOnExpiry() {
   const val = document.getElementById('opt-expiry').value;
   if (!val) return;
   optChain = null;
+  const refreshOiBtn = document.getElementById('opt-refresh-oi-btn');
+  refreshOiBtn.disabled = true;
+  refreshOiBtn.hidden = true;
   document.getElementById('opt-strikes-row').style.display = 'none';
   document.getElementById('opt-info-row').style.display    = 'none';
   document.getElementById('opt-strikes').innerHTML         = '';
@@ -409,6 +415,24 @@ function optBuildStrikes() {
   const lo  = Math.max(0, atmIdx - range);
   const hi  = Math.min(strikes.length - 1, atmIdx + range);
   const sub = strikes.slice(lo, hi + 1);
+  const maxCeOi = Math.max(0, ...sub
+    .map(s => s.ce_oi == null ? 0 : Number(s.ce_oi))
+    .filter(Number.isFinite));
+  const maxPeOi = Math.max(0, ...sub
+    .map(s => s.pe_oi == null ? 0 : Number(s.pe_oi))
+    .filter(Number.isFinite));
+  const topCeOi = sub
+    .map((strike, index) => ({ strike, index, oi: Number(strike.ce_oi) }))
+    .filter(item => Number.isFinite(item.oi) && item.oi > 0)
+    .sort((a, b) => b.oi - a.oi)
+    .slice(0, 3);
+  const topPeOi = sub
+    .map((strike, index) => ({ strike, index, oi: Number(strike.pe_oi) }))
+    .filter(item => Number.isFinite(item.oi) && item.oi > 0)
+    .sort((a, b) => b.oi - a.oi)
+    .slice(0, 3);
+  const ceOiRanks = new Map(topCeOi.map((item, rank) => [item.index, rank + 1]));
+  const peOiRanks = new Map(topPeOi.map((item, rank) => [item.index, rank + 1]));
 
   const cont = document.getElementById('opt-strikes');
   cont.innerHTML = '';
@@ -421,7 +445,15 @@ function optBuildStrikes() {
     const ceBtn = document.createElement('button');
     ceBtn.className   = 'ce-btn';
     ceBtn.textContent = s.strike;
-    ceBtn.title       = `CE  ${s.ce_key}`;
+    const ceOi = s.ce_oi == null ? NaN : Number(s.ce_oi);
+    const ceOiRank = ceOiRanks.get(idx);
+    if (ceOiRank) ceBtn.classList.add(`oi-rank-${ceOiRank}`);
+    ceBtn.title = `CE ${s.ce_key || ''} | OI: ${
+      Number.isFinite(ceOi) ? ceOi.toLocaleString('en-IN') : 'unavailable'
+    }${ceOiRank ? ` | #${ceOiRank} CE OI in visible range` : ''}`;
+    ceBtn.style.setProperty('--oi-fill', `${
+      Number.isFinite(ceOi) && ceOi > 0 && maxCeOi > 0 ? (ceOi / maxCeOi) * 100 : 0
+    }%`);
     ceBtn.dataset.instrumentKey = s.ce_key;
     ceBtn.onclick     = () => optSelectStrike(s.strike, 'CE', s.ce_key, ceBtn);
 
@@ -433,7 +465,15 @@ function optBuildStrikes() {
     const peBtn = document.createElement('button');
     peBtn.className   = 'pe-btn';
     peBtn.textContent = s.strike;
-    peBtn.title       = `PE  ${s.pe_key}`;
+    const peOi = s.pe_oi == null ? NaN : Number(s.pe_oi);
+    const peOiRank = peOiRanks.get(idx);
+    if (peOiRank) peBtn.classList.add(`oi-rank-${peOiRank}`);
+    peBtn.title = `PE ${s.pe_key || ''} | OI: ${
+      Number.isFinite(peOi) ? peOi.toLocaleString('en-IN') : 'unavailable'
+    }${peOiRank ? ` | #${peOiRank} PE OI in visible range` : ''}`;
+    peBtn.style.setProperty('--oi-fill', `${
+      Number.isFinite(peOi) && peOi > 0 && maxPeOi > 0 ? (peOi / maxPeOi) * 100 : 0
+    }%`);
     peBtn.dataset.instrumentKey = s.pe_key;
     peBtn.onclick     = () => optSelectStrike(s.strike, 'PE', s.pe_key, peBtn);
 

@@ -6,7 +6,7 @@
   <title>Upstox Options Chart</title>
   <link rel="icon" type="image/svg+xml" href="favicon.svg"/>
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet"/>
-  <link rel="stylesheet" href="style.css?v=20260919-1">
+  <link rel="stylesheet" href="style.css?v=20261014-4">
 </head>
 <body>
 
@@ -80,14 +80,17 @@
         <span class="exp-label">ATM ±</span>
         <select class="range-pill" id="opt-range" onchange="optBuildStrikes()">
           <option value="3">3</option>
-          <option value="5" selected>5</option>
-          <option value="8">8</option>
+          <option value="5">5</option>
+          <option value="8" selected>8</option>
           <option value="10">10</option>
         </select>
       </div>
 
       <!-- Load chain -->
-      <button class="opt-load-btn" id="opt-fetch-btn" onclick="optFetchChain()" disabled>⬇ Load Chain</button>
+      <div class="opt-chain-actions">
+        <button class="opt-load-btn" id="opt-fetch-btn" onclick="optFetchChain()" disabled>⬇ Load Chain</button>
+        <button class="oi-refresh-btn" id="opt-refresh-oi-btn" onclick="optFetchChain(true)" disabled hidden title="Fetch the latest option-chain open interest">↻ Update OI</button>
+      </div>
       <div id="opt-chain-status">Connect &amp; authenticate first</div>
 
       <!-- Auto Strike Toggle -->
@@ -100,9 +103,9 @@
       <!-- Strike grid (populated dynamically) -->
       <div id="opt-strikes-row" style="display:none">
         <div class="strikes-header">
-          <div class="sh-ce">▲ CE</div>
+          <div class="sh-ce">▲ CE · OI</div>
           <div class="sh-mid">Strike</div>
-          <div class="sh-pe">▼ PE</div>
+          <div class="sh-pe">▼ PE · OI</div>
         </div>
         <div id="opt-strikes"></div>
       </div>
@@ -465,10 +468,10 @@
 </script>
 
 <script src="config.js?v=20260919-1"></script>
-<script src="ui.js?v=20260919-1"></script>
+<script src="ui.js?v=20261014-4"></script>
 <script src="bubbles.js?v=20260919-1"></script>
 <script src="chart.js?v=20260919-1"></script>
-<script src="ws.js?v=20260919-1"></script>
+<script src="ws.js?v=20261014-2"></script>
 <script src="init.js?v=20260919-1"></script>
 </body>
 </html>
