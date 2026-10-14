@@ -101,7 +101,6 @@ body{font-family:'JetBrains Mono',monospace;background:var(--bg);color:var(--tex
   #side-drawer{
     position:absolute;top:0;left:0;bottom:0;width:min(82vw,300px);min-width:min(82vw,300px);max-width:min(82vw,300px);box-shadow:12px 0 32px rgba(0,0,0,.38);z-index:90
   }
-  #sidebar-top{position:sticky;top:0;z-index:2}
   #side-drawer.collapsed{transform:translateX(-110%);width:0;min-width:0}
   #drawer-toggle{left:0;top:50%;transform:translateY(-50%);height:56px;min-width:28px;padding:.45rem .55rem}
   #right-drawer{
