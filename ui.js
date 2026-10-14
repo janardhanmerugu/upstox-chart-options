@@ -176,6 +176,24 @@ function openInterestTypes() {
   return ['CE', 'PE'].filter(type => document.getElementById(`oi-${type.toLowerCase()}`)?.checked);
 }
 
+function validateHistoryRange(startDate, endDate, maxDays = 2) {
+  if (!startDate || !endDate) return { ok: false, msg: '⚠ Choose a valid history date range.' };
+
+  const start = new Date(`${startDate}T00:00:00`);
+  const end = new Date(`${endDate}T00:00:00`);
+
+  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime()) || start > end) {
+    return { ok: false, msg: '⚠ Choose a valid history date range.' };
+  }
+
+  const diffDays = (end - start) / (1000 * 60 * 60 * 24);
+  if (diffDays > maxDays) {
+    return { ok: false, msg: `⚠ History range must be ${maxDays} days or less.` };
+  }
+
+  return { ok: true };
+}
+
 function loadOpenInterest() {
   if (!ws || ws.readyState !== WebSocket.OPEN) {
     showAlert('err', '⚠ Connect to server first.');
@@ -184,8 +202,13 @@ function loadOpenInterest() {
   const startDate = document.getElementById('oi-from').value;
   const endDate = document.getElementById('oi-to').value;
   const optionTypes = openInterestTypes();
+  const rangeCheck = validateHistoryRange(startDate, endDate, 2);
   if (!startDate || !endDate || !optionTypes.length) {
     showAlert('warn', '⚠ Choose a date range and at least one option type.');
+    return;
+  }
+  if (!rangeCheck.ok) {
+    showAlert('warn', rangeCheck.msg);
     return;
   }
   oiBubbleRadiusMultiplier = Math.max(0.001, Number(document.getElementById('oi-radius').value) / 1000 || 0.001);
@@ -218,8 +241,9 @@ function loadDeltaChangeHistory() {
   }
   const startDate = document.getElementById('delta-history-from').value;
   const endDate = document.getElementById('delta-history-to').value;
-  if (!startDate || !endDate || startDate > endDate) {
-    showAlert('warn', '⚠ Choose a valid Delta Change history date range.');
+  const rangeCheck = validateHistoryRange(startDate, endDate, 2);
+  if (!rangeCheck.ok) {
+    showAlert('warn', rangeCheck.msg);
     return;
   }
   const indexKey = OPT_INDEX_KEY[optUL];
@@ -306,6 +330,11 @@ function loadSym() {
   const backendIv = (selIv === 5 || selIv === 15 || selIv === 30 || selIv === 60 || selIv === 300 || selIv === 900) ? 1 : selIv;
   const startDate = document.getElementById('index-history-from')?.value;
   const endDate = document.getElementById('index-history-to')?.value;
+  const rangeCheck = validateHistoryRange(startDate, endDate, 2);
+  if (!rangeCheck.ok) {
+    showAlert('warn', rangeCheck.msg);
+    return;
+  }
   historyReadyForSubscribe = false;
   ws.send(JSON.stringify({
     type: 'load_symbol_history', instrument: selSym, interval: backendIv,
@@ -377,8 +406,10 @@ function loadIndexChart() {
 
   const startDate = document.getElementById('index-history-from').value;
   const endDate = document.getElementById('index-history-to').value;
-  if (!startDate || !endDate || startDate > endDate) {
-    showAlert('warn','⚠ Choose a valid index history date range.'); return;
+  const rangeCheck = validateHistoryRange(startDate, endDate, 2);
+  if (!rangeCheck.ok) {
+    showAlert('warn', rangeCheck.msg);
+    return;
   }
 
   const indexKey = OPT_INDEX_KEY[optUL];

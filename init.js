@@ -20,18 +20,18 @@ window.addEventListener('DOMContentLoaded', () => {
   document.getElementById('opt-chain-status').textContent = 'Connect & authenticate first';
 
   const today = new Date();
-  const weekAgo = new Date(today);
-  weekAgo.setDate(today.getDate() - 7);
+  const twoDaysAgo = new Date(today);
+  twoDaysAgo.setDate(today.getDate() - 1);
   const dateValue = date => date.toISOString().slice(0, 10);
-  document.getElementById('oi-from').value = dateValue(weekAgo);
+  document.getElementById('oi-from').value = dateValue(twoDaysAgo);
   document.getElementById('oi-to').value = dateValue(today);
   const localDateValue = date => {
     const localDate = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
     return localDate.toISOString().slice(0, 10);
   };
-  document.getElementById('index-history-from').value = localDateValue(weekAgo);
+  document.getElementById('index-history-from').value = localDateValue(twoDaysAgo);
   document.getElementById('index-history-to').value = localDateValue(today);
-  document.getElementById('delta-history-from').value = localDateValue(weekAgo);
+  document.getElementById('delta-history-from').value = localDateValue(twoDaysAgo);
   document.getElementById('delta-history-to').value = localDateValue(today);
 
   // ── Restore token from sessionStorage (survives refresh, clears on tab close) ──
