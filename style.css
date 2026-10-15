@@ -303,6 +303,9 @@ body{font-family:'JetBrains Mono',monospace;background:var(--bg);color:var(--tex
 .pe-btn{background-color:var(--pe-lo);background-image:linear-gradient(90deg,#f472b644 0 var(--oi-fill,0%),transparent var(--oi-fill,0%));border-color:var(--pe-bdr);color:var(--pe)}
 .pe-btn:hover{border-color:var(--pe);background-color:#ec489922;box-shadow:0 0 6px #f472b622}
 .pe-btn.active{background-color:#ec489933;border-color:var(--pe);color:#fbcfe8;box-shadow:0 0 10px #f472b633;font-weight:700}
+.pe-btn.oi-rank-1,.pe-btn.oi-rank-1:hover,.pe-btn.oi-rank-1.active{border-color:#ffd54f;box-shadow:0 0 9px #ffd54f88;font-weight:700}
+.pe-btn.oi-rank-2,.pe-btn.oi-rank-2:hover,.pe-btn.oi-rank-2.active{border-color:#ffca28;box-shadow:0 0 7px #ffca2866;font-weight:700}
+.pe-btn.oi-rank-3,.pe-btn.oi-rank-3:hover,.pe-btn.oi-rank-3.active{border-color:#fff176;box-shadow:0 0 6px #fff17655;font-weight:700}
 
 /* spot info below strikes */
 .strikes-spot{font-size:.61rem;color:var(--accent);text-align:right;padding:.1rem .1rem 0}
