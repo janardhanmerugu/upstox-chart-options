@@ -38,6 +38,7 @@ function connectWS() {
     document.getElementById('connectBtn').disabled    = true;
     document.getElementById('disconnectBtn').disabled = false;
     document.getElementById('saveTokenBtn').disabled  = false;
+    renderActiveSubscriptions([]);
     
     showAlert('info','✅ Connected! Paste your token and click Save Token.', false);
     
@@ -76,6 +77,12 @@ function connectWS() {
     else if (t === 'auth_fail') { 
       setTok(false,'❌ '+msg.message); 
       showAlert('err','⚠ '+msg.message, false); 
+    }
+    else if (t === 'subscriptions') {
+      renderActiveSubscriptions(msg.instruments);
+    }
+    else if (t === 'unsubscribed') {
+      removeActiveSubscription(msg.symbol);
     }
 
     else if (t === 'open_interest_data') {
@@ -249,6 +256,7 @@ function connectWS() {
       if (tpsTmr) { clearInterval(tpsTmr); tpsTmr = null; }
       const tpsEl = document.getElementById('s-tps');
       if (tpsEl) tpsEl.textContent = '—';
+      renderActiveSubscriptions([]);
       tokSaved = false; setTok(null,'Disconnected.');
       ws = null;
     } catch(e) { console.error('Disconnect handler error:', e); }
@@ -267,7 +275,9 @@ function _makeOptWS(subscription) {
   };
   s.onmessage = e => {
     let msg; try { msg = JSON.parse(e.data); } catch(_) { return; }
-    if (msg.type === 'auth_ok') {
+    if (msg.type === 'subscriptions') {
+      renderActiveSubscriptions(msg.instruments);
+    } else if (msg.type === 'auth_ok') {
       const backendIv = (selIv === 5 || selIv === 15 || selIv === 30 || selIv === 60 || selIv === 300 || selIv === 900) ? 1 : selIv;
       subscription.status = 'SUBSCRIBING';
       s.send(JSON.stringify({ type: 'subscribe', symbol: subscription.key, interval: backendIv }));

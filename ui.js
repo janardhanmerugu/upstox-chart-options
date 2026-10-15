@@ -111,6 +111,82 @@ function toggleDrawer() {
   }, 280);
 }
 
+let activeSubscriptions = [];
+
+function renderActiveSubscriptions(instruments) {
+  const list = document.getElementById('active-subscription-list');
+  const count = document.getElementById('active-subscription-count');
+  const button = document.getElementById('unsubscribe-all-btn');
+  if (!list || !count) return;
+  activeSubscriptions = Array.isArray(instruments) ? instruments.slice() : [];
+  const active = activeSubscriptions;
+  count.textContent = active.length;
+  if (button) button.disabled = active.length === 0 || !ws || ws.readyState !== WebSocket.OPEN;
+  list.replaceChildren();
+  if (!active.length) {
+    const empty = document.createElement('div');
+    empty.className = 'active-subscription-empty';
+    empty.textContent = 'No active instruments';
+    list.appendChild(empty);
+    return;
+  }
+  active.forEach(instrument => {
+    const item = document.createElement('div');
+    item.className = 'active-subscription-item';
+    const name = typeof instrument === 'string' ? instrument : instrument.name;
+    const key = typeof instrument === 'string' ? instrument : instrument.key;
+    item.title = key;
+    const dot = document.createElement('span');
+    dot.className = 'active-subscription-dot';
+    const label = document.createElement('span');
+    label.className = 'active-subscription-name';
+    label.textContent = name;
+    const unsubscribe = document.createElement('button');
+    unsubscribe.type = 'button';
+    unsubscribe.className = 'active-subscription-unsubscribe';
+    unsubscribe.textContent = 'Unsubscribe';
+    unsubscribe.setAttribute('aria-label', `Unsubscribe ${name}`);
+    unsubscribe.disabled = !ws || ws.readyState !== WebSocket.OPEN;
+    unsubscribe.addEventListener('click', () => unsubscribeActiveInstrument(key));
+    item.append(dot, label, unsubscribe);
+    list.appendChild(item);
+  });
+}
+
+function unsubscribeActiveInstrument(instrumentKey) {
+  const optionSubscription = optionSubscriptions.find(item => item.key === instrumentKey);
+  if (optionSubscription) {
+    unsubscribeOptionInstrument(instrumentKey);
+    return;
+  }
+  if (!ws || ws.readyState !== WebSocket.OPEN) {
+    showAlert('warn', '⚠ Connect to the server to unsubscribe this instrument.');
+    return;
+  }
+  ws.send(JSON.stringify({ type: 'unsubscribe', symbol: instrumentKey }));
+}
+
+function removeActiveSubscription(instrumentKey) {
+  renderActiveSubscriptions(activeSubscriptions.filter(instrument =>
+    (typeof instrument === 'string' ? instrument : instrument.key) !== instrumentKey
+  ));
+}
+
+function restoreActiveSubscriptionsState() {
+  const panel = document.getElementById('active-subscriptions-panel');
+  const title = panel?.querySelector('.ds-title');
+  const collapsed = sessionStorage.getItem('active_subscriptions_collapsed') === 'true';
+  if (!panel || !title) return;
+  panel.classList.toggle('expanded', !collapsed);
+  title.setAttribute('aria-expanded', String(!collapsed));
+}
+
+function unsubscribeAll() {
+  if (!ws || ws.readyState !== WebSocket.OPEN) return;
+  [...optionSubscriptions].forEach(subscription => unsubscribeOptionInstrument(subscription.key));
+  ws.send(JSON.stringify({ type: 'unsubscribe_all' }));
+}
+
 function applyResponsiveLayout() {
   const mobile = window.matchMedia('(max-width: 760px)').matches;
   const drawer = document.getElementById('side-drawer');

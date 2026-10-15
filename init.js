@@ -5,13 +5,16 @@
 window.addEventListener('DOMContentLoaded', () => {
   const rightContent = document.getElementById('right-drawer-content');
   const oiPanel = document.querySelector('.oi-panel');
+  const activeSubscriptionsPanel = document.getElementById('active-subscriptions-panel');
   const bubbleConfig = [...document.querySelectorAll('#side-drawer>.ds')]
     .find(section => section.querySelector('.ds-title')?.textContent.includes('Delta Change'));
 
   if (rightContent) {
     if (oiPanel) rightContent.appendChild(oiPanel);
     if (bubbleConfig) rightContent.appendChild(bubbleConfig);
+    if (activeSubscriptionsPanel) rightContent.appendChild(activeSubscriptionsPanel);
     setupRightDrawerAccordion(rightContent);
+    restoreActiveSubscriptionsState();
   }
 
   // selSym is intentionally NOT set here.
@@ -82,12 +85,17 @@ function setupRightDrawerAccordion(container) {
     const body = document.createElement('div');
     body.className = 'accordion-body';
     body.id = `right-section-${index}`;
-    while (title.nextSibling) body.appendChild(title.nextSibling);
+    while (title.nextSibling) {
+      body.appendChild(title.nextSibling);
+    }
     section.appendChild(body);
 
     const toggle = () => {
       const expanded = section.classList.toggle('expanded');
       title.setAttribute('aria-expanded', String(expanded));
+      if (section.id === 'active-subscriptions-panel') {
+        sessionStorage.setItem('active_subscriptions_collapsed', String(!expanded));
+      }
     };
 
     title.addEventListener('click', toggle);

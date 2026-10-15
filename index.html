@@ -6,7 +6,7 @@
   <title>Upstox Options Chart</title>
   <link rel="icon" type="image/svg+xml" href="favicon.svg"/>
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet"/>
-  <link rel="stylesheet" href="style.css?v=20261014-5">
+  <link rel="stylesheet" href="style.css?v=20261015-4">
 </head>
 <body>
 
@@ -431,7 +431,19 @@
     <div id="right-drawer-top" title="Option bubble controls">
       <div id="right-drawer-title"><span>◉</span><span>OPTION BUBBLES</span></div>
     </div>
-    <div id="right-drawer-content"></div>
+    <div id="right-drawer-content">
+      <div class="ds active-subscriptions-panel" id="active-subscriptions-panel">
+        <div class="ds-title">
+          <span class="ds-title-icon">●</span>
+          <span>Active Subscriptions <strong id="active-subscription-count">0</strong></span>
+        </div>
+        <button class="unsubscribe-all-btn" id="unsubscribe-all-btn"
+          onclick="unsubscribeAll()" disabled>Unsubscribe all</button>
+        <div id="active-subscription-list" aria-live="polite">
+          <div class="active-subscription-empty">No active instruments</div>
+        </div>
+      </div>
+    </div>
   </aside>
   <button id="right-drawer-toggle" class="collapsed" onclick="toggleRightDrawer()" title="Toggle option bubble panel">‹</button>
 
@@ -465,10 +477,10 @@
 </script>
 
 <script src="config.js?v=20261014-1"></script>
-<script src="ui.js?v=20261014-5"></script>
+<script src="ui.js?v=20261015-2"></script>
 <script src="bubbles.js?v=20261014-2"></script>
 <script src="chart.js?v=20260919-1"></script>
-<script src="ws.js?v=20261014-2"></script>
-<script src="init.js?v=20261014-5"></script>
+<script src="ws.js?v=20261015-2"></script>
+<script src="init.js?v=20261015-3"></script>
 </body>
 </html>
