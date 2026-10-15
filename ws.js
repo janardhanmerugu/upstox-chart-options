@@ -83,6 +83,7 @@ function connectWS() {
     }
     else if (t === 'unsubscribed') {
       removeActiveSubscription(msg.symbol);
+      if (!msg.removed) showAlert('warn', `⚠ ${msg.symbol} was not active on the server.`);
     }
 
     else if (t === 'open_interest_data') {
