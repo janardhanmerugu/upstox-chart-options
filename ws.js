@@ -8,10 +8,18 @@ function resolvedWebSocketUrl() {
   return configured;
 }
 
+let wsRetryTmr = null;
+let wsAutoReconnect = true;
+let wsReconnectPending = false;
+
 function connectWS() {
   clearAlerts();  // Remove any old alert messages
-  
-  // Close existing connection if present (prevent duplicate connections)
+  wsAutoReconnect = true;
+  if (wsRetryTmr) {
+    clearTimeout(wsRetryTmr);
+    wsRetryTmr = null;
+  }
+  if (ws && (ws.readyState === WebSocket.CONNECTING || ws.readyState === WebSocket.OPEN)) return;
   if (ws) ws.close();
   
   setStatus('connecting','CONNECTING…');
@@ -51,6 +59,15 @@ function connectWS() {
       tickCnt = 0;  // Reset counter for next second
     }, CONFIG.TPS_INTERVAL_MS);
 
+    if (wsReconnectPending) {
+      const savedToken = sessionStorage.getItem('upstox_token');
+      if (savedToken) {
+        socket.send(JSON.stringify({ type: 'auth', token: savedToken }));
+        showAlert('info','🔄 Reconnected. Restoring your session…', false);
+      } else {
+        wsReconnectPending = false;
+      }
+    }
   };
 
   // ── MESSAGE HANDLER ────────────────────────────────────────────────────
@@ -70,6 +87,14 @@ function connectWS() {
       setTok(true,'✅ Token accepted!');
       setStatus('live','● READY');
       showAlert('ok','✅ Token saved! Pick underlying & click ⬇ Load Chain');
+      if (wsReconnectPending) {
+        wsReconnectPending = false;
+        if (selSym) {
+          const backendIv = (selIv === 5 || selIv === 15 || selIv === 30 ||
+            selIv === 60 || selIv === 300 || selIv === 900) ? 1 : selIv;
+          ws.send(JSON.stringify({ type: 'subscribe', symbol: selSym, interval: backendIv }));
+        }
+      }
       
       optOnAuthOk();  // Trigger option chain UI updates
       reconnectOptionSubscriptions();
@@ -260,6 +285,13 @@ function connectWS() {
       renderActiveSubscriptions([]);
       tokSaved = false; setTok(null,'Disconnected.');
       ws = null;
+      if (wsAutoReconnect && !wsRetryTmr) {
+        wsReconnectPending = true;
+        wsRetryTmr = setTimeout(() => {
+          wsRetryTmr = null;
+          connectWS();
+        }, CONFIG.WS_RETRY_MS || 5000);
+      }
     } catch(e) { console.error('Disconnect handler error:', e); }
   };
 }
@@ -268,10 +300,16 @@ function connectWS() {
 // OPTION WEBSOCKETS — one connection per selected instrument
 // ─────────────────────────────────────────────────────────────────────────────
 function _makeOptWS(subscription) {
-  if (!tokSaved || !subscription.key) return null;
+  if ((!tokSaved && !sessionStorage.getItem('upstox_token')) || !subscription.key) return null;
   const s = new WebSocket(resolvedWebSocketUrl());
   s.onopen = () => {
-    const tok = document.getElementById('token-input').value.trim();
+    const tok = sessionStorage.getItem('upstox_token') ||
+      document.getElementById('token-input').value.trim();
+    if (!tok) {
+      s.close();
+      return;
+    }
+    subscription.connectedAt = Date.now();
     s.send(JSON.stringify({ type: 'auth', token: tok }));
   };
   s.onmessage = e => {
@@ -302,13 +340,36 @@ function _makeOptWS(subscription) {
     renderOptionSubscriptions();
   };
   s.onclose = () => {
-    if (optionSubscriptions.includes(subscription)) {
+    if (subscription.socket === s && optionSubscriptions.includes(subscription)) {
+      if (subscription.connectedAt && Date.now() - subscription.connectedAt > 30000) {
+        subscription.retryCount = 0;
+      }
+      subscription.connectedAt = null;
       subscription.socket = null;
       subscription.status = 'OFFLINE';
       renderOptionSubscriptions();
+      scheduleOptionReconnect(subscription);
     }
   };
   return s;
+}
+
+function scheduleOptionReconnect(subscription) {
+  if (!wsAutoReconnect || !optionSubscriptions.includes(subscription) ||
+      !sessionStorage.getItem('upstox_token') || subscription.reconnectTimer) return;
+  const attempt = subscription.retryCount || 0;
+  const delay = Math.min(1000 * (2 ** attempt), 30000);
+  subscription.retryCount = attempt + 1;
+  subscription.reconnectTimer = setTimeout(() => {
+    subscription.reconnectTimer = null;
+    if (!wsAutoReconnect || !optionSubscriptions.includes(subscription) ||
+        subscription.socket) return;
+    subscription.socket = _makeOptWS(subscription);
+    if (!subscription.socket) {
+      subscription.status = 'ERROR';
+      renderOptionSubscriptions();
+    }
+  }, delay);
 }
 
 function subscribeOptionInstrument(details) {
@@ -399,6 +460,10 @@ function unsubscribeOptionInstrument(instrumentKey) {
     subscription.socket.onclose = null;
     try { subscription.socket.close(); } catch(_) {}
   }
+  if (subscription.reconnectTimer) {
+    clearTimeout(subscription.reconnectTimer);
+    subscription.reconnectTimer = null;
+  }
   BUB.clearOptionBucket(subscription.optionType, instrumentKey);
 
   const remaining = optionSubscriptions.filter(item => item.optionType === subscription.optionType).at(-1);
@@ -436,9 +501,19 @@ function sanitizeLatin1String(value) {
 }
 
 function disconnectWS() {
+  wsAutoReconnect = false;
+  wsReconnectPending = false;
+  if (wsRetryTmr) {
+    clearTimeout(wsRetryTmr);
+    wsRetryTmr = null;
+  }
   // Close browser connections without sending provider unsubscribe requests.
   if (ws)   { try { ws.close();   } catch(_){} ws   = null; }
   optionSubscriptions.forEach(subscription => {
+    if (subscription.reconnectTimer) {
+      clearTimeout(subscription.reconnectTimer);
+      subscription.reconnectTimer = null;
+    }
     if (subscription.socket) {
       subscription.socket.onclose = null;
       try { subscription.socket.close(); } catch(_) {}
