@@ -41,6 +41,16 @@ file:///D:/upstox-chart/upstox-chart-options/index.html?ws=ws%3A%2F%2F127.0.0.1%
 
 Then click **Connect** and authenticate with a valid Upstox token.
 
+## Drawing Rectangles
+
+Open **Drawing Tools** in the right sidebar, then click **Draw one rectangle**
+or press **R**. Drag on the chart to create one rectangle; drawing mode exits
+when the drag ends. Choose red or green with the fill swatches. Click a
+rectangle to select it and double-click it to delete it. Press **Escape** to
+cancel drawing. Rectangles can extend across empty time slots and beyond the
+first or last candle. Changing the selected chart instrument clears drawn
+rectangles.
+
 ## Vercel Custom Domain
 
 Use this domain for the deployed Options frontend:

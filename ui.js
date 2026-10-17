@@ -403,6 +403,7 @@ function loadSym() {
   clearAlerts();
   aggBucket = null;
   BUB.clear();
+  RD.clear();
   const backendIv = (selIv === 5 || selIv === 15 || selIv === 30 || selIv === 60 || selIv === 300 || selIv === 900) ? 1 : selIv;
   const startDate = document.getElementById('index-history-from')?.value;
   const endDate = document.getElementById('index-history-to')?.value;

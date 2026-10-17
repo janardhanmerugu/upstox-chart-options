@@ -136,12 +136,13 @@ function connectWS() {
         // Batch-load historical candles
         msg.candles.forEach(c => upsertCandle(aggCandle(c), true));
         _flushBulk();  // Push all accumulated candles to chart in one setData() call
+        RD.draw();
 
         // Flush all candles to chart in one operation
         setTimeout(() => {
           BUB.clear();
           fitChartContent();  // Fit time range and restore price autoscale
-          requestAnimationFrame(() => BUB.draw());
+          requestAnimationFrame(() => { BUB.draw(); RD.draw(); });
         }, 120);
         
         // Update ticker display with latest candle
@@ -160,8 +161,10 @@ function connectWS() {
       aggBucket = null;
       BUB.clear();
       cData = []; vData = []; cMap = {};
+      RD.clear();
       msg.candles.forEach(c => upsertCandle(aggCandle(c), true));
       _flushBulk();
+      RD.draw();
 
       if (msg.candles.length > 0) {
         updateTicker(msg.candles[msg.candles.length - 1], msg.instrument);
@@ -176,7 +179,7 @@ function connectWS() {
       setTimeout(() => {
         if (lwChart) {
           fitChartContent();
-          requestAnimationFrame(() => BUB.draw());
+          requestAnimationFrame(() => { BUB.draw(); RD.draw(); });
         }
       }, 120);
     }
@@ -228,6 +231,7 @@ function connectWS() {
       
       // Add/update chart
       upsertCandle(chartCandle, false);
+      RD.draw();
       updateTicker(chartCandle, msg.instrument);
       
       // Feed to bubbles system (for CE/PE calculations)
@@ -254,6 +258,7 @@ function connectWS() {
       if (msg.current_candle) {
         const chartCandle = aggCandle(msg.current_candle);
         upsertCandle(chartCandle, false);
+        RD.draw();
         updateTicker(chartCandle, msg.instrument);
       }
     }

@@ -106,10 +106,10 @@ function initCharts() {
 
   // ── EVENT LISTENERS ────────────────────────────────────────────────────
   // Redraw bubbles when viewport changes (scroll, zoom)
-  lwChart.timeScale().subscribeVisibleLogicalRangeChange(() => { BUB.draw(); });
+  lwChart.timeScale().subscribeVisibleLogicalRangeChange(() => { BUB.draw(); RD.draw(); });
   
   // Redraw bubbles when crosshair moves (follows mouse)
-  lwChart.subscribeCrosshairMove(() => BUB.draw());
+  lwChart.subscribeCrosshairMove(() => { BUB.draw(); RD.draw(); });
 
   // Initialize bubble overlay on the chart
   BUB.mount();
@@ -131,7 +131,7 @@ function initCharts() {
           lwChart.resize(Math.max(el.clientWidth, 200), Math.max(el.clientHeight, 200));
         }
       }
-      BUB.sync(); BUB.draw();  // Redraw bubbles after resize
+      BUB.sync(); BUB.draw(); RD.draw();  // Redraw overlays after resize
     });
     wrap._ro.observe(con);
   }
@@ -281,4 +281,3 @@ function fitChartContent() {
   cSeries.priceScale().applyOptions({ autoScale: true });
   lwChart.timeScale().fitContent();
 }
-

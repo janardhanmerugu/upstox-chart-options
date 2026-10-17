@@ -3,6 +3,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 window.addEventListener('DOMContentLoaded', () => {
+  RD.init();
   const rightContent = document.getElementById('right-drawer-content');
   const oiPanel = document.querySelector('.oi-panel');
   const activeSubscriptionsPanel = document.getElementById('active-subscriptions-panel');
@@ -50,6 +51,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
   // Ctrl + Left-click → add / remove nearest horizontal line
   document.getElementById('chart-con').addEventListener('click', e => {
+    if (RD.isDrawing()) return;
     if (!e.ctrlKey || !lwChart || !cSeries) return;
     const rect  = document.getElementById('lw-chart').getBoundingClientRect();
     const price = cSeries.coordinateToPrice(e.clientY - rect.top);
