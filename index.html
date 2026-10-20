@@ -6,7 +6,7 @@
   <title>Upstox Options Chart</title>
   <link rel="icon" type="image/svg+xml" href="favicon.svg"/>
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet"/>
-  <link rel="stylesheet" href="style.css?v=20261017-1">
+  <link rel="stylesheet" href="style.css?v=20261020-1">
 </head>
 <body>
 
@@ -441,9 +441,12 @@
         <div id="chart-drawing-controls">
           <button id="draw-rectangle-btn" class="vp-btn" type="button"
             aria-pressed="false" title="Draw one rectangle (R)"
-            onclick="RD.toggleDrawing()">Draw one rectangle (R)</button>
+            onclick="RD.toggleDrawing('rectangle')">Draw one rectangle (R)</button>
+          <button id="draw-trendline-btn" class="vp-btn" type="button"
+            aria-pressed="false" title="Draw one trend line (T)"
+            onclick="RD.toggleDrawing('trendline')">Draw trend line (T)</button>
           <button class="vp-btn vp-clear-btn" type="button"
-            onclick="RD.clear()">Clear rectangles</button>
+            onclick="RD.clear()">Clear drawings</button>
         </div>
         <div class="rect-color-picker" role="group" aria-label="Rectangle fill color">
           <span>Fill color</span>
@@ -454,7 +457,7 @@
             data-color="#00e676" aria-label="Green fill" aria-pressed="false"
             title="Green fill" onclick="RD.setColor('#00e676')"></button>
         </div>
-        <span class="drawing-hint">Press R, then drag once. Click a rectangle to select; double-click it to delete.</span>
+        <span class="drawing-hint">Press R for a rectangle or T for a trend line, then drag once. Click to select; double-click to delete.</span>
       </div>
       <div class="ds active-subscriptions-panel" id="active-subscriptions-panel">
         <div class="ds-title">
@@ -504,7 +507,7 @@
 <script src="ui.js?v=20261017-1"></script>
 <script src="bubbles.js?v=20261014-2"></script>
 <script src="chart.js?v=20261017-1"></script>
-<script src="rectangle-draw.js?v=20261017-1"></script>
+<script src="rectangle-draw.js?v=20261020-1"></script>
 <script src="ws.js?v=20261017-1"></script>
 <script src="init.js?v=20261017-1"></script>
 </body>
