@@ -252,7 +252,7 @@ function openInterestTypes() {
   return ['CE', 'PE'].filter(type => document.getElementById(`oi-${type.toLowerCase()}`)?.checked);
 }
 
-function validateHistoryRange(startDate, endDate, maxDays = 2) {
+function validateHistoryRange(startDate, endDate, maxDays = 7) {
   if (!startDate || !endDate) return { ok: false, msg: '⚠ Choose a valid history date range.' };
 
   const start = new Date(`${startDate}T00:00:00`);
@@ -278,7 +278,7 @@ function loadOpenInterest() {
   const startDate = document.getElementById('oi-from').value;
   const endDate = document.getElementById('oi-to').value;
   const optionTypes = openInterestTypes();
-  const rangeCheck = validateHistoryRange(startDate, endDate, 2);
+  const rangeCheck = validateHistoryRange(startDate, endDate, 7);
   if (!startDate || !endDate || !optionTypes.length) {
     showAlert('warn', '⚠ Choose a date range and at least one option type.');
     return;
@@ -317,7 +317,7 @@ function loadDeltaChangeHistory() {
   }
   const startDate = document.getElementById('delta-history-from').value;
   const endDate = document.getElementById('delta-history-to').value;
-  const rangeCheck = validateHistoryRange(startDate, endDate, 2);
+  const rangeCheck = validateHistoryRange(startDate, endDate, 7);
   if (!rangeCheck.ok) {
     showAlert('warn', rangeCheck.msg);
     return;
@@ -407,7 +407,7 @@ function loadSym() {
   const backendIv = (selIv === 5 || selIv === 15 || selIv === 30 || selIv === 60 || selIv === 300 || selIv === 900) ? 1 : selIv;
   const startDate = document.getElementById('index-history-from')?.value;
   const endDate = document.getElementById('index-history-to')?.value;
-  const rangeCheck = validateHistoryRange(startDate, endDate, 2);
+  const rangeCheck = validateHistoryRange(startDate, endDate, 7);
   if (!rangeCheck.ok) {
     showAlert('warn', rangeCheck.msg);
     return;
@@ -483,7 +483,7 @@ function loadIndexChart() {
 
   const startDate = document.getElementById('index-history-from').value;
   const endDate = document.getElementById('index-history-to').value;
-  const rangeCheck = validateHistoryRange(startDate, endDate, 2);
+  const rangeCheck = validateHistoryRange(startDate, endDate, 7);
   if (!rangeCheck.ok) {
     showAlert('warn', rangeCheck.msg);
     return;
