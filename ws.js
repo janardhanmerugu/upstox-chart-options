@@ -382,9 +382,9 @@ function subscribeOptionInstrument(details) {
   if (existing) return existing;
 
   const sameType = optionSubscriptions.filter(item => item.optionType === details.optionType);
-  if (sameType.length >= 2) {
+  if (sameType.length >= 3) {
     if (!details.replaceOldest) {
-      showAlert('warn', `⚠ You can subscribe to only two ${details.optionType} instruments.`);
+      showAlert('warn', `⚠ You can subscribe to only three ${details.optionType} instruments.`);
       return null;
     }
     unsubscribeOptionInstrument(sameType[0].key);
@@ -408,42 +408,42 @@ function renderOptionSubscriptions() {
   const row = document.getElementById('opt-info-row');
   if (!list || !count || !row) return;
 
-  count.textContent = `${optionSubscriptions.length} / 4`;
+  count.textContent = `${optionSubscriptions.length} / 6`;
   row.style.display = optionSubscriptions.length ? 'flex' : 'none';
   list.replaceChildren();
 
-  if (!optionSubscriptions.length) {
-    const empty = document.createElement('div');
-    empty.className = 'opt-subscriptions-empty';
-    empty.textContent = 'No option instruments selected';
-    list.appendChild(empty);
-  }
+  ['CE', 'PE'].forEach(optionType => {
+    const group = document.createElement('section');
+    group.className = `opt-subscription-group ${optionType.toLowerCase()}`;
 
-  optionSubscriptions.forEach(subscription => {
-    const item = document.createElement('div');
-    item.className = 'opt-subscription-row';
-    const details = document.createElement('div');
-    details.className = 'opt-subscription-details';
-    const title = document.createElement('div');
-    title.className = `opt-subscription-title ${subscription.optionType.toLowerCase()}`;
-    title.textContent = `${subscription.optionType} ${subscription.strike}`;
-    const meta = document.createElement('div');
-    meta.className = 'opt-subscription-meta';
-    meta.textContent = `${subscription.expiry} · ${subscription.status}`;
-    const key = document.createElement('div');
-    key.className = 'opt-subscription-key';
-    key.textContent = subscription.key;
-    details.append(title, meta, key);
+    const heading = document.createElement('div');
+    heading.className = 'opt-subscription-group-title';
+    heading.textContent = optionType;
+    group.appendChild(heading);
 
-    const button = document.createElement('button');
-    button.type = 'button';
-    button.className = 'opt-unsubscribe-btn';
-    button.textContent = '×';
-    button.setAttribute('aria-label', `Unsubscribe ${subscription.optionType} ${subscription.strike}`);
-    button.title = `Unsubscribe ${subscription.optionType} ${subscription.strike}`;
-    button.onclick = () => unsubscribeOptionInstrument(subscription.key);
-    item.append(details, button);
-    list.appendChild(item);
+    optionSubscriptions
+      .filter(subscription => subscription.optionType === optionType)
+      .forEach(subscription => {
+        const item = document.createElement('div');
+        item.className = 'opt-subscription-row';
+
+        const title = document.createElement('div');
+        title.className = `opt-subscription-title ${optionType.toLowerCase()}`;
+        title.textContent = subscription.strike;
+
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'opt-unsubscribe-btn';
+        button.textContent = '×';
+        button.setAttribute('aria-label', `Unsubscribe ${optionType} ${subscription.strike}`);
+        button.title = `Unsubscribe ${optionType} ${subscription.strike}`;
+        button.onclick = () => unsubscribeOptionInstrument(subscription.key);
+
+        item.append(title, button);
+        group.appendChild(item);
+      });
+
+    list.appendChild(group);
   });
 
   document.querySelectorAll('#opt-strikes button[data-instrument-key]').forEach(button => {
