@@ -114,6 +114,10 @@ function connectWS() {
     else if (t === 'open_interest_data') {
       OIB.setData(msg.bubbles || []);
     }
+    else if (t === 'open_interest_error') {
+      const status = document.getElementById('oi-status');
+      if (status) status.textContent = msg.message || 'Failed to load OI bubbles.';
+    }
     else if (t === 'delta_change_history') {
       if (msg.instrument !== OPT_INDEX_KEY[optUL] ||
           msg.request_id !== deltaChangeHistoryRequestId) return;
@@ -304,6 +308,34 @@ function connectWS() {
 // ─────────────────────────────────────────────────────────────────────────────
 // OPTION WEBSOCKETS — one connection per selected instrument
 // ─────────────────────────────────────────────────────────────────────────────
+function optionBubbleSettings(subscription) {
+  return {
+    bubble_mode: true,
+    option_type: subscription.optionType,
+    strike: subscription.strike,
+    expiry: subscription.expiry,
+    trading_symbol: subscription.tradingSymbol || subscription.key,
+    underlying: subscription.underlying || OPT_INDEX_KEY[optUL],
+    min_ratio_ce: Math.max(0, Number(bubMinRatioCE) || 0),
+    min_ratio_pe: Math.max(0, Number(bubMinRatioPE) || 0),
+    min_spot_delta: Math.max(0, Number(bubSpotDeltaMin) || 0),
+    min_oi_change: Math.max(0, Number(document.getElementById('oi-min-change')?.value) || 0),
+  };
+}
+
+function notifyOptionBubbleConfig() {
+  optionSubscriptions.forEach(subscription => {
+    const socket = subscription.socket;
+    if (socket?.readyState === WebSocket.OPEN) {
+      socket.send(JSON.stringify({
+        type: 'bubble_config',
+        enabled: true,
+        ...optionBubbleSettings(subscription),
+      }));
+    }
+  });
+}
+
 function _makeOptWS(subscription) {
   if ((!tokSaved && !sessionStorage.getItem('upstox_token')) || !subscription.key) return null;
   const s = new WebSocket(resolvedWebSocketUrl());
@@ -324,8 +356,17 @@ function _makeOptWS(subscription) {
     } else if (msg.type === 'auth_ok') {
       const backendIv = (selIv === 5 || selIv === 15 || selIv === 30 || selIv === 60 || selIv === 300 || selIv === 900) ? 1 : selIv;
       subscription.status = 'SUBSCRIBING';
-      s.send(JSON.stringify({ type: 'subscribe', symbol: subscription.key, interval: backendIv }));
+      s.send(JSON.stringify({
+        type: 'subscribe',
+        symbol: subscription.key,
+        interval: backendIv,
+        ...optionBubbleSettings(subscription),
+      }));
       renderOptionSubscriptions();
+    } else if (msg.type === 'premium_bubble') {
+      BUB.pushServerBubble(msg.bubble);
+    } else if (msg.type === 'oi_bubble') {
+      OIB.pushServerLive(msg.bubble);
     } else if (msg.type === 'candle') {
       if (subscription.optionType === 'CE') BUB.pushCE5s(msg.candle, subscription.key);
       else BUB.pushPE5s(msg.candle, subscription.key);
@@ -395,7 +436,12 @@ function subscribeOptionInstrument(details) {
     return null;
   }
 
-  const subscription = { ...details, socket: null, status: 'CONNECTING' };
+  const subscription = {
+    ...details,
+    underlying: details.underlying || OPT_INDEX_KEY[optUL],
+    socket: null,
+    status: 'CONNECTING',
+  };
   optionSubscriptions.push(subscription);
   subscription.socket = _makeOptWS(subscription);
   renderOptionSubscriptions();

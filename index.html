@@ -6,7 +6,7 @@
   <title>Upstox Options Chart</title>
   <link rel="icon" type="image/svg+xml" href="favicon.svg"/>
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet"/>
-  <link rel="stylesheet" href="style.css?v=20261020-1">
+  <link rel="stylesheet" href="style.css?v=20261023-1">
 </head>
 <body>
 
@@ -121,6 +121,7 @@
           <div id="opt-subscribed-list" aria-live="polite"></div>
         </div>
       </div>
+
     </div>
 
     <!-- ── OPEN INTEREST BUBBLES ── -->
@@ -131,6 +132,10 @@
         <label>From<input id="oi-from" class="oi-input" type="date"></label>
         <label>To<input id="oi-to" class="oi-input" type="date"></label>
       </div>
+      <label class="sync-row" for="oi-sync-history" style="display:flex;align-items:center;gap:.45rem;font-size:.62rem;color:var(--muted);margin:.25rem 0 .35rem">
+        <input id="oi-sync-history" type="checkbox" checked>
+        <span>Sync with left-side history range</span>
+      </label>
       <div class="oi-control-row">
         <label for="oi-radius">Bubble Radius</label>
         <input id="oi-radius" class="oi-radius-range" type="range" min="1" max="100" step="1" value="50" oninput="oiBubbleRadiusMultiplier=Number(this.value)/3000; document.getElementById('oi-radius-value').textContent=this.value + '%'; BUB.draw()">
@@ -138,7 +143,8 @@
       </div>
       <div class="oi-control-row">
         <label for="oi-min-change">Min OI Change</label>
-        <input id="oi-min-change" class="oi-input" type="number" min="0" step="1" value="50000" oninput="BUB.draw()">
+        <input id="oi-min-change" class="oi-input" type="number" min="0" step="1" value="50000"
+          oninput="notifyOptionBubbleConfig(); BUB.draw()">
       </div>
       <div class="oi-checks">
         <label><input id="oi-ce" type="checkbox" checked onchange="BUB.draw()"> CE</label>
@@ -151,8 +157,8 @@
       <div id="oi-symbols" class="oi-symbols" aria-live="polite">
         <div class="oi-symbols-table-wrap">
           <table class="oi-symbols-table">
-            <thead><tr><th colspan="3">Date / Time</th><th>Symbol / Show</th></tr></thead>
-            <tbody class="oi-symbols-list"><tr><td colspan="4">—</td></tr></tbody>
+            <thead><tr><th>PE</th><th>Strike</th><th>CE</th></tr></thead>
+            <tbody class="oi-symbols-list"><tr><td colspan="3">—</td></tr></tbody>
           </table>
         </div>
       </div>
@@ -160,10 +166,10 @@
 
       <div class="oi-legend" aria-label="Open Interest bubble legend">
         <div class="oi-legend-title">OI Legend</div>
-        <div class="oi-legend-row"><span class="oi-dot ce-up"></span> CE OI ↑</div>
-        <div class="oi-legend-row"><span class="oi-dot ce-down"></span> CE OI ↓</div>
-        <div class="oi-legend-row"><span class="oi-dot pe-up"></span> PE OI ↑</div>
-        <div class="oi-legend-row"><span class="oi-dot pe-down"></span> PE OI ↓</div>
+        <label class="oi-legend-row"><span class="oi-dot ce-up"></span> CE OI ↑<input id="oi-show-ce-up" type="checkbox" checked onchange="BUB.draw()"></label>
+        <label class="oi-legend-row"><span class="oi-dot ce-down"></span> CE OI ↓<input id="oi-show-ce-down" type="checkbox" checked onchange="BUB.draw()"></label>
+        <label class="oi-legend-row"><span class="oi-dot pe-up"></span> PE OI ↑<input id="oi-show-pe-up" type="checkbox" checked onchange="BUB.draw()"></label>
+        <label class="oi-legend-row"><span class="oi-dot pe-down"></span> PE OI ↓<input id="oi-show-pe-down" type="checkbox" checked onchange="BUB.draw()"></label>
       </div>
 
       <div class="oi-color-grid" aria-label="Open Interest custom colors">
@@ -224,7 +230,7 @@
           <span class="bub-cfg-label">Spot Δ Min</span>
           <input type="number" id="bub-spot-min" class="bub-cfg-input" min="0" step="0.5" value="0.7"
             title="Only show bubbles where |spot close−open| ≥ this value"
-            oninput="bubSpotDeltaMin=+this.value||0; BUB.draw()"/>
+            oninput="bubSpotDeltaMin=+this.value||0; notifyOptionBubbleConfig(); BUB.draw()"/>
           <span style="font-size:.58rem;color:var(--muted)">|spot C−O| ≥</span>
         </div>
 
@@ -359,12 +365,12 @@
           <div class="bubble-filter-row">
             <span class="bc-label">Min CE</span>
             <input type="number" id="bub-minrat-ce" class="bc-num" min="0" step="0.1" value="1"
-              oninput="bubMinRatioCE=+this.value||0; BUB.draw()" style="border-color:#ff3d5a55"/>
+              oninput="bubMinRatioCE=+this.value||0; notifyOptionBubbleConfig(); BUB.draw()" style="border-color:#ff3d5a55"/>
           </div>
           <div class="bubble-filter-row">
             <span class="bc-label">Min PE</span>
             <input type="number" id="bub-minrat-pe" class="bc-num" min="0" step="0.1" value="1"
-              oninput="bubMinRatioPE=+this.value||0; BUB.draw()" style="border-color:#00e67655"/>
+              oninput="bubMinRatioPE=+this.value||0; notifyOptionBubbleConfig(); BUB.draw()" style="border-color:#00e67655"/>
           </div>
           <div class="bubble-filter-row">
             <span class="bc-label">MaxPx</span>
@@ -509,7 +515,7 @@
 <script src="bubbles.js?v=20261014-2"></script>
 <script src="chart.js?v=20261017-1"></script>
 <script src="rectangle-draw.js?v=20261020-1"></script>
-<script src="ws.js?v=20261017-1"></script>
-<script src="init.js?v=20261017-1"></script>
+<script src="ws.js?v=20261023-1"></script>
+<script src="init.js?v=20261023-1"></script>
 </body>
 </html>

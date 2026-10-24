@@ -17,7 +17,6 @@ window.addEventListener('DOMContentLoaded', () => {
     setupRightDrawerAccordion(rightContent);
     restoreActiveSubscriptionsState();
   }
-
   // selSym is intentionally NOT set here.
   // It gets assigned in optSelectStrike() when the user picks a CE/PE strike,
   // ensuring the spot chart subscription always matches the chosen underlying.
@@ -37,6 +36,23 @@ window.addEventListener('DOMContentLoaded', () => {
   document.getElementById('index-history-to').value = localDateValue(today);
   document.getElementById('delta-history-from').value = localDateValue(twoDaysAgo);
   document.getElementById('delta-history-to').value = localDateValue(today);
+
+  const syncOiHistoryWithSidebar = () => {
+    const checkbox = document.getElementById('oi-sync-history');
+    if (!checkbox || !checkbox.checked) return;
+    const from = document.getElementById('index-history-from')?.value;
+    const to = document.getElementById('index-history-to')?.value;
+    if (from) document.getElementById('oi-from').value = from;
+    if (to) document.getElementById('oi-to').value = to;
+  };
+  document.getElementById('oi-sync-history')?.addEventListener('change', (event) => {
+    if (event.target.checked) syncOiHistoryWithSidebar();
+  });
+  ['index-history-from', 'index-history-to'].forEach(id => {
+    document.getElementById(id)?.addEventListener('change', syncOiHistoryWithSidebar);
+    document.getElementById(id)?.addEventListener('input', syncOiHistoryWithSidebar);
+  });
+  syncOiHistoryWithSidebar();
 
   // ── Restore token from sessionStorage (survives refresh, clears on tab close) ──
   const defaultToken = 'eyJ0eXAiOiJKV1QiLCJrZXlfaWQiOiJza192MS4wIiwiYWxnIjoiSFMyNTYifQ.eyJzdWIiOiJCTTY3OTIiLCJqdGkiOiI2YTMwYzU3ZmY4NWUzZTY2MTgwNmM4N2UiLCJpc011bHRpQ2xpZW50IjpmYWxzZSwiaXNQbHVzUGxhbiI6dHJ1ZSwiaXNFeHRlbmRlZCI6dHJ1ZSwiaWF0IjoxNzgxNTgxMTgzLCJpc3MiOiJ1ZGFwaS1nYXRld2F5LXNlcnZpY2UiLCJleHAiOjE4MTMxODMyMDB9.XujS7CgYRW1uCm_zhdhHza9rrCD1BBE4vG03lPglqz8';

@@ -112,6 +112,33 @@ const BUB = {
     this.draw();
   },
 
+  pushServerBubble(raw) {
+    if (!raw || !['CE', 'PE'].includes(raw.optType)) return;
+    const item = {
+      ...raw,
+      time: Number(raw.time),
+      open: Number(raw.open),
+      spotClose: Number(raw.spotClose),
+      optDelta: Number(raw.optDelta),
+      spotDelta: Number(raw.spotDelta),
+      ratio: Number(raw.ratio),
+      _serverLive: true,
+    };
+    if (![item.time, item.open, item.spotClose, item.optDelta,
+      item.spotDelta, item.ratio].every(Number.isFinite)) return;
+    const key = `${item.instrument || item.strikeLabel || ''}|${item.optType}|${item.time}`;
+    const existing = this.items.findIndex(candidate =>
+      `${candidate.instrument || candidate.strikeLabel || ''}|${candidate.optType}|${candidate.time}` === key
+    );
+    if (existing >= 0) this.items[existing] = item;
+    else this.items.push(item);
+    while (this.items.length > this.MAX) this.items.shift();
+    this.updateStrikeRows();
+    const count = document.getElementById('s-bubs');
+    if (count) count.textContent = this.items.length;
+    this.draw();
+  },
+
   _strikeKey(item) {
     return String(item.strikeLabel ?? item.instrument ?? item.strike ?? item.optType ?? '');
   },
@@ -521,6 +548,33 @@ const OIB = {
     this.updateSymbols();
     this.draw();
   },
+  pushServerLive(item) {
+    if (!item || !['CE', 'PE'].includes(item.option_type)) return;
+    const normalized = {
+      ...item,
+      time: Number(item.time),
+      index_close: Number(item.index_close),
+      oi_change: Number(item.oi_change),
+      live: true,
+    };
+    if (![normalized.time, normalized.index_close, normalized.oi_change]
+      .every(Number.isFinite)) return;
+    const key = this._rowKey(normalized);
+    const existing = this.items.findIndex(candidate =>
+      this._rowKey(candidate) === key && Number(candidate.time) === normalized.time
+    );
+    if (normalized.oi_change === 0) {
+      if (existing >= 0) this.items.splice(existing, 1);
+      this.updateSymbols();
+      this.draw();
+      return;
+    }
+    if (existing >= 0) this.items[existing] = normalized;
+    else this.items.push(normalized);
+    if (this.selectedRows) this.selectedRows.add(key);
+    this.updateSymbols();
+    this.draw();
+  },
   _dateTime(time) {
     const date = new Date((Number(time) + IST_OFFSET_S) * 1000);
     return {
@@ -529,7 +583,8 @@ const OIB = {
     };
   },
   _rowKey(item) {
-    const instrumentId = item.instrument_id ?? item.instrumentId ?? item.symbol ?? '';
+    const instrumentId = item.instrument_key ?? item.instrument_id ??
+      item.instrumentId ?? item.symbol ?? '';
     return `${this._dateTime(item.time).date}|${String(instrumentId).trim()}`;
   },
   updateSymbols() {
@@ -538,21 +593,33 @@ const OIB = {
     const rows = new Map();
     this.items.forEach(item => {
       const symbol = typeof item.symbol === 'string' ? item.symbol.trim() : '';
-      const instrumentId = item.instrument_id ?? item.instrumentId ?? symbol;
+      const instrumentId = item.instrument_key ?? item.instrument_id ??
+        item.instrumentId ?? symbol;
       if (!symbol || !instrumentId || item.time == null) return;
-      const key = this._rowKey(item);
-      if (!rows.has(key)) rows.set(key, {
-        key,
-        symbol,
-        instrumentId: String(instrumentId),
+      const optionType = item.option_type;
+      if (!['CE', 'PE'].includes(optionType)) return;
+      const subscription = optionSubscriptions.find(entry => entry.key === instrumentId);
+      const strike = item.strike != null && Number.isFinite(Number(item.strike))
+        ? Number(item.strike)
+        : subscription?.strike != null && Number.isFinite(Number(subscription.strike))
+          ? Number(subscription.strike) : null;
+      const strikeLabel = strike == null ? symbol : String(strike);
+      const date = this._dateTime(item.time).date;
+      const groupKey = `${date}|${strikeLabel}`;
+      if (!rows.has(groupKey)) rows.set(groupKey, {
+        strikeLabel,
+        date,
         timestamp: Number(item.time),
-        ...this._dateTime(item.time),
+        sides: { CE: new Map(), PE: new Map() },
       });
+      const row = rows.get(groupKey);
+      row.timestamp = Math.max(row.timestamp, Number(item.time));
+      row.sides[optionType].set(this._rowKey(item), symbol);
     });
     list.textContent = '';
     if (!rows.size) {
       const empty = document.createElement('tr');
-      empty.innerHTML = '<td colspan="4">—</td>';
+      empty.innerHTML = '<td colspan="3">—</td>';
       list.appendChild(empty);
       return;
     }
@@ -563,38 +630,61 @@ const OIB = {
       group.latest = Math.max(group.latest, row.timestamp);
       group.rows.push(row);
     });
-    const allRowKeys = new Set(rows.keys());
+    const allRowKeys = new Set(
+      [...rows.values()].flatMap(row => [
+        ...row.sides.CE.keys(),
+        ...row.sides.PE.keys(),
+      ]),
+    );
     [...groups.values()].sort((a, b) => b.latest - a.latest).forEach(group => {
       const dateRow = document.createElement('tr');
       dateRow.className = 'oi-symbol-date-row';
       const dateCell = document.createElement('td');
       dateCell.colSpan = 3;
-      dateCell.textContent = group.date;
-      const timeCell = document.createElement('td');
-      timeCell.textContent = this._dateTime(group.latest).time;
-      dateRow.append(dateCell, timeCell);
+      const [year, month, day] = group.date.split('-').map(Number);
+      const formattedDate = new Intl.DateTimeFormat('en-GB', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+      }).format(new Date(year, month - 1, day));
+      dateCell.textContent = `${formattedDate} · ${this._dateTime(group.latest).time}`;
+      dateRow.appendChild(dateCell);
       list.appendChild(dateRow);
 
-      group.rows.sort((a, b) => b.timestamp - a.timestamp).forEach(row => {
+      group.rows.sort((a, b) =>
+        a.strikeLabel.localeCompare(b.strikeLabel, undefined, { numeric: true })).forEach(row => {
         const symbolRow = document.createElement('tr');
         symbolRow.className = 'oi-symbol-entry-row';
-        const symbolCell = document.createElement('td');
-        symbolCell.colSpan = 3;
-        symbolCell.textContent = row.symbol;
-        symbolCell.title = row.symbol;
-        const checkCell = document.createElement('td');
-        const checkbox = document.createElement('input');
-        checkbox.type = 'checkbox';
-        checkbox.checked = this.selectedRows === null || this.selectedRows.has(row.key);
-        checkbox.setAttribute('aria-label', `Show ${row.symbol} on ${row.date}`);
-        checkbox.onchange = () => {
-          if (this.selectedRows === null) this.selectedRows = new Set(allRowKeys);
-          if (checkbox.checked) this.selectedRows.add(row.key);
-          else this.selectedRows.delete(row.key);
-          BUB.draw();
-        };
-        checkCell.appendChild(checkbox);
-        symbolRow.append(symbolCell, checkCell);
+        ['PE', null, 'CE'].forEach(side => {
+          const cell = document.createElement('td');
+          if (side === null) {
+            cell.textContent = row.strikeLabel;
+            cell.title = row.strikeLabel;
+            cell.className = 'oi-symbol-strike';
+          } else {
+            const sideRows = row.sides[side];
+            if (sideRows.size) {
+              const checkbox = document.createElement('input');
+              checkbox.type = 'checkbox';
+              const keys = [...sideRows.keys()];
+              checkbox.checked = this.selectedRows === null ||
+                keys.every(key => this.selectedRows.has(key));
+              checkbox.setAttribute('aria-label',
+                `Show ${side} ${row.strikeLabel} on ${row.date}`);
+              checkbox.onchange = () => {
+                if (this.selectedRows === null) this.selectedRows = new Set(allRowKeys);
+                keys.forEach(key => {
+                  if (checkbox.checked) this.selectedRows.add(key);
+                  else this.selectedRows.delete(key);
+                });
+                BUB.draw();
+              };
+              cell.appendChild(checkbox);
+            }
+            cell.className = `oi-symbol-side oi-symbol-${side.toLowerCase()}`;
+          }
+          symbolRow.appendChild(cell);
+        });
         list.appendChild(symbolRow);
       });
     });
@@ -611,7 +701,17 @@ const OIB = {
     BUB.draw();
   },
   setData(items) {
-    this.items = items || [];
+    const liveItems = this.items.filter(item => item.live);
+    const merged = new Map();
+    (items || []).forEach(item => {
+      const key = `${item.instrument_key ?? item.instrument_id ?? item.symbol ?? ''}|${item.time}`;
+      merged.set(key, item);
+    });
+    liveItems.forEach(item => {
+      const key = `${item.instrument_key ?? item.instrument_id ?? item.symbol ?? ''}|${item.time}`;
+      merged.set(key, item);
+    });
+    this.items = [...merged.values()];
     this.selectedRows = null;
     this.liveEnabled = true;
     this.liveOi.clear();
@@ -651,6 +751,10 @@ const OIB = {
 
     this.items.forEach(item => {
       if ((item.option_type === 'CE' && !showCE) || (item.option_type === 'PE' && !showPE)) return;
+      const directionCheckbox = item.option_type === 'CE'
+        ? (Number(item.oi_change) > 0 ? 'oi-show-ce-up' : 'oi-show-ce-down')
+        : (Number(item.oi_change) > 0 ? 'oi-show-pe-up' : 'oi-show-pe-down');
+      if (document.getElementById(directionCheckbox)?.checked === false) return;
       if (this.selectedRows && !this.selectedRows.has(this._rowKey(item))) return;
       if (Math.abs(Number(item.oi_change) || 0) < minOiChange) return;
       const chartTime = (selIv === 5 || selIv === 15 || selIv === 30 || selIv === 60 || selIv === 300 || selIv === 900)

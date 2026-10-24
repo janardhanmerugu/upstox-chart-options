@@ -307,6 +307,7 @@ function loadOpenInterest() {
     end_date: endDate,
     interval: chartIntervalSeconds(),
     option_types: optionTypes,
+    min_oi_change: Math.max(0, Number(document.getElementById('oi-min-change').value) || 0),
   }));
 }
 
@@ -335,6 +336,7 @@ function loadDeltaChangeHistory() {
   const requestId = ++deltaChangeHistoryRequestId;
   const minRatioCE = Math.max(0, Number(document.getElementById('bub-minrat-ce').value) || 0);
   const minRatioPE = Math.max(0, Number(document.getElementById('bub-minrat-pe').value) || 0);
+  const minSpotDelta = Math.max(0, Number(document.getElementById('bub-spot-min').value) || 0);
   const status = document.getElementById('delta-history-status');
   if (status) status.textContent = `Loading ${startDate} to ${endDate}…`;
   ws.send(JSON.stringify({
@@ -344,6 +346,7 @@ function loadDeltaChangeHistory() {
     end_date: endDate,
     min_ratio_ce: minRatioCE,
     min_ratio_pe: minRatioPE,
+    min_spot_delta: minSpotDelta,
     request_id: requestId,
   }));
 }

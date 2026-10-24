@@ -25,6 +25,16 @@ ws://127.0.0.1:8765/ws
 
 Keep this terminal running while using the chart.
 
+## Live Option Bubbles
+
+Option subscriptions use bubble mode: the server continues storing the full
+market feed, but sends the browser filtered premium-bubble events for completed
+matching five-second option/index buckets and OI-bubble events when OI changes.
+Historical and live bubbles share instrument/time identities so overlapping
+events can be merged. The main index chart connection continues receiving its
+normal price and candle updates; chart positioning, colors, and visibility
+controls remain in the browser.
+
 ## Use Locally
 
 Open `index.html` in a browser. To force the local server, add this query parameter to the file URL:
