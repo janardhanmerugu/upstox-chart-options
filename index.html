@@ -213,13 +213,17 @@
         <label>History from<input id="delta-history-from" class="oi-input" type="date"></label>
         <label>To<input id="delta-history-to" class="oi-input" type="date"></label>
       </div>
+      <label class="sync-row" for="delta-sync-history" style="display:flex;align-items:center;gap:.45rem;font-size:.62rem;color:var(--muted);margin:.25rem 0 .35rem">
+        <input id="delta-sync-history" type="checkbox" checked>
+        <span>Sync with left-side history range</span>
+      </label>
       <button class="opt-load-btn" id="delta-history-load" type="button" onclick="loadDeltaChangeHistory()">Load Stored Delta Bubbles</button>
       <div id="delta-history-status" class="tip">Choose dates to load stored option bubbles.</div>
       <div id="bub-strikes" class="oi-symbols" aria-live="polite">
         <div class="oi-symbols-table-wrap">
           <table class="oi-symbols-table">
-            <thead><tr><th colspan="3">Option Strike</th><th>Show</th></tr></thead>
-            <tbody id="bub-strikes-list"><tr><td colspan="4">—</td></tr></tbody>
+            <thead><tr><th>PE</th><th>Strike</th><th>CE</th></tr></thead>
+            <tbody id="bub-strikes-list"><tr><td colspan="3">—</td></tr></tbody>
           </table>
         </div>
       </div>

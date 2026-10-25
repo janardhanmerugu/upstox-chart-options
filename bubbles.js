@@ -152,7 +152,7 @@ const BUB = {
   },
 
   _strikeRowKey(item) {
-    return `${this._dateTime(item.time).date}|${this._strikeKey(item)}`;
+    return `${this._dateTime(item.time).date}|${this._strikeKey(item)}|${item.optType}`;
   },
 
   updateStrikeRows() {
@@ -168,21 +168,41 @@ const BUB = {
       }
       const group = groups.get(dateTime.date);
       group.latest = Math.max(group.latest, Number(item.time));
-      const key = `${dateTime.date}|${strikeKey}`;
-      if (!group.rows.has(key)) group.rows.set(key, strikeKey.replace(/_/g, ' '));
+      const strike = Number(item.strike);
+      const labelMatch = strikeKey.match(/_(\d+(?:\.\d+)?)_(?:CE|PE)$/);
+      const strikeValue = item.strike != null && Number.isFinite(strike)
+        ? String(strike)
+        : labelMatch?.[1] || null;
+      const strikeLabel = strikeValue || strikeKey.replace(/_/g, ' ');
+      const rowKey = `${dateTime.date}|${strikeValue || strikeKey.replace(/_(?:CE|PE)$/, '')}`;
+      if (!group.rows.has(rowKey)) group.rows.set(rowKey, {
+        strikeKey,
+        strikeLabel,
+        sides: {CE: new Set(), PE: new Set()},
+      });
+      const side = item.optType;
+      if (side === 'CE' || side === 'PE') {
+        group.rows.get(rowKey).sides[side].add(this._strikeRowKey(item));
+      }
     });
     const rows = new Map();
-    groups.forEach(group => group.rows.forEach((label, key) => rows.set(key, label)));
+    groups.forEach(group => group.rows.forEach((row, key) => rows.set(
+      key,
+      [...row.sides.CE, ...row.sides.PE],
+    )));
     if (this.selectedStrikes) {
-      rows.forEach((_, key) => {
-        if (!this.strikeRows.has(key)) this.selectedStrikes.add(key);
+      rows.forEach((rowKeys, key) => {
+        const previousKeys = new Set(this.strikeRows.get(key) || []);
+        rowKeys.forEach(rowKey => {
+          if (!previousKeys.has(rowKey)) this.selectedStrikes.add(rowKey);
+        });
       });
     }
     this.strikeRows = rows;
     list.textContent = '';
     if (!rows.size) {
       const empty = document.createElement('tr');
-      empty.innerHTML = '<td colspan="4">—</td>';
+      empty.innerHTML = '<td colspan="3">—</td>';
       list.appendChild(empty);
       return;
     }
@@ -191,32 +211,51 @@ const BUB = {
       dateRow.className = 'oi-symbol-date-row';
       const dateCell = document.createElement('td');
       dateCell.colSpan = 3;
-      dateCell.textContent = group.date;
-      const timeCell = document.createElement('td');
-      timeCell.textContent = this._dateTime(group.latest).time;
-      dateRow.append(dateCell, timeCell);
+      const [year, month, day] = group.date.split('-').map(Number);
+      const formattedDate = new Intl.DateTimeFormat('en-GB', {
+        day: '2-digit', month: '2-digit', year: 'numeric',
+      }).format(new Date(year, month - 1, day));
+      dateCell.textContent = `${formattedDate} · ${this._dateTime(group.latest).time}`;
+      dateRow.appendChild(dateCell);
       list.appendChild(dateRow);
 
-      [...group.rows.entries()].sort((a, b) => a[1].localeCompare(b[1])).forEach(([key, label]) => {
+      [...group.rows.values()].sort((a, b) =>
+        a.strikeLabel.localeCompare(b.strikeLabel, undefined, {numeric: true})).forEach(rowData => {
         const row = document.createElement('tr');
         row.className = 'oi-symbol-entry-row';
-        const strikeCell = document.createElement('td');
-        strikeCell.colSpan = 3;
-        strikeCell.textContent = label;
-        strikeCell.title = label;
-        const checkCell = document.createElement('td');
-        const checkbox = document.createElement('input');
-        checkbox.type = 'checkbox';
-        checkbox.checked = this.selectedStrikes === null || this.selectedStrikes.has(key);
-        checkbox.setAttribute('aria-label', `Show ${label} bubbles on ${group.date}`);
-        checkbox.onchange = () => {
-          if (this.selectedStrikes === null) this.selectedStrikes = new Set(this.strikeRows.keys());
-          if (checkbox.checked) this.selectedStrikes.add(key);
-          else this.selectedStrikes.delete(key);
-          this.draw();
-        };
-        checkCell.appendChild(checkbox);
-        row.append(strikeCell, checkCell);
+        ['PE', null, 'CE'].forEach(side => {
+          const cell = document.createElement('td');
+          if (side === null) {
+            cell.textContent = rowData.strikeLabel;
+            cell.title = rowData.strikeLabel;
+            cell.className = 'oi-symbol-strike';
+          } else {
+            const keys = [...rowData.sides[side]];
+            if (keys.length) {
+              const checkbox = document.createElement('input');
+              checkbox.type = 'checkbox';
+              checkbox.checked = this.selectedStrikes === null ||
+                keys.every(key => this.selectedStrikes.has(key));
+              checkbox.setAttribute('aria-label',
+                `Show ${side} ${rowData.strikeLabel} delta bubbles on ${group.date}`);
+              checkbox.onchange = () => {
+                if (this.selectedStrikes === null) {
+                  this.selectedStrikes = new Set(
+                    [...this.strikeRows.values()].flat(),
+                  );
+                }
+                keys.forEach(key => {
+                  if (checkbox.checked) this.selectedStrikes.add(key);
+                  else this.selectedStrikes.delete(key);
+                });
+                this.draw();
+              };
+              cell.appendChild(checkbox);
+            }
+            cell.className = `oi-symbol-side oi-symbol-${side.toLowerCase()}`;
+          }
+          row.appendChild(cell);
+        });
         list.appendChild(row);
       });
     });

@@ -37,22 +37,26 @@ window.addEventListener('DOMContentLoaded', () => {
   document.getElementById('delta-history-from').value = localDateValue(twoDaysAgo);
   document.getElementById('delta-history-to').value = localDateValue(today);
 
-  const syncOiHistoryWithSidebar = () => {
-    const checkbox = document.getElementById('oi-sync-history');
-    if (!checkbox || !checkbox.checked) return;
+  const syncHistoryRange = (checkboxId, fromId, toId) => {
+    const checkbox = document.getElementById(checkboxId);
+    if (!checkbox?.checked) return;
     const from = document.getElementById('index-history-from')?.value;
     const to = document.getElementById('index-history-to')?.value;
-    if (from) document.getElementById('oi-from').value = from;
-    if (to) document.getElementById('oi-to').value = to;
+    if (from) document.getElementById(fromId).value = from;
+    if (to) document.getElementById(toId).value = to;
   };
-  document.getElementById('oi-sync-history')?.addEventListener('change', (event) => {
-    if (event.target.checked) syncOiHistoryWithSidebar();
+  const syncAllHistoryRanges = () => {
+    syncHistoryRange('oi-sync-history', 'oi-from', 'oi-to');
+    syncHistoryRange('delta-sync-history', 'delta-history-from', 'delta-history-to');
+  };
+  ['oi-sync-history', 'delta-sync-history'].forEach(id => {
+    document.getElementById(id)?.addEventListener('change', syncAllHistoryRanges);
   });
   ['index-history-from', 'index-history-to'].forEach(id => {
-    document.getElementById(id)?.addEventListener('change', syncOiHistoryWithSidebar);
-    document.getElementById(id)?.addEventListener('input', syncOiHistoryWithSidebar);
+    document.getElementById(id)?.addEventListener('change', syncAllHistoryRanges);
+    document.getElementById(id)?.addEventListener('input', syncAllHistoryRanges);
   });
-  syncOiHistoryWithSidebar();
+  syncAllHistoryRanges();
 
   // ── Restore token from sessionStorage (survives refresh, clears on tab close) ──
   const defaultToken = 'eyJ0eXAiOiJKV1QiLCJrZXlfaWQiOiJza192MS4wIiwiYWxnIjoiSFMyNTYifQ.eyJzdWIiOiJCTTY3OTIiLCJqdGkiOiI2YTMwYzU3ZmY4NWUzZTY2MTgwNmM4N2UiLCJpc011bHRpQ2xpZW50IjpmYWxzZSwiaXNQbHVzUGxhbiI6dHJ1ZSwiaXNFeHRlbmRlZCI6dHJ1ZSwiaWF0IjoxNzgxNTgxMTgzLCJpc3MiOiJ1ZGFwaS1nYXRld2F5LXNlcnZpY2UiLCJleHAiOjE4MTMxODMyMDB9.XujS7CgYRW1uCm_zhdhHza9rrCD1BBE4vG03lPglqz8';
