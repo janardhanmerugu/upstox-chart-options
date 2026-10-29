@@ -727,50 +727,50 @@ const BUB_PRESETS = {
     // CE falling while spot falls + PE falling while spot rises
     'chk-ce-bull-pos': false, 'chk-ce-bull-neg': false,
     'chk-ce-bear-pos': false, 'chk-ce-bear-neg': true,
-    'chk-pe-bull-pos': true,  'chk-pe-bull-neg': false,
-    'chk-pe-bear-pos': false, 'chk-pe-bear-neg': false,
+    'chk-pe-bear-pos': true,  'chk-pe-bear-neg': false,
+    'chk-pe-bull-pos': false, 'chk-pe-bull-neg': false,
   },
   positive: {
     // Positive Direction: all ▲ +ve — spot genuinely moving up
     'chk-ce-bull-pos': true,  'chk-ce-bull-neg': false,
     'chk-ce-bear-pos': false,  'chk-ce-bear-neg': false,
-    'chk-pe-bull-pos': true,  'chk-pe-bull-neg': false,
-    'chk-pe-bear-pos': false,  'chk-pe-bear-neg': false,
+    'chk-pe-bear-pos': true,  'chk-pe-bear-neg': false,
+    'chk-pe-bull-pos': false, 'chk-pe-bull-neg': false,
   },
   negative: {
     // Negative Direction: all ▼ −ve — spot genuinely moving down
     'chk-ce-bull-pos': false, 'chk-ce-bull-neg': false,
     'chk-ce-bear-pos': false, 'chk-ce-bear-neg': true,
-    'chk-pe-bull-pos': false, 'chk-pe-bull-neg': false,
-    'chk-pe-bear-pos': false, 'chk-pe-bear-neg': true,
+    'chk-pe-bear-pos': false, 'chk-pe-bear-neg': false,
+    'chk-pe-bull-pos': false, 'chk-pe-bull-neg': true,
   },
   fake: {
     // Fake Move: options contradicting price direction
     // CE rising while spot falls + PE falling while spot falls + PE rising while spot rises
     'chk-ce-bull-pos': false, 'chk-ce-bull-neg': true,
     'chk-ce-bear-pos': true, 'chk-ce-bear-neg': false,
-    'chk-pe-bull-pos': false, 'chk-pe-bull-neg': true,
-    'chk-pe-bear-pos': true,  'chk-pe-bear-neg': false,
+    'chk-pe-bear-pos': false, 'chk-pe-bear-neg': true,
+    'chk-pe-bull-pos': true,  'chk-pe-bull-neg': false,
   },
   inverse_fake: {
     // Inverse Fake: options confirming price from contrarian side
     // CE rising while spot rises + CE falling while spot rises + PE falling while spot rises + PE rising while spot falls
     'chk-ce-bull-pos': true,  'chk-ce-bull-neg': false,
     'chk-ce-bear-pos': false,  'chk-ce-bear-neg': true,
-    'chk-pe-bull-pos': true,  'chk-pe-bull-neg': false,
-    'chk-pe-bear-pos': false, 'chk-pe-bear-neg': true,
+    'chk-pe-bear-pos': true,  'chk-pe-bear-neg': false,
+    'chk-pe-bull-pos': false, 'chk-pe-bull-neg': true,
   },
   all: {
     'chk-ce-bull-pos': true,  'chk-ce-bull-neg': true,
     'chk-ce-bear-pos': true,  'chk-ce-bear-neg': true,
-    'chk-pe-bull-pos': true,  'chk-pe-bull-neg': true,
     'chk-pe-bear-pos': true,  'chk-pe-bear-neg': true,
+    'chk-pe-bull-pos': true,  'chk-pe-bull-neg': true,
   },
   none: {
     'chk-ce-bull-pos': false, 'chk-ce-bull-neg': false,
     'chk-ce-bear-pos': false, 'chk-ce-bear-neg': false,
-    'chk-pe-bull-pos': false, 'chk-pe-bull-neg': false,
     'chk-pe-bear-pos': false, 'chk-pe-bear-neg': false,
+    'chk-pe-bull-pos': false, 'chk-pe-bull-neg': false,
   },
 };
 

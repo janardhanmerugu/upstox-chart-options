@@ -24,6 +24,7 @@ function connectWS() {
   
   setStatus('connecting','CONNECTING…');
   const socketUrl = resolvedWebSocketUrl();
+  connectionTracker.attempt(socketUrl);
 
   try {
     // Establish WebSocket to backend server
@@ -39,6 +40,7 @@ function connectWS() {
 
   // ── CONNECTION ESTABLISHED ────────────────────────────────────────────
   socket.onopen = () => {
+    connectionTracker.opened();
     setStatus('authed','● CONNECTED');
     setTok(null,'✅ Connected! Paste your token and click Save Token.');
     
@@ -78,6 +80,7 @@ function connectWS() {
     } catch(_) { 
       return;  // Ignore malformed messages
     }
+    connectionTracker.message();
     
     tickCnt++;  // Increment tick counter for TPS monitoring
     const t = msg.type;
@@ -206,6 +209,7 @@ function connectWS() {
 
     // ── LIVE STATUS UPDATES ────────────────────────────────────────────
     else if (t === 'status') {
+      connectionTracker.serverStatus(msg.status, msg.diagnostic);
       if (msg.status === 'connected') {
         document.getElementById('s-sym').textContent = msg.symbol;
         document.getElementById('s-iv').textContent  = ivLabel(selIv);
@@ -275,13 +279,15 @@ function connectWS() {
     else if (t === 'error') { showAlert('err','⚠ '+msg.message, false); }
   };
 
-  socket.onerror = () => {
+  socket.onerror = (event) => {
+    connectionTracker.error(event && event.message);
     setStatus('err','ERROR');
     showAlert('err',`⚠ Cannot connect to ${socketUrl}\n→ Start server first, then retry.`, false);
   };
 
-  socket.onclose = () => {
+  socket.onclose = (event) => {
     if (ws !== socket) return;
+    connectionTracker.closed(event);
     try {
       setStatus('idle','DISCONNECTED');
       document.getElementById('connectBtn').disabled    = false;

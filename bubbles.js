@@ -77,7 +77,7 @@ const BUB = {
     this._pushItem(spotBucket, ceDelta, spotDelta, ratio, 'CE', instrumentKey);
   },
 
-  // ── PE bubble: color: ratio > 0 → red (premium rose = bearish), ratio ≤ 0 → green
+  // ── PE bubble: negative ratio is bearish, positive ratio is bullish
   _tryEmitPE(peBucket, spotBucket, instrumentKey) {
     if (!peBucket || !spotBucket) return;
     if (peBucket.time !== spotBucket.time) return;
@@ -342,8 +342,8 @@ const BUB = {
     // Read color pickers once per draw
     const clrCEBull = document.getElementById('clr-ce-bull')?.value || '#00e676';
     const clrCEBear = document.getElementById('clr-ce-bear')?.value || '#ff3d5a';
-    const clrPEBull = document.getElementById('clr-pe-bull')?.value || '#00e676';
-    const clrPEBear = document.getElementById('clr-pe-bear')?.value || '#ff3d5a';
+    const clrPEBull = document.getElementById('clr-pe-bull')?.value || '#ff3d5a';
+    const clrPEBear = document.getElementById('clr-pe-bear')?.value || '#00e676';
 
     // Read direction checkboxes
     const chkCEBullPos = document.getElementById('chk-ce-bull-pos')?.checked ?? true;
@@ -367,10 +367,10 @@ const BUB = {
       // ── Classify bubble type & index direction ────────────────────────────
       // CE Bullish  → CE ratio > 0  (premium rose  → calls bid up → bullish)
       // CE Bearish  → CE ratio ≤ 0  (premium fell  → calls sold   → bearish)
-      // PE Bullish  → PE ratio ≤ 0  (premium fell  → puts sold    → bullish)
-      // PE Bearish  → PE ratio > 0  (premium rose  → puts bid up  → bearish)
+      // PE Bearish  → PE ratio < 0
+      // PE Bullish  → PE ratio > 0
       const isCE    = b.optType === 'CE';
-      const isGreen = isCE ? (b.ratio > 0) : (b.ratio <= 0);
+      const isBullish = b.ratio > 0;
 
       // Index direction: did spot move up (+ve) or down (−ve) during this 5s bar?
       // Use spotClose−open when available; fall back to ratio sign as proxy.
@@ -378,25 +378,26 @@ const BUB = {
       if (b.spotClose !== undefined && b.open !== undefined && b.spotClose !== b.open) {
         spotPos = (b.spotClose - b.open) > 0;
       } else {
-        // Proxy: CE ratio>0 or PE ratio<0 both imply bullish pressure
-        spotPos = isGreen;
+        // Proxy: positive option ratios imply bullish pressure
+        spotPos = isBullish;
       }
 
       // ── Checkbox visibility gate ──────────────────────────────────────────
       // ▲ +ve checkbox = show this bubble type when index went UP
       // ▼ −ve checkbox = show this bubble type when index went DOWN
       let visible = false;
-      if ( isCE &&  isGreen) visible = spotPos ? chkCEBullPos : chkCEBullNeg;
-      if ( isCE && !isGreen) visible = spotPos ? chkCEBearPos : chkCEBearNeg;
-      if (!isCE &&  isGreen) visible = spotPos ? chkPEBullPos : chkPEBullNeg;
-      if (!isCE && !isGreen) visible = spotPos ? chkPEBearPos : chkPEBearNeg;
+      if ( isCE &&  isBullish) visible = spotPos ? chkCEBullPos : chkCEBullNeg;
+      if ( isCE && !isBullish) visible = spotPos ? chkCEBearPos : chkCEBearNeg;
+      if (!isCE &&  isBullish) visible = spotPos ? chkPEBullPos : chkPEBullNeg;
+      if (!isCE && !isBullish) visible = spotPos ? chkPEBearPos : chkPEBearNeg;
       if (!visible) { b._x = undefined; return; }
 
       let hexColor;
-      if (isCE && isGreen)  hexColor = clrCEBull;
+      if (isCE && isBullish)  hexColor = clrCEBull;
       else if (isCE)        hexColor = clrCEBear;
-      else if (isGreen)     hexColor = clrPEBull;
+      else if (isBullish)   hexColor = clrPEBull;
       else                  hexColor = clrPEBear;
+      const isGreenColor = isCE ? isBullish : !isBullish;
 
       // Recalculate chartTime based on current selIv
       b.chartTime = (selIv === 5 || selIv === 15 || selIv === 30 || selIv === 60 || selIv === 300 || selIv === 900)
@@ -447,7 +448,7 @@ const BUB = {
         const fontSize = Math.max(7, Math.min(rr * 0.50, 13));
         ctx.save();
         ctx.font         = `bold ${fontSize}px "JetBrains Mono", monospace`;
-        ctx.fillStyle    = isGreen ? 'rgba(0,30,15,0.95)' : 'rgba(255,220,220,0.95)';
+        ctx.fillStyle    = isGreenColor ? 'rgba(0,30,15,0.95)' : 'rgba(255,220,220,0.95)';
         ctx.textAlign    = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillText(txt, x, y);
@@ -504,7 +505,7 @@ const BUB = {
     const ss = String(d.getUTCSeconds()).padStart(2,'0');
     const ts   = `${hh}:${mm}:${ss} IST`;
 
-    const isGreenTip  = isCE ? (b.ratio > 0) : (b.ratio <= 0);
+    const isGreenTip  = isCE ? (b.ratio > 0) : (b.ratio < 0);
     title.textContent = isCE
       ? (b.ratio > 0 ? '🟢 CE Rising' : '🔴 CE Falling')
       : (b.ratio > 0 ? '🔴 PE Rising' : '🟢 PE Falling');

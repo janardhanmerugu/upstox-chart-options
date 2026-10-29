@@ -26,6 +26,7 @@
         <button class="hbtn primary" id="connectBtn"    onclick="connectWS()">⬡ Connect</button>
         <button class="hbtn danger"  id="disconnectBtn" onclick="disconnectWS()" disabled>✕ Disconnect</button>
       </div>
+        <div id="connection-diagnostic" role="status" aria-live="polite">No connection diagnostics yet</div>
     </div>
 
     <!-- ── ACCESS TOKEN ── -->
@@ -313,42 +314,42 @@
           </div>
         </div>
 
-        <!-- PE Bullish -->
-        <div class="bub-type-block">
-          <div class="bub-type-title">
-            <span class="dot" style="background:#00e676"></span>
-            <span style="color:#00e676">PE Bullish</span>
-            <span style="color:var(--muted);font-size:.55rem;font-weight:400;margin-left:auto">PE ratio ≤ 0</span>
-            <input type="color" id="clr-pe-bull" class="bub-color-pick" value="#00e676"
-              title="PE Bullish fill color" oninput="BUB.draw()"/>
-          </div>
-          <div class="bub-dir-row">
-            <span style="font-size:.57rem;color:var(--muted)">Index:</span>
-            <label class="bub-chk-label">
-              <input type="checkbox" id="chk-pe-bull-pos" checked onchange="bubPresetCustom()"/> ▲ +ve
-            </label>
-            <label class="bub-chk-label">
-              <input type="checkbox" id="chk-pe-bull-neg" onchange="bubPresetCustom()"/> ▼ −ve
-            </label>
-          </div>
-        </div>
-
         <!-- PE Bearish -->
         <div class="bub-type-block">
           <div class="bub-type-title">
-            <span class="dot" style="background:#ff3d5a"></span>
-            <span style="color:#ff3d5a">PE Bearish</span>
-            <span style="color:var(--muted);font-size:.55rem;font-weight:400;margin-left:auto">PE ratio &gt; 0</span>
-            <input type="color" id="clr-pe-bear" class="bub-color-pick" value="#ff3d5a"
+            <span class="dot" style="background:#00e676"></span>
+            <span style="color:#00e676">PE Bearish</span>
+            <span style="color:var(--muted);font-size:.55rem;font-weight:400;margin-left:auto">PE ratio &lt; 0</span>
+            <input type="color" id="clr-pe-bear" class="bub-color-pick" value="#00e676"
               title="PE Bearish fill color" oninput="BUB.draw()"/>
           </div>
           <div class="bub-dir-row">
             <span style="font-size:.57rem;color:var(--muted)">Index:</span>
             <label class="bub-chk-label">
-              <input type="checkbox" id="chk-pe-bear-pos" onchange="bubPresetCustom()"/> ▲ +ve
+              <input type="checkbox" id="chk-pe-bear-pos" checked onchange="bubPresetCustom()"/> ▲ +ve
             </label>
             <label class="bub-chk-label">
               <input type="checkbox" id="chk-pe-bear-neg" onchange="bubPresetCustom()"/> ▼ −ve
+            </label>
+          </div>
+        </div>
+
+        <!-- PE Bullish -->
+        <div class="bub-type-block">
+          <div class="bub-type-title">
+            <span class="dot" style="background:#ff3d5a"></span>
+            <span style="color:#ff3d5a">PE Bullish</span>
+            <span style="color:var(--muted);font-size:.55rem;font-weight:400;margin-left:auto">PE ratio &gt; 0</span>
+            <input type="color" id="clr-pe-bull" class="bub-color-pick" value="#ff3d5a"
+              title="PE Bullish fill color" oninput="BUB.draw()"/>
+          </div>
+          <div class="bub-dir-row">
+            <span style="font-size:.57rem;color:var(--muted)">Index:</span>
+            <label class="bub-chk-label">
+              <input type="checkbox" id="chk-pe-bull-pos" onchange="bubPresetCustom()"/> ▲ +ve
+            </label>
+            <label class="bub-chk-label">
+              <input type="checkbox" id="chk-pe-bull-neg" onchange="bubPresetCustom()"/> ▼ −ve
             </label>
           </div>
         </div>
@@ -519,6 +520,7 @@
 <script src="bubbles.js?v=20261014-2"></script>
 <script src="chart.js?v=20261017-1"></script>
 <script src="rectangle-draw.js?v=20261020-1"></script>
+<script src="connection-tracker.js?v=20261030-1"></script>
 <script src="ws.js?v=20261023-1"></script>
 <script src="init.js?v=20261023-1"></script>
 </body>
