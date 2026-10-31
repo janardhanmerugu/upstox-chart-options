@@ -117,6 +117,10 @@
     <!-- ── OPEN INTEREST BUBBLES ── -->
     <div class="ds oi-panel">
       <div class="ds-title"><span class="ds-title-icon">◉</span><span>Open Interest</span></div>
+      <div class="oi-control-row oi-toggle-row">
+        <span>Bubbles</span>
+        <button id="oi-toggle" class="tbtn" type="button" onclick="toggleOpenInterest()">● ON</button>
+      </div>
       <div class="oi-selected-index">Using chain index: <strong id="oi-selected-index">NIFTY</strong></div>
       <div class="oi-control-grid">
         <label>From<input id="oi-from" class="oi-input" type="date"></label>
@@ -133,16 +137,18 @@
       </div>
       <div class="oi-control-row">
         <label for="oi-min-change">Min OI Change</label>
-        <input id="oi-min-change" class="oi-input" type="number" min="0" step="1" value="50000"
-          oninput="notifyOptionBubbleConfig(); BUB.draw()">
+        <div class="oi-stepper">
+          <button class="oi-step-btn" type="button" aria-label="Decrease minimum OI change by 5000"
+            onclick="adjustOiMinChange(-5000)">−5000</button>
+          <input id="oi-min-change" class="oi-input" type="number" min="0" step="1" value="50000"
+            oninput="notifyOptionBubbleConfig(); BUB.draw()">
+          <button class="oi-step-btn" type="button" aria-label="Increase minimum OI change by 5000"
+            onclick="adjustOiMinChange(5000)">+5000</button>
+        </div>
       </div>
       <div class="oi-checks">
         <label><input id="oi-ce" type="checkbox" checked onchange="BUB.draw()"> CE</label>
         <label><input id="oi-pe" type="checkbox" checked onchange="BUB.draw()"> PE</label>
-      </div>
-      <div class="oi-control-row oi-toggle-row">
-        <span>Open Interest Bubbles</span>
-        <button id="oi-toggle" class="tbtn" type="button" onclick="toggleOpenInterest()">● ON</button>
       </div>
       <div id="oi-symbols" class="oi-symbols" aria-live="polite">
         <div class="oi-symbols-table-wrap">
@@ -167,11 +173,12 @@
           <option value="index-fall">📉 Index Fall</option>
           <option value="all">✅ All</option>
           <option value="none">⬜ None</option>
+          <option value="custom">✏ Custom</option>
         </select>
-        <label class="oi-legend-row"><span class="oi-dot ce-up"></span> CE OI ↑<input id="oi-show-ce-up" type="checkbox" onchange="BUB.draw()"></label>
-        <label class="oi-legend-row"><span class="oi-dot ce-down"></span> CE OI ↓<input id="oi-show-ce-down" type="checkbox" checked onchange="BUB.draw()"></label>
-        <label class="oi-legend-row"><span class="oi-dot pe-up"></span> PE OI ↑<input id="oi-show-pe-up" type="checkbox" onchange="BUB.draw()"></label>
-        <label class="oi-legend-row"><span class="oi-dot pe-down"></span> PE OI ↓<input id="oi-show-pe-down" type="checkbox" checked onchange="BUB.draw()"></label>
+        <label class="oi-legend-row"><span class="oi-dot ce-up"></span> CE OI ↑<input id="oi-show-ce-up" type="checkbox" onchange="oiLegendCustom()"></label>
+        <label class="oi-legend-row"><span class="oi-dot ce-down"></span> CE OI ↓<input id="oi-show-ce-down" type="checkbox" checked onchange="oiLegendCustom()"></label>
+        <label class="oi-legend-row"><span class="oi-dot pe-up"></span> PE OI ↑<input id="oi-show-pe-up" type="checkbox" onchange="oiLegendCustom()"></label>
+        <label class="oi-legend-row"><span class="oi-dot pe-down"></span> PE OI ↓<input id="oi-show-pe-down" type="checkbox" checked onchange="oiLegendCustom()"></label>
       </div>
 
       <div class="oi-color-grid" aria-label="Open Interest custom colors">
@@ -211,6 +218,10 @@
     <!-- ── DELTA CHANGE ── -->
     <div class="ds">
       <div class="ds-title"><span class="ds-title-icon">🫧</span><span>Delta Change</span></div>
+      <div class="oi-control-row oi-toggle-row">
+        <span>Open Interest Bubbles</span>
+        <button class="tbtn off" id="bubBtn" type="button" onclick="toggleBubbles()">○ Bubbles OFF</button>
+      </div>
       <div class="oi-control-grid">
         <label>History from<input id="delta-history-from" class="oi-input" type="date"></label>
         <label>To<input id="delta-history-to" class="oi-input" type="date"></label>
@@ -234,7 +245,7 @@
         <!-- Spot Delta Min -->
         <div class="bub-cfg-row">
           <span class="bub-cfg-label">Spot Δ Min</span>
-          <input type="number" id="bub-spot-min" class="bub-cfg-input" min="0" step="0.5" value="0.7"
+          <input type="number" id="bub-spot-min" class="bub-cfg-input" min="0" step="0.5" value="1"
             title="Only show bubbles where |spot close−open| ≥ this value"
             oninput="bubSpotDeltaMin=+this.value||0; notifyOptionBubbleConfig(); BUB.draw()"/>
           <span style="font-size:.58rem;color:var(--muted)">|spot C−O| ≥</span>
@@ -251,11 +262,6 @@
             <span id="bub-opacity-val" class="bub-opacity-val">60%</span>
           </div>
         </div>
-        <div class="bub-cfg-row">
-          <span class="bub-cfg-label">Bubbles</span>
-          <button class="tbtn off" id="bubBtn" type="button" onclick="toggleBubbles()">○ Bubbles OFF</button>
-        </div>
-
         <!-- Preset dropdown -->
         <div style="display:flex;align-items:center;gap:.4rem;margin-bottom:.3rem">
           <span style="font-size:.6rem;color:var(--muted);white-space:nowrap">Preset</span>

@@ -311,6 +311,16 @@ function loadOpenInterest() {
   }));
 }
 
+function adjustOiMinChange(delta) {
+  const input = document.getElementById('oi-min-change');
+  if (!input) return;
+  const currentValue = Number(input.value);
+  const nextValue = Math.max(0, (Number.isFinite(currentValue) ? currentValue : 0) + delta);
+  input.value = String(nextValue);
+  notifyOptionBubbleConfig();
+  BUB.draw();
+}
+
 function loadDeltaChangeHistory() {
   if (!ws || ws.readyState !== WebSocket.OPEN || !tokSaved) {
     showAlert('err', '⚠ Connect and authenticate with the server first.');
@@ -858,11 +868,18 @@ const OI_LEGEND_PRESETS = {
 };
 
 function applyOiLegendPreset(value) {
+  if (value === 'custom') return;
   const preset = OI_LEGEND_PRESETS[value];
   if (!preset) return;
   Object.entries(preset).forEach(([id, checked]) => {
     const checkbox = document.getElementById(id);
     if (checkbox) checkbox.checked = checked;
   });
+  BUB.draw();
+}
+
+function oiLegendCustom() {
+  const select = document.getElementById('oi-legend-preset');
+  if (select) select.value = 'custom';
   BUB.draw();
 }
