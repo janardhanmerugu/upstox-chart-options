@@ -103,13 +103,18 @@ function initCharts() {
   cSeries.priceScale().applyOptions({ 
     scaleMargins: { top: 0.05, bottom: 0.20 }  // 5% top, 20% bottom for volume
   });
+  syncOptionStrikeLines();
 
   // ── EVENT LISTENERS ────────────────────────────────────────────────────
   // Redraw bubbles when viewport changes (scroll, zoom)
-  lwChart.timeScale().subscribeVisibleLogicalRangeChange(() => { BUB.draw(); RD.draw(); });
+  lwChart.timeScale().subscribeVisibleLogicalRangeChange(() => {
+    BUB.draw(); RD.draw();
+  });
   
   // Redraw bubbles when crosshair moves (follows mouse)
-  lwChart.subscribeCrosshairMove(() => { BUB.draw(); RD.draw(); });
+  lwChart.subscribeCrosshairMove(() => {
+    BUB.draw(); RD.draw();
+  });
 
   // Initialize bubble overlay on the chart
   BUB.mount();

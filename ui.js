@@ -426,11 +426,49 @@ function loadSym() {
 // Lines added/removed via Ctrl + Left-click on chart
 // All lines cleared via Ctrl + C
 let hLines = [];
+let optionStrikeLines = new Map();
 
-function addHLine(price) {
+function addHLine(price, options = {}) {
   if (!cSeries) return;
-  const pl = cSeries.createPriceLine({ price, color:'#ffe033cc', lineWidth:1, lineStyle:2, axisLabelVisible:true, title:'' });
-  hLines.push({ priceLine: pl, price });
+  const pl = cSeries.createPriceLine({
+    price,
+    color: options.color || '#ffe033cc',
+    lineWidth: 1,
+    lineStyle: options.lineStyle ?? 2,
+    lineVisible: options.lineVisible ?? true,
+    axisLabelVisible: options.axisLabelVisible ?? true,
+    axisLabelColor: options.axisLabelColor,
+    axisLabelTextColor: options.axisLabelTextColor,
+    title: options.title || '',
+  });
+  hLines.push({ priceLine: pl, price, optionKey: options.optionKey || null });
+  return pl;
+}
+
+function syncOptionStrikeLines() {
+  optionStrikeLines.forEach(line => {
+    if (cSeries) cSeries.removePriceLine(line);
+  });
+  hLines = hLines.filter(line => !line.optionKey);
+  optionStrikeLines.clear();
+  if (!cSeries) return;
+
+  optionSubscriptions.forEach(subscription => {
+    const strike = Number(subscription.strike);
+    if (!subscription.key || !Number.isFinite(strike)) return;
+    const axisColor = subscription.optionType === 'CE' ? '#0284c7' : '#db2777';
+    const line = addHLine(strike, {
+      optionKey: subscription.key,
+      color: `${axisColor}cc`,
+      lineStyle: subscription.optionType === 'CE' ? 0 : 1,
+      lineVisible: false,
+      title: '',
+      axisLabelVisible: true,
+      axisLabelColor: axisColor,
+      axisLabelTextColor: '#ffffff',
+    });
+    if (line) optionStrikeLines.set(subscription.key, line);
+  });
 }
 
 function removeNearestHLine(clientY, rect) {
@@ -451,6 +489,7 @@ function clearAllLines() {
   if (!cSeries) return;
   hLines.forEach(h => cSeries.removePriceLine(h.priceLine));
   hLines = [];
+  optionStrikeLines.clear();
 }
 
 // ──── Option Chain UI ────
@@ -471,7 +510,6 @@ function optPickUL(ul, btn) {
   refreshOiBtn.disabled = true;
   refreshOiBtn.hidden = true;
   document.getElementById('opt-strikes-row').style.display = 'none';
-  document.getElementById('opt-info-row').style.display    = 'none';
   document.getElementById('opt-strikes').innerHTML         = '';
   document.getElementById('opt-chain-status').textContent  = 'Pick expiry → Load Chain';
 
@@ -509,7 +547,6 @@ function optOnExpiry() {
   refreshOiBtn.disabled = true;
   refreshOiBtn.hidden = true;
   document.getElementById('opt-strikes-row').style.display = 'none';
-  document.getElementById('opt-info-row').style.display    = 'none';
   document.getElementById('opt-strikes').innerHTML         = '';
   document.getElementById('opt-fetch-btn').disabled        = false;
   document.getElementById('opt-chain-status').textContent  = `Expiry: ${val}  →  Click ⬇ Load Chain`;
@@ -625,6 +662,7 @@ function optSelectStrike(strike, optType, instrKey, btn, replaceOldest = false) 
     selPEKey = instrKey; selPEStrike = strike;
     showAlert('info',`🟢 PE: ${optUL} ${strike}  |  Expiry: ${expiry}`);
   }
+  syncOptionStrikeLines();
 
   // Load spot chart — always use the correct index key for the current underlying.
   // selSym drives the spot WebSocket subscription; set it here (not in optPickUL).
@@ -789,5 +827,42 @@ function bubApplyPreset(val) {
 function bubPresetCustom() {
   const sel = document.getElementById('bub-preset');
   if (sel && sel.value !== 'custom') sel.value = 'custom';
+  BUB.draw();
+}
+
+const OI_LEGEND_PRESETS = {
+  'smart-sellers': {
+    'oi-show-ce-up': false, 'oi-show-ce-down': true,
+    'oi-show-pe-up': false, 'oi-show-pe-down': true,
+  },
+  builders: {
+    'oi-show-ce-up': true, 'oi-show-ce-down': false,
+    'oi-show-pe-up': true, 'oi-show-pe-down': false,
+  },
+  'index-rise': {
+    'oi-show-ce-up': false, 'oi-show-ce-down': true,
+    'oi-show-pe-up': true, 'oi-show-pe-down': false,
+  },
+  'index-fall': {
+    'oi-show-ce-up': true, 'oi-show-ce-down': false,
+    'oi-show-pe-up': false, 'oi-show-pe-down': true,
+  },
+  all: {
+    'oi-show-ce-up': true, 'oi-show-ce-down': true,
+    'oi-show-pe-up': true, 'oi-show-pe-down': true,
+  },
+  none: {
+    'oi-show-ce-up': false, 'oi-show-ce-down': false,
+    'oi-show-pe-up': false, 'oi-show-pe-down': false,
+  },
+};
+
+function applyOiLegendPreset(value) {
+  const preset = OI_LEGEND_PRESETS[value];
+  if (!preset) return;
+  Object.entries(preset).forEach(([id, checked]) => {
+    const checkbox = document.getElementById(id);
+    if (checkbox) checkbox.checked = checked;
+  });
   BUB.draw();
 }

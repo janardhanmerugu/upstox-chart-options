@@ -76,8 +76,8 @@ let aggBucket = null;
 // tickCnt = Count of incoming ticks (messages) - reset every second for TPS display
 // tpsTmr = Timer ID for the TPS interval (used to clear it later)
 // bubOn = Whether bubble visualization is enabled/disabled by user
-let tickCnt=0, tpsTmr=null, bubOn=true;
-let oiBubOn=false, oiBubbleRadiusMultiplier=0.016666666666666666;
+let tickCnt=0, tpsTmr=null, bubOn=false;
+let oiBubOn=true, oiBubbleRadiusMultiplier=0.016666666666666666;
 
 // ── Real-time Mode Flag ────────────────────────────────────────────────────
 // When true: chart auto-scrolls to show latest data (live mode)

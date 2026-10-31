@@ -112,17 +112,6 @@
         <div id="opt-strikes"></div>
       </div>
 
-      <!-- Active option subscriptions -->
-      <div id="opt-info-row" style="display:none">
-        <div id="opt-info-strip">
-          <div class="opt-subscriptions-heading">
-            <span>Live option instruments</span>
-            <span id="opt-subscription-count">0 / 6</span>
-          </div>
-          <div id="opt-subscribed-list" aria-live="polite"></div>
-        </div>
-      </div>
-
     </div>
 
     <!-- ── OPEN INTEREST BUBBLES ── -->
@@ -153,7 +142,7 @@
       </div>
       <div class="oi-control-row oi-toggle-row">
         <span>Open Interest Bubbles</span>
-        <button id="oi-toggle" class="tbtn off" type="button" onclick="toggleOpenInterest()">○ OFF</button>
+        <button id="oi-toggle" class="tbtn" type="button" onclick="toggleOpenInterest()">● ON</button>
       </div>
       <div id="oi-symbols" class="oi-symbols" aria-live="polite">
         <div class="oi-symbols-table-wrap">
@@ -167,9 +156,21 @@
 
       <div class="oi-legend" aria-label="Open Interest bubble legend">
         <div class="oi-legend-title">OI Legend</div>
-        <label class="oi-legend-row"><span class="oi-dot ce-up"></span> CE OI ↑<input id="oi-show-ce-up" type="checkbox" checked onchange="BUB.draw()"></label>
+        <select id="oi-legend-preset"
+          onchange="applyOiLegendPreset(this.value)"
+          style="width:100%;font-family:'JetBrains Mono',monospace;font-size:.68rem;
+                 background:#060a11;border:1px solid var(--border);color:var(--text);
+                 border-radius:6px;padding:.26rem .4rem;outline:none;">
+          <option value="smart-sellers">🧠 Smart Sellers</option>
+          <option value="builders">🏗 Builders</option>
+          <option value="index-rise">📈 Index Rise</option>
+          <option value="index-fall">📉 Index Fall</option>
+          <option value="all">✅ All</option>
+          <option value="none">⬜ None</option>
+        </select>
+        <label class="oi-legend-row"><span class="oi-dot ce-up"></span> CE OI ↑<input id="oi-show-ce-up" type="checkbox" onchange="BUB.draw()"></label>
         <label class="oi-legend-row"><span class="oi-dot ce-down"></span> CE OI ↓<input id="oi-show-ce-down" type="checkbox" checked onchange="BUB.draw()"></label>
-        <label class="oi-legend-row"><span class="oi-dot pe-up"></span> PE OI ↑<input id="oi-show-pe-up" type="checkbox" checked onchange="BUB.draw()"></label>
+        <label class="oi-legend-row"><span class="oi-dot pe-up"></span> PE OI ↑<input id="oi-show-pe-up" type="checkbox" onchange="BUB.draw()"></label>
         <label class="oi-legend-row"><span class="oi-dot pe-down"></span> PE OI ↓<input id="oi-show-pe-down" type="checkbox" checked onchange="BUB.draw()"></label>
       </div>
 
@@ -252,7 +253,7 @@
         </div>
         <div class="bub-cfg-row">
           <span class="bub-cfg-label">Bubbles</span>
-          <button class="tbtn" id="bubBtn" type="button" onclick="toggleBubbles()">● Bubbles ON</button>
+          <button class="tbtn off" id="bubBtn" type="button" onclick="toggleBubbles()">○ Bubbles OFF</button>
         </div>
 
         <!-- Preset dropdown -->

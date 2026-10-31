@@ -455,51 +455,21 @@ function subscribeOptionInstrument(details) {
 }
 
 function renderOptionSubscriptions() {
-  const list = document.getElementById('opt-subscribed-list');
-  const count = document.getElementById('opt-subscription-count');
-  const row = document.getElementById('opt-info-row');
-  if (!list || !count || !row) return;
-
-  count.textContent = `${optionSubscriptions.length} / 6`;
-  row.style.display = optionSubscriptions.length ? 'flex' : 'none';
-  list.replaceChildren();
-
-  ['CE', 'PE'].forEach(optionType => {
-    const group = document.createElement('section');
-    group.className = `opt-subscription-group ${optionType.toLowerCase()}`;
-
-    const heading = document.createElement('div');
-    heading.className = 'opt-subscription-group-title';
-    heading.textContent = optionType;
-    group.appendChild(heading);
-
-    optionSubscriptions
-      .filter(subscription => subscription.optionType === optionType)
-      .forEach(subscription => {
-        const item = document.createElement('div');
-        item.className = 'opt-subscription-row';
-
-        const title = document.createElement('div');
-        title.className = `opt-subscription-title ${optionType.toLowerCase()}`;
-        title.textContent = subscription.strike;
-
-        const button = document.createElement('button');
-        button.type = 'button';
-        button.className = 'opt-unsubscribe-btn';
-        button.textContent = '×';
-        button.setAttribute('aria-label', `Unsubscribe ${optionType} ${subscription.strike}`);
-        button.title = `Unsubscribe ${optionType} ${subscription.strike}`;
-        button.onclick = () => unsubscribeOptionInstrument(subscription.key);
-
-        item.append(title, button);
-        group.appendChild(item);
-      });
-
-    list.appendChild(group);
-  });
-
   document.querySelectorAll('#opt-strikes button[data-instrument-key]').forEach(button => {
-    button.classList.toggle('active', optionSubscriptions.some(item => item.key === button.dataset.instrumentKey));
+    const subscription = optionSubscriptions.find(item => item.key === button.dataset.instrumentKey);
+    button.classList.toggle('active', Boolean(subscription));
+    button.querySelector('.opt-unsubscribe-mark')?.remove();
+    if (!subscription) return;
+    const mark = document.createElement('span');
+    mark.className = 'opt-unsubscribe-mark';
+    mark.textContent = '×';
+    mark.setAttribute('aria-label', `Unsubscribe ${subscription.optionType} ${subscription.strike}`);
+    mark.title = `Unsubscribe ${subscription.optionType} ${subscription.strike}`;
+    mark.onclick = event => {
+      event.stopPropagation();
+      unsubscribeOptionInstrument(subscription.key);
+    };
+    button.appendChild(mark);
   });
 }
 
@@ -531,6 +501,7 @@ function unsubscribeOptionInstrument(instrumentKey) {
     selPEKey = remaining?.key || null;
     selPEStrike = remaining?.strike || null;
   }
+  syncOptionStrikeLines();
   renderOptionSubscriptions();
 }
 
