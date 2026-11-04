@@ -78,6 +78,8 @@ let aggBucket = null;
 // bubOn = Whether bubble visualization is enabled/disabled by user
 let tickCnt=0, tpsTmr=null, bubOn=false;
 let oiBubOn=true, oiBubbleRadiusMultiplier=0.016666666666666666;
+let buySignalsOn = true;
+let sellSignalsOn = true;
 
 // ── Real-time Mode Flag ────────────────────────────────────────────────────
 // When true: chart auto-scrolls to show latest data (live mode)

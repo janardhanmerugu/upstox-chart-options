@@ -6,7 +6,7 @@
   <title>Upstox Options Chart</title>
   <link rel="icon" type="image/svg+xml" href="favicon.svg"/>
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet"/>
-  <link rel="stylesheet" href="style.css?v=20261023-1">
+  <link rel="stylesheet" href="style.css?v=20261104-1">
 </head>
 <body>
 
@@ -91,7 +91,7 @@
       <!-- Load chain -->
       <div class="opt-chain-actions">
         <button class="opt-load-btn" id="opt-fetch-btn" onclick="optFetchChain()" disabled>⬇ Load Chain</button>
-        <button class="oi-refresh-btn" id="opt-refresh-oi-btn" onclick="optFetchChain(true)" disabled hidden title="Fetch the latest option-chain open interest">↻ Update OI</button>
+        <button class="oi-refresh-btn" id="opt-refresh-oi-btn" onclick="optFetchChain(true)" disabled title="Fetch the latest option-chain open interest">↻ Update OI</button>
       </div>
       <div id="opt-chain-status">Connect &amp; authenticate first</div>
 
@@ -392,6 +392,30 @@
           <span id="bub-hover-info"></span>
         </div>
 
+      </div>
+    </div>
+
+    <!-- ── BUY SIGNALS ── -->
+    <div class="ds buy-signal-panel">
+      <div class="ds-title"><span class="ds-title-icon">↗</span><span>BUY Signals</span></div>
+      <div class="oi-control-row oi-toggle-row">
+        <span>Signal comments</span>
+        <button id="buy-signal-toggle" class="tbtn" type="button" onclick="toggleBuySignals()">● ON</button>
+      </div>
+      <div class="buy-signal-rule">
+        1m bearish candle + CE OI fall ≥ Min OI Change<br>
+        next closed 1m candle bullish → <strong>BUY</strong><br>
+        1m bullish candle + PE OI fall ≥ Min OI Change on either candle<br>
+        next closed 1m candle bearish → <strong>SELL</strong>
+      </div>
+      <div class="oi-control-row oi-toggle-row">
+        <span>SELL comments</span>
+        <button id="sell-signal-toggle" class="tbtn" type="button" onclick="toggleSellSignals()">● ON</button>
+      </div>
+      <button class="opt-load-btn" id="buy-signal-refresh" type="button" onclick="refreshBuySignals()">↻ Refresh OI + Signals</button>
+      <div id="buy-signal-status" class="tip">Waiting for OI history and chart candles.</div>
+      <div id="signal-day-counts" class="signal-day-counts" aria-live="polite">
+        <div class="signal-day-empty">Daily counts will appear here.</div>
       </div>
     </div>
 

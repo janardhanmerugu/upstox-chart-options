@@ -16,6 +16,11 @@ const BUB = {
   MAX:     6000,
   MIN_R:   2,
   hovered: null,
+  lastBuySignals: [],
+  lastSellSignals: [],
+  signalDayCountsKey: '',
+  buySignalCacheKey: '',
+  sellSignalCacheKey: '',
 
   // ── Create canvas overlay inside #chart-con ──────────────────────────────
   mount() {
@@ -541,6 +546,9 @@ const BUB = {
   clear() {
     this.items   = [];
     this.hovered = null;
+    this.signalDayCountsKey = '';
+    this.buySignalCacheKey = '';
+    this.sellSignalCacheKey = '';
     this.strikeRows = new Map();
     this.selectedStrikes = null;
     this.updateStrikeRows();
@@ -557,6 +565,7 @@ const BUB = {
 
 const OIB = {
   items: [],
+  signalDataVersion: 0,
   selectedRows: null,
   liveEnabled: false,
   liveOi: new Map(),
@@ -584,6 +593,7 @@ const OIB = {
       live: true,
     };
     this.items.push(item);
+    this.signalDataVersion += 1;
     if (this.selectedRows) this.selectedRows.add(this._rowKey(item));
     this.updateSymbols();
     this.draw();
@@ -605,12 +615,14 @@ const OIB = {
     );
     if (normalized.oi_change === 0) {
       if (existing >= 0) this.items.splice(existing, 1);
+      this.signalDataVersion += 1;
       this.updateSymbols();
       this.draw();
       return;
     }
     if (existing >= 0) this.items[existing] = normalized;
     else this.items.push(normalized);
+    this.signalDataVersion += 1;
     if (this.selectedRows) this.selectedRows.add(key);
     this.updateSymbols();
     this.draw();
@@ -731,10 +743,12 @@ const OIB = {
   },
   clear() {
     this.items = [];
+    this.signalDataVersion += 1;
     this.selectedRows = null;
     this.liveEnabled = false;
     this.liveOi.clear();
     this.liveIndexPrice = null;
+    this.signalDayCountsKey = '';
     this.updateSymbols();
     const status = document.getElementById('oi-status');
     if (status) status.textContent = `Uses the chart interval: ${ivLabel(selIv)}`;
@@ -752,6 +766,7 @@ const OIB = {
       merged.set(key, item);
     });
     this.items = [...merged.values()];
+    this.signalDataVersion += 1;
     this.selectedRows = null;
     this.liveEnabled = true;
     this.liveOi.clear();
@@ -765,7 +780,13 @@ const OIB = {
     BUB.draw();
   },
   draw(ctx, width, height) {
-    if (!oiBubOn || !lwChart || !cSeries) return;
+    if (!lwChart || !cSeries) return;
+    if (!oiBubOn) {
+      this.drawBuySignals(ctx, width, height);
+      this.drawSellSignals(ctx, width, height);
+      this.updateSignalDayCounts();
+      return;
+    }
     const showCE = document.getElementById('oi-ce')?.checked ?? true;
     const showPE = document.getElementById('oi-pe')?.checked ?? true;
     let priceScaleW = 0;
@@ -818,7 +839,188 @@ const OIB = {
       ctx.stroke();
     });
     ctx.restore();
+    this.drawBuySignals(ctx, width, height);
+    this.drawSellSignals(ctx, width, height);
+    this.updateSignalDayCounts();
+  },
+  drawBuySignals(ctx, width, height) {
+    this.lastBuySignals = [];
+    if (!buySignalsOn || selIv !== 60 || !cData.length) return;
+
+    const minOiChange = Math.max(0,
+      Number(document.getElementById('oi-min-change')?.value) || 0);
+    const cacheKey = `${cData.length}|${cData[cData.length - 1]?.time}|${cData[cData.length - 1]?.close}|${OIB.signalDataVersion}|${minOiChange}|${Math.floor(Date.now() / 60000)}`;
+    if (cacheKey === this.buySignalCacheKey) {
+      this.lastBuySignals = this.cachedBuySignals;
+    } else {
+      this.buySignalCacheKey = cacheKey;
+      this.cachedBuySignals = this.calculateBuySignals(minOiChange);
+      this.lastBuySignals = this.cachedBuySignals;
+    }
+    const signals = this.lastBuySignals;
+    this.drawSignalLabels(ctx, width, height, signals, 'BUY', '#087f49', 'close');
+    const status = document.getElementById('buy-signal-status');
+    if (status) {
+      const message = signals.length
+        ? `${signals.length} BUY signal${signals.length === 1 ? '' : 's'} found.`
+        : 'No BUY signals found for the loaded candles.';
+      if (status.dataset.buyMessage !== message) {
+        status.dataset.buyMessage = message;
+        status.textContent = message;
+      }
+    }
+  },
+  calculateBuySignals(minOiChange) {
+    const qualifyingMinutes = new Set();
+    this.items.forEach(item => {
+      const oiChange = Number(item.oi_change);
+      if (item.option_type === 'CE' && oiChange < 0 &&
+          Math.abs(oiChange) >= minOiChange && Number.isFinite(Number(item.time))) {
+        qualifyingMinutes.add(Math.floor(Number(item.time) / 60) * 60);
+      }
+    });
+
+    const candles = new Map();
+    cData.forEach(candle => {
+      if (candle.open == null || candle.close == null) return;
+      const time = Number(candle.time) - IST_OFFSET_S;
+      candles.set(time, { ...candle, time });
+    });
+
+    const signals = [];
+    const currentMinute = Math.floor(Date.now() / 1000 / 60) * 60;
+    qualifyingMinutes.forEach(firstTime => {
+      const first = candles.get(firstTime);
+      const second = candles.get(firstTime + 60);
+      if (!first || !second ||
+          first.close >= first.open ||
+          second.close <= second.open ||
+          secondTimeIsOpen(second.time, currentMinute)) return;
+      signals.push(second);
+    });
+    return signals;
+  },
+  drawSellSignals(ctx, width, height) {
+    this.lastSellSignals = [];
+    if (!sellSignalsOn || selIv !== 60 || !cData.length) return;
+
+    const minOiChange = Math.max(0,
+      Number(document.getElementById('oi-min-change')?.value) || 0);
+    const cacheKey = `${cData.length}|${cData[cData.length - 1]?.time}|${cData[cData.length - 1]?.close}|${OIB.signalDataVersion}|${minOiChange}|${Math.floor(Date.now() / 60000)}`;
+    if (cacheKey === this.sellSignalCacheKey) {
+      this.lastSellSignals = this.cachedSellSignals;
+    } else {
+      this.sellSignalCacheKey = cacheKey;
+      this.cachedSellSignals = this.calculateSellSignals(minOiChange);
+      this.lastSellSignals = this.cachedSellSignals;
+    }
+    const signals = this.lastSellSignals;
+    this.drawSignalLabels(ctx, width, height, signals, 'SELL', '#a83232', 'close');
+    const status = document.getElementById('buy-signal-status');
+    if (status) {
+      const buyMessage = status.dataset.buyMessage || '';
+      const message = signals.length
+        ? `${buyMessage} ${signals.length} SELL signal${signals.length === 1 ? '' : 's'} found.`
+        : buyMessage;
+      if (status.dataset.signalMessage !== message) {
+        status.dataset.signalMessage = message;
+        status.textContent = message;
+      }
+    }
+  },
+  calculateSellSignals(minOiChange) {
+    const qualifyingMinutes = new Set();
+    this.items.forEach(item => {
+      const oiChange = Number(item.oi_change);
+      if (item.option_type === 'PE' && oiChange < 0 &&
+          Math.abs(oiChange) >= minOiChange && Number.isFinite(Number(item.time))) {
+        qualifyingMinutes.add(Math.floor(Number(item.time) / 60) * 60);
+      }
+    });
+
+    const candles = new Map();
+    cData.forEach(candle => {
+      if (candle.open == null || candle.close == null) return;
+      const time = Number(candle.time) - IST_OFFSET_S;
+      candles.set(time, { ...candle, time });
+    });
+
+    const signals = [];
+    const currentMinute = Math.floor(Date.now() / 1000 / 60) * 60;
+    candles.forEach((first, firstTime) => {
+      const second = candles.get(firstTime + 60);
+      if (!second ||
+          first.close <= first.open ||
+          second.close >= second.open ||
+          secondTimeIsOpen(second.time, currentMinute)) return;
+      if (!qualifyingMinutes.has(firstTime) &&
+          !qualifyingMinutes.has(firstTime + 60)) return;
+      signals.push(second);
+    });
+    return signals;
+  },
+  drawSignalLabels(ctx, width, height, signals, label, color, priceKey) {
+    ctx.save();
+    ctx.font = 'bold 11px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    signals.forEach(candle => {
+      const point = BUB.toXY(candle.time, candle[priceKey]);
+      if (!point || point.x < 0 || point.x > width || point.y < 0 || point.y > height) return;
+      const boxWidth = ctx.measureText(label).width + 10;
+      const boxHeight = 18;
+      const x = Math.max(2, Math.min(width - boxWidth - 2, point.x - boxWidth / 2));
+      const y = Math.min(height - boxHeight - 2, point.y + 6);
+      ctx.fillStyle = color;
+      ctx.fillRect(x, y, boxWidth, boxHeight);
+      ctx.fillStyle = '#ffffff';
+      ctx.fillText(label, x + boxWidth / 2, y + boxHeight / 2);
+    });
+    ctx.restore();
+  },
+  updateSignalDayCounts() {
+    const container = document.getElementById('signal-day-counts');
+    if (!container) return;
+    const days = new Map();
+    const add = (signals, type) => signals.forEach(signal => {
+      const date = new Date((Number(signal.time) + IST_OFFSET_S) * 1000)
+        .toISOString().slice(0, 10);
+      if (!days.has(date)) days.set(date, { buy: 0, sell: 0 });
+      days.get(date)[type] += 1;
+    });
+    add(this.lastBuySignals, 'buy');
+    add(this.lastSellSignals, 'sell');
+    const key = JSON.stringify([...days.entries()]);
+    if (key === this.signalDayCountsKey) return;
+    this.signalDayCountsKey = key;
+    container.textContent = '';
+    if (!days.size) {
+      const empty = document.createElement('div');
+      empty.className = 'signal-day-empty';
+      empty.textContent = 'No daily signals found.';
+      container.appendChild(empty);
+      return;
+    }
+    [...days.entries()].sort((a, b) => b[0].localeCompare(a[0])).forEach(([date, counts]) => {
+      const row = document.createElement('div');
+      row.className = 'signal-day-row';
+      const dateCell = document.createElement('span');
+      dateCell.className = 'signal-day-date';
+      dateCell.textContent = date;
+      const buyCell = document.createElement('span');
+      buyCell.className = 'signal-day-buy';
+      buyCell.textContent = `BUY ${counts.buy}`;
+      const sellCell = document.createElement('span');
+      sellCell.className = 'signal-day-sell';
+      sellCell.textContent = `SELL ${counts.sell}`;
+      row.append(dateCell, buyCell, sellCell);
+      container.appendChild(row);
+    });
   },
 };
+
+function secondTimeIsOpen(time, currentMinute) {
+  return time >= currentMinute;
+}
 
 function setLiveMode(live) { _atRealTime = live; }

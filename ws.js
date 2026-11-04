@@ -644,7 +644,6 @@ function onOptExpiries(msg) {
   document.getElementById('opt-fetch-btn').disabled = false;
   const refreshOiBtn = document.getElementById('opt-refresh-oi-btn');
   refreshOiBtn.disabled = !optChain;
-  refreshOiBtn.hidden = !optChain;
   document.getElementById('opt-chain-status').textContent =
     `${expiries.length} expiries loaded  →  Click ⬇ Load Chain`;
 }
@@ -654,7 +653,6 @@ function onOptChain(msg) {
   document.getElementById('opt-fetch-btn').disabled = false;
   const refreshOiBtn = document.getElementById('opt-refresh-oi-btn');
   refreshOiBtn.disabled = false;
-  refreshOiBtn.hidden = false;
   optBuildStrikes();
 }
 
@@ -662,7 +660,6 @@ function onOptError(msg) {
   document.getElementById('opt-fetch-btn').disabled = false;
   const refreshOiBtn = document.getElementById('opt-refresh-oi-btn');
   refreshOiBtn.disabled = !optChain;
-  refreshOiBtn.hidden = !optChain;
   document.getElementById('opt-chain-status').textContent = '⚠ ' + msg;
   showAlert('err','⚠ Option chain error: ' + msg, false);
 }

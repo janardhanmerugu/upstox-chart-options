@@ -408,6 +408,43 @@ function toggleOpenInterest() {
   else { OIB.clear(); BUB.draw(); }
 }
 
+function toggleBuySignals() {
+  buySignalsOn = !buySignalsOn;
+  const button = document.getElementById('buy-signal-toggle');
+  if (button) {
+    button.textContent = buySignalsOn ? '● ON' : '○ OFF';
+    button.classList.toggle('off', !buySignalsOn);
+  }
+  BUB.draw();
+}
+
+function toggleSellSignals() {
+  sellSignalsOn = !sellSignalsOn;
+  const button = document.getElementById('sell-signal-toggle');
+  if (button) {
+    button.textContent = sellSignalsOn ? '● ON' : '○ OFF';
+    button.classList.toggle('off', !sellSignalsOn);
+  }
+  BUB.draw();
+}
+
+function refreshBuySignals() {
+  if (!ws || ws.readyState !== WebSocket.OPEN) {
+    showAlert('err', '⚠ Connect to server first.');
+    return;
+  }
+  const button = document.getElementById('buy-signal-refresh');
+  if (button) button.disabled = true;
+  const status = document.getElementById('buy-signal-status');
+  if (status) status.textContent = 'Refreshing OI history and signal data…';
+  try {
+    loadOpenInterest();
+    if (tokSaved && optChain) optFetchChain(true);
+  } finally {
+    if (button) setTimeout(() => { button.disabled = false; }, 800);
+  }
+}
+
 // ──── Symbol loader ────
 function loadSym() {
   if (!selSym) { showAlert('warn','⚠ No symbol selected.'); return; }
@@ -518,7 +555,6 @@ function optPickUL(ul, btn) {
   exp.innerHTML = '<option value="">— load chain —</option>';
   const refreshOiBtn = document.getElementById('opt-refresh-oi-btn');
   refreshOiBtn.disabled = true;
-  refreshOiBtn.hidden = true;
   document.getElementById('opt-strikes-row').style.display = 'none';
   document.getElementById('opt-strikes').innerHTML         = '';
   document.getElementById('opt-chain-status').textContent  = 'Pick expiry → Load Chain';
@@ -555,7 +591,6 @@ function optOnExpiry() {
   optChain = null;
   const refreshOiBtn = document.getElementById('opt-refresh-oi-btn');
   refreshOiBtn.disabled = true;
-  refreshOiBtn.hidden = true;
   document.getElementById('opt-strikes-row').style.display = 'none';
   document.getElementById('opt-strikes').innerHTML         = '';
   document.getElementById('opt-fetch-btn').disabled        = false;
