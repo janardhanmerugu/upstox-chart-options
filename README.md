@@ -63,6 +63,12 @@ removes all rectangles and trend lines. Drawings can extend across empty time
 slots and beyond the first or last candle. Changing the selected chart
 instrument clears drawings.
 
+## Buy Signals
+
+Open the existing right-side drawer and expand **BUY Signals**. Signal
+comments, BUY/SELL toggles, refresh, and daily signal counts are grouped there
+with the other chart controls.
+
 ## Vercel Custom Domain
 
 Use this domain for the deployed Options frontend:

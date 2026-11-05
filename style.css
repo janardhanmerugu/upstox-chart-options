@@ -215,6 +215,7 @@ body{font-family:'JetBrains Mono',monospace;background:var(--bg);color:var(--tex
   display:flex;flex-direction:column;gap:.5rem;
 }
 .buy-signal-panel{border-bottom:1px solid var(--green);background:linear-gradient(180deg,#0b171b 0%,#080c14 100%)}
+#right-drawer-content>.buy-signal-panel{display:flex;border:1px solid #1c2c43;border-radius:9px;background:linear-gradient(180deg,#0d1725 0%,#0a121e 100%);box-shadow:0 4px 12px #00000018;padding:.7rem .75rem;gap:.5rem}
 .buy-signal-rule{font-size:.58rem;line-height:1.55;color:var(--muted);border:1px solid #00e67633;border-radius:6px;padding:.45rem .5rem}
 .buy-signal-rule strong{color:var(--green)}
 .signal-day-counts{display:flex;flex-direction:column;gap:.2rem;max-height:180px;overflow-y:auto}

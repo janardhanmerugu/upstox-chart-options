@@ -575,7 +575,7 @@ const OIB = {
     if (Number.isFinite(value)) this.liveIndexPrice = value;
   },
   pushLive(optionType, instrument, candle) {
-    if (!this.liveEnabled || !instrument || !candle) return;
+    if (!instrument || !candle) return;
     const oi = Number(candle.open_interest);
     if (!Number.isFinite(oi)) return;
     const previous = this.liveOi.get(instrument);
