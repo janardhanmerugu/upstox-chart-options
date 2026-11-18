@@ -960,21 +960,51 @@ const OIB = {
     return signals;
   },
   drawSignalLabels(ctx, width, height, signals, label, color, priceKey) {
+    let priceScaleW = 0;
+    try { priceScaleW = lwChart.priceScale('right').width(); } catch(_) {}
+    const plotW = Math.max(0, width - priceScaleW);
     ctx.save();
     ctx.font = 'bold 11px sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
+    ctx.beginPath();
+    ctx.rect(0, 0, plotW, height);
+    ctx.clip();
     signals.forEach(candle => {
       const point = BUB.toXY(candle.time, candle[priceKey]);
-      if (!point || point.x < 0 || point.x > width || point.y < 0 || point.y > height) return;
-      const boxWidth = ctx.measureText(label).width + 10;
-      const boxHeight = 18;
-      const x = Math.max(2, Math.min(width - boxWidth - 2, point.x - boxWidth / 2));
-      const y = Math.min(height - boxHeight - 2, point.y + 6);
+      if (!point || point.x < 0 || point.x >= plotW || point.y < 0 || point.y > height) return;
+      const boxWidth = ctx.measureText(label).width + 16;
+      const boxHeight = 20;
+      const x = Math.max(2, Math.min(plotW - boxWidth - 2, point.x - boxWidth / 2));
+      const above = label === 'SELL'
+        ? point.y - boxHeight - 13 >= 2
+        : point.y + boxHeight + 13 > height - 2;
+      const y = above
+        ? Math.max(2, point.y - boxHeight - 13)
+        : Math.min(height - boxHeight - 2, point.y + 13);
+      const radius = boxHeight / 2;
+      const anchorX = Math.max(x + radius + 3, Math.min(x + boxWidth - radius - 3, point.x));
+      const tipY = above ? y + boxHeight + 7 : y - 7;
+
+      ctx.save();
+      ctx.shadowColor = `${color}88`;
+      ctx.shadowBlur = 7;
       ctx.fillStyle = color;
-      ctx.fillRect(x, y, boxWidth, boxHeight);
+      ctx.beginPath();
+      ctx.moveTo(anchorX - 5, above ? y + boxHeight - 1 : y + 1);
+      ctx.lineTo(anchorX, tipY);
+      ctx.lineTo(anchorX + 5, above ? y + boxHeight - 1 : y + 1);
+      ctx.fill();
+      ctx.shadowBlur = 0;
+      ctx.beginPath();
+      ctx.roundRect(x, y, boxWidth, boxHeight, radius);
+      ctx.fill();
+      ctx.strokeStyle = `${color}cc`;
+      ctx.lineWidth = 1;
+      ctx.stroke();
       ctx.fillStyle = '#ffffff';
       ctx.fillText(label, x + boxWidth / 2, y + boxHeight / 2);
+      ctx.restore();
     });
     ctx.restore();
   },

@@ -66,8 +66,9 @@ instrument clears drawings.
 ## Buy Signals
 
 Open the existing right-side drawer and expand **BUY Signals**. Signal
-comments, BUY/SELL toggles, refresh, and daily signal counts are grouped there
-with the other chart controls.
+BUY/SELL callouts point to their signal candles and stay inside the plot area,
+clear of the price-axis labels. BUY/SELL toggles, refresh, and daily signal
+counts are grouped there with the other chart controls.
 
 ## Vercel Custom Domain
 
