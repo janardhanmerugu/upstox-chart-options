@@ -169,6 +169,7 @@ function connectWS() {
       BUB.clear();
       cData = []; vData = []; cMap = {};
       RD.clear();
+      setTradeHistoricalTicks(msg.instrument, msg.ticks);
       msg.candles.forEach(c => upsertCandle(aggCandle(c), true));
       _flushBulk();
       RD.draw();

@@ -599,3 +599,33 @@ body{font-family:'JetBrains Mono',monospace;background:var(--bg);color:var(--tex
   text-align:center;
 }
 .auto-thresh-inp:focus{ outline:none;border-color:var(--accent); }
+
+/* ── Trade CSV replay ── */
+.trade-replay-panel{gap:.4rem}
+.trade-csv-input{display:none}
+.trade-replay-panel>.vp-btn{width:100%;min-height:28px;white-space:normal}
+.trade-csv-status{font-size:.58rem;line-height:1.5;color:var(--muted);overflow-wrap:anywhere}
+.trade-summary{display:flex;flex-wrap:wrap;gap:.3rem .6rem;padding:.4rem .45rem;border:1px solid var(--border);border-radius:5px;background:#09111d;font-size:.57rem;color:var(--muted)}
+.trade-summary[hidden]{display:none}
+.trade-summary strong{color:var(--text)}
+.trade-list-scroll{max-height:240px;overflow:auto;border:1px solid var(--border);border-radius:5px;scrollbar-width:thin}
+.trade-list{width:100%;min-width:540px;border-collapse:collapse;font-size:.54rem;text-align:left}
+.trade-list th,.trade-list td{padding:.32rem .38rem;border-bottom:1px solid #172438;white-space:nowrap}
+.trade-list th{position:sticky;top:0;background:#0d1725;color:var(--muted);font-weight:600;z-index:1}
+.trade-list td{color:var(--text)}
+.trade-list tr:last-child td{border-bottom:0}
+.trade-list .trade-profit,.trade-summary .trade-profit{color:var(--green)}
+.trade-list .trade-loss,.trade-summary .trade-loss{color:var(--red)}
+.trade-marker-legend{font-size:.52rem;color:var(--muted);line-height:1.4}
+#trade-marker-overlay{position:absolute;inset:0;z-index:8;overflow:hidden;pointer-events:none}
+.trade-marker-label{
+  position:absolute;transform:translate(-50%,-50%);max-width:180px;overflow:hidden;text-overflow:ellipsis;
+  padding:.12rem .24rem;border:1px solid #d1d5db;border-radius:4px;background:#fff;
+  box-shadow:0 2px 6px #0009;font:700 .5rem/1.2 'JetBrains Mono',monospace;
+  white-space:nowrap;pointer-events:auto;
+}
+.trade-marker-label.is-entry{color:#16a34a}
+.trade-marker-label.is-exit{color:#dc2626}
+.trade-marker-label .trade-profit{color:#16a34a}
+.trade-marker-label .trade-loss{color:#dc2626}
+.trade-marker-label .trade-flat{color:#6b7280}

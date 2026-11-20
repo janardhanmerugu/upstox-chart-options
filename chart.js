@@ -108,12 +108,12 @@ function initCharts() {
   // ── EVENT LISTENERS ────────────────────────────────────────────────────
   // Redraw bubbles when viewport changes (scroll, zoom)
   lwChart.timeScale().subscribeVisibleLogicalRangeChange(() => {
-    BUB.draw(); RD.draw();
+    BUB.draw(); RD.draw(); renderTradeMarkers();
   });
   
   // Redraw bubbles when crosshair moves (follows mouse)
   lwChart.subscribeCrosshairMove(() => {
-    BUB.draw(); RD.draw();
+    BUB.draw(); RD.draw(); renderTradeMarkers();
   });
 
   // Initialize bubble overlay on the chart
@@ -136,7 +136,7 @@ function initCharts() {
           lwChart.resize(Math.max(el.clientWidth, 200), Math.max(el.clientHeight, 200));
         }
       }
-      BUB.sync(); BUB.draw(); RD.draw();  // Redraw overlays after resize
+      BUB.sync(); BUB.draw(); RD.draw(); renderTradeMarkers();  // Redraw overlays after resize
     });
     wrap._ro.observe(con);
   }
@@ -276,6 +276,7 @@ function _flushBulk() {
   // Single batch call to chart (faster than individual updates)
   cSeries.setData(cData);
   vSeries.setData(vData);
+  renderTradeMarkers();
   
   // Update UI
   document.getElementById('s-bars').textContent = candleCount(cData);

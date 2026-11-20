@@ -6,7 +6,7 @@
   <title>Upstox Options Chart</title>
   <link rel="icon" type="image/svg+xml" href="favicon.svg"/>
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet"/>
-  <link rel="stylesheet" href="style.css?v=20261104-2">
+  <link rel="stylesheet" href="style.css?v=20261121-4">
 </head>
 <body>
 
@@ -441,6 +441,7 @@
           </p>
         </div>
         <canvas id="rectangle-canvas" aria-label="Rectangle drawing overlay"></canvas>
+        <div id="trade-marker-overlay" aria-hidden="true"></div>
       </div>
     </div>
 
@@ -500,6 +501,26 @@
           <div class="signal-day-empty">Daily counts will appear here.</div>
         </div>
       </div>
+      <div class="ds trade-replay-panel">
+        <div class="ds-title"><span class="ds-title-icon">↗</span><span>Trade CSV</span></div>
+        <input id="trade-csv-input" class="trade-csv-input" type="file" accept=".csv,text/csv">
+        <button class="opt-load-btn" type="button" onclick="document.getElementById('trade-csv-input').click()">Load trade CSV</button>
+        <button id="trade-load-dates-btn" class="vp-btn" type="button" onclick="loadTradeDateRange()" disabled>Load matching index history</button>
+        <button id="trade-clear-btn" class="vp-btn vp-clear-btn" type="button" onclick="clearTradeCsv()" disabled>Clear trades</button>
+        <div id="trade-csv-status" class="trade-csv-status" role="status" aria-live="polite">No trade CSV loaded.</div>
+        <div class="trade-marker-legend">IN green · OUT red · profit green · loss red</div>
+        <div id="trade-summary" class="trade-summary" hidden>
+          <span><strong id="trade-count">0</strong> trades</span>
+          <span><strong id="trade-win-loss">0 / 0</strong> W / L</span>
+          <span>Net <strong id="trade-net-pnl">₹0.00</strong></span>
+        </div>
+        <div class="trade-list-scroll">
+          <table class="trade-list">
+            <thead><tr><th># / Instrument</th><th>Entry</th><th>Exit</th><th>Qty</th><th>P&amp;L</th></tr></thead>
+            <tbody id="trade-list-body"></tbody>
+          </table>
+        </div>
+      </div>
       <div class="ds active-subscriptions-panel" id="active-subscriptions-panel">
         <div class="ds-title">
           <span class="ds-title-icon">●</span>
@@ -548,9 +569,10 @@
 <script src="ui.js?v=20261017-1"></script>
 <script src="bubbles.js?v=20261118-1"></script>
 <script src="chart.js?v=20261017-1"></script>
+<script src="trade-replay.js?v=20261121-5"></script>
 <script src="rectangle-draw.js?v=20261020-1"></script>
 <script src="connection-tracker.js?v=20261030-1"></script>
-<script src="ws.js?v=20261023-1"></script>
+<script src="ws.js?v=20261121-1"></script>
 <script src="init.js?v=20261023-1"></script>
 </body>
 </html>

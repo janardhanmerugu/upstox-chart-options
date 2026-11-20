@@ -70,6 +70,22 @@ BUY/SELL callouts point to their signal candles and stay inside the plot area,
 clear of the price-axis labels. BUY/SELL toggles, refresh, and daily signal
 counts are grouped there with the other chart controls.
 
+## Import trade CSV
+
+Open **Trade CSV** in the right drawer and load a CSV with `Instrument`, `Dir`,
+`Entry Time`, `Exit Time`, `Qty`, `Entry Price`, `Exit Price`, and `P&L`
+columns. Times use `YYYY-MM-DD HH:mm:ss` in India Standard Time. The file is
+parsed in the browser; it is not uploaded. The panel shows each trade and the
+win/loss and net-P&L totals. **Load matching index history** sets the chart
+history dates from the imported trades and loads the currently selected
+underlying, including its stored historical ticks. Compact white labels show
+CE/PE and trade numbers; their vertical position uses the underlying index LTP
+from the latest historical tick at or before each trade time on the same IST
+date. IN text is green, OUT text is red, and P&L is green for profit or red for
+loss. Events without a matching tick are not drawn at an approximate candle
+price. Hover a label or check the trade list for prices; the chart displays the
+underlying index, not option-premium candles.
+
 ## Vercel Custom Domain
 
 Use this domain for the deployed Options frontend:
