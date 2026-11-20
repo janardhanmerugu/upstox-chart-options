@@ -889,13 +889,14 @@ const OIB = {
 
     const signals = [];
     const currentMinute = Math.floor(Date.now() / 1000 / 60) * 60;
-    qualifyingMinutes.forEach(firstTime => {
-      const first = candles.get(firstTime);
+    candles.forEach((first, firstTime) => {
       const second = candles.get(firstTime + 60);
       if (!first || !second ||
           first.close >= first.open ||
           second.close <= second.open ||
           secondTimeIsOpen(second.time, currentMinute)) return;
+      if (!qualifyingMinutes.has(firstTime) &&
+          !qualifyingMinutes.has(firstTime + 60)) return;
       signals.push(second);
     });
     return signals;
