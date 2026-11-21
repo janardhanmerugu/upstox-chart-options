@@ -551,6 +551,22 @@ body{font-family:'JetBrains Mono',monospace;background:var(--bg);color:var(--tex
 #bub-canvas{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;touch-action:none;z-index:5}
 #rectangle-canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:7}
 #rectangle-canvas.drawing{pointer-events:auto;cursor:crosshair;touch-action:none}
+.trade-quality-summary{
+  position:absolute;top:10px;left:50%;transform:translateX(-50%);z-index:9;
+  display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:.3rem .4rem;
+  max-width:calc(100% - 24px);padding:.35rem .45rem;border:1px solid #52647a;
+  border-radius:7px;background:#080c14eF;box-shadow:0 3px 12px #0009;
+  color:#e5edf6;font-size:.62rem;line-height:1.35;pointer-events:none;
+}
+.trade-quality-summary[hidden]{display:none}
+.trade-quality-title{color:#cbd5e1;padding:0 .2rem;white-space:nowrap}
+.trade-quality-metric{padding:.18rem .32rem;border:1px solid #ffffff1c;border-radius:4px;background:#ffffff0a;white-space:nowrap}
+.trade-quality-good{color:#4ade80;font-weight:700}
+.trade-quality-bad{color:#fb7185;font-weight:700}
+.trade-quality-pnl{font-weight:700}
+.trade-quality-pnl.is-profit{color:#4ade80}
+.trade-quality-pnl.is-loss{color:#fb7185}
+.trade-quality-pnl.is-flat{color:#cbd5e1}
 #chart-drawing-controls{display:flex;flex-direction:column;gap:.4rem}
 #chart-drawing-controls .vp-btn{width:100%;min-height:30px}
 .vp-btn{font:600 .58rem 'JetBrains Mono',monospace;border:1px solid #00d4ff66;border-radius:4px;padding:.22rem .38rem;background:#00d4ff12;color:var(--accent);white-space:nowrap;cursor:pointer}
@@ -605,6 +621,22 @@ body{font-family:'JetBrains Mono',monospace;background:var(--bg);color:var(--tex
 .trade-csv-input{display:none}
 .trade-replay-panel>.vp-btn{width:100%;min-height:28px;white-space:normal}
 .trade-csv-status{font-size:.58rem;line-height:1.5;color:var(--muted);overflow-wrap:anywhere}
+.trade-filter-options{
+  display:grid;grid-template-columns:1fr 1fr;gap:.35rem .45rem;
+  min-width:0;padding:.45rem;border:1px solid var(--border);border-radius:5px;
+  color:var(--text);font:500 .54rem 'JetBrains Mono',monospace;
+}
+.trade-filter-options legend{padding:0 .25rem;color:var(--muted)}
+.trade-filter-item{display:flex;align-items:center;gap:.25rem;min-width:0;white-space:nowrap}
+.trade-filter-options input{margin:0;accent-color:var(--accent)}
+.trade-filter-options .trade-filter-threshold{
+  width:3.3rem;margin-left:auto;padding:.18rem .2rem;border:1px solid var(--border);
+  border-radius:3px;background:#070d16;color:var(--text);font:500 .52rem 'JetBrains Mono',monospace;
+}
+.trade-filter-options .trade-filter-threshold:focus{outline:none;border-color:var(--accent)}
+.trade-filter-options>span{grid-column:1/-1;color:var(--muted);font-size:.5rem}
+.trade-filter-status{font-size:.52rem;line-height:1.4;color:var(--muted);overflow-wrap:anywhere}
+.trade-filter-status[hidden]{display:none}
 .trade-summary{display:flex;flex-wrap:wrap;gap:.3rem .6rem;padding:.4rem .45rem;border:1px solid var(--border);border-radius:5px;background:#09111d;font-size:.57rem;color:var(--muted)}
 .trade-summary[hidden]{display:none}
 .trade-summary strong{color:var(--text)}
@@ -619,11 +651,16 @@ body{font-family:'JetBrains Mono',monospace;background:var(--bg);color:var(--tex
 .trade-marker-legend{font-size:.52rem;color:var(--muted);line-height:1.4}
 #trade-marker-overlay{position:absolute;inset:0;z-index:8;overflow:hidden;pointer-events:none}
 .trade-marker-label{
-  position:absolute;transform:translate(-50%,-50%);max-width:180px;overflow:hidden;text-overflow:ellipsis;
-  padding:.12rem .24rem;border:1px solid #d1d5db;border-radius:4px;background:#fff;
-  box-shadow:0 2px 6px #0009;font:700 .5rem/1.2 'JetBrains Mono',monospace;
-  white-space:nowrap;pointer-events:auto;
+  position:absolute;transform:translate(-50%,-50%);max-width:240px;overflow:hidden;text-overflow:ellipsis;
+  padding:.18rem .32rem;border:1px solid #d1d5db;border-radius:4px;background:#fff;
+  box-shadow:0 2px 6px #0009;font:700 .72rem/1.25 'JetBrains Mono',monospace;
+  display:flex;flex-direction:column;align-items:flex-start;white-space:nowrap;pointer-events:auto;
 }
+.trade-marker-main,.trade-marker-cumulative{display:block}
+.trade-marker-cumulative{font-size:.64rem;line-height:1.2}
+.trade-marker-label.is-good-trade{background:#dcfce7;border-color:#16a34a}
+.trade-marker-label.is-bad-trade{background:#fee2e2;border-color:#dc2626}
+.trade-marker-label.is-mixed-trade{background:#fef3c7;border-color:#d97706}
 .trade-marker-label.is-entry{color:#16a34a}
 .trade-marker-label.is-exit{color:#dc2626}
 .trade-marker-label .trade-profit{color:#16a34a}

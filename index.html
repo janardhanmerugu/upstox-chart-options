@@ -6,7 +6,7 @@
   <title>Upstox Options Chart</title>
   <link rel="icon" type="image/svg+xml" href="favicon.svg"/>
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet"/>
-  <link rel="stylesheet" href="style.css?v=20261121-4">
+  <link rel="stylesheet" href="style.css?v=20261121-12">
 </head>
 <body>
 
@@ -441,6 +441,7 @@
           </p>
         </div>
         <canvas id="rectangle-canvas" aria-label="Rectangle drawing overlay"></canvas>
+        <div id="trade-quality-summary" class="trade-quality-summary" role="status" aria-live="polite" hidden></div>
         <div id="trade-marker-overlay" aria-hidden="true"></div>
       </div>
     </div>
@@ -507,6 +508,23 @@
         <button class="opt-load-btn" type="button" onclick="document.getElementById('trade-csv-input').click()">Load trade CSV</button>
         <button id="trade-load-dates-btn" class="vp-btn" type="button" onclick="loadTradeDateRange()" disabled>Load matching index history</button>
         <button id="trade-clear-btn" class="vp-btn vp-clear-btn" type="button" onclick="clearTradeCsv()" disabled>Clear trades</button>
+        <fieldset id="trade-filter-options" class="trade-filter-options" disabled>
+          <legend>Filter trades</legend>
+          <label class="trade-filter-item">
+            <input id="trade-filter-big-loss" type="checkbox" onchange="onTradeFiltersChanged()">
+            <span>Big loss ≤ -₹</span>
+            <input id="trade-filter-big-loss-threshold" class="trade-filter-threshold" type="number" min="0" step="1" value="800" aria-label="Big loss threshold in rupees" onchange="onTradeFiltersChanged(event)">
+          </label>
+          <label class="trade-filter-item"><input id="trade-filter-good" type="checkbox" onchange="onTradeFiltersChanged()"><span>Good entry</span></label>
+          <label class="trade-filter-item"><input id="trade-filter-bad" type="checkbox" onchange="onTradeFiltersChanged()"><span>Bad entry</span></label>
+          <label class="trade-filter-item">
+            <input id="trade-filter-high-profit" type="checkbox" onchange="onTradeFiltersChanged()">
+            <span>High profit ≥ ₹</span>
+            <input id="trade-filter-high-profit-threshold" class="trade-filter-threshold" type="number" min="0" step="1" value="800" aria-label="High profit threshold in rupees" onchange="onTradeFiltersChanged(event)">
+          </label>
+          <span>Multiple filters use AND.</span>
+        </fieldset>
+        <div id="trade-filter-status" class="trade-filter-status" role="status" aria-live="polite" hidden></div>
         <div id="trade-csv-status" class="trade-csv-status" role="status" aria-live="polite">No trade CSV loaded.</div>
         <div class="trade-marker-legend">IN green · OUT red · profit green · loss red</div>
         <div id="trade-summary" class="trade-summary" hidden>
@@ -567,9 +585,9 @@
 
 <script src="config.js?v=20261014-1"></script>
 <script src="ui.js?v=20261017-1"></script>
-<script src="bubbles.js?v=20261118-1"></script>
-<script src="chart.js?v=20261017-1"></script>
-<script src="trade-replay.js?v=20261121-5"></script>
+<script src="bubbles.js?v=20261121-1"></script>
+<script src="chart.js?v=20261121-1"></script>
+<script src="trade-replay.js?v=20261121-16"></script>
 <script src="rectangle-draw.js?v=20261020-1"></script>
 <script src="connection-tracker.js?v=20261030-1"></script>
 <script src="ws.js?v=20261121-1"></script>

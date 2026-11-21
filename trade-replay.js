@@ -3,6 +3,9 @@ let tradeMarkerMatches = 0;
 let tradeTickMatches = 0;
 let historicalIndexTickInstrument = null;
 let historicalIndexTicks = [];
+let importedTradeFileName = '';
+let bigLossThreshold = 800;
+let highProfitThreshold = 800;
 const tradeMoneyFormat = new Intl.NumberFormat('en-IN', {
   minimumFractionDigits: 2,
   maximumFractionDigits: 2,
@@ -183,6 +186,53 @@ function formatTradeMoney(value, withSign = false) {
   return `${value > 0 ? '+' : value < 0 ? '-' : ''}₹${formatted}`;
 }
 
+function selectedTradeFilters() {
+  return {
+    bigLoss: document.getElementById('trade-filter-big-loss')?.checked ?? false,
+    good: document.getElementById('trade-filter-good')?.checked ?? false,
+    bad: document.getElementById('trade-filter-bad')?.checked ?? false,
+    highProfit: document.getElementById('trade-filter-high-profit')?.checked ?? false,
+  };
+}
+
+function visibleTradesFor(assessments) {
+  const filters = selectedTradeFilters();
+  const selected = Object.values(filters).some(Boolean);
+  return importedTrades.filter(trade => {
+    if (!selected) return true;
+    const matches = [];
+    if (filters.bigLoss) matches.push(trade.pnl <= -bigLossThreshold);
+    if (filters.good) matches.push(assessments.get(trade)?.matched === true);
+    if (filters.bad) matches.push(assessments.get(trade)?.matched === false);
+    if (filters.highProfit) matches.push(trade.pnl >= highProfitThreshold);
+    return matches.every(Boolean);
+  });
+}
+
+function setTradeFiltersEnabled(enabled) {
+  const options = document.getElementById('trade-filter-options');
+  if (options) options.disabled = !enabled;
+}
+
+function onTradeFiltersChanged(event) {
+  if (!importedTrades.length) return;
+  const field = event?.currentTarget;
+  if (field?.id === 'trade-filter-big-loss-threshold' ||
+      field?.id === 'trade-filter-high-profit-threshold') {
+    const threshold = field.valueAsNumber;
+    if (!Number.isFinite(threshold) || threshold < 0) {
+      field.setCustomValidity('Enter a non-negative P&L threshold.');
+      field.reportValidity();
+      return;
+    }
+    field.setCustomValidity('');
+    if (field.id === 'trade-filter-big-loss-threshold') bigLossThreshold = threshold;
+    else highProfitThreshold = threshold;
+  }
+  renderImportedTrades();
+  renderTradeMarkers();
+}
+
 function onTradeCsvSelected(event) {
   const input = event.currentTarget;
   const file = input.files?.[0];
@@ -192,8 +242,14 @@ function onTradeCsvSelected(event) {
   file.text().then(text => {
     const trades = parseTradeCsv(text);
     importedTrades = trades;
+    importedTradeFileName = file.name;
+    ['trade-filter-big-loss', 'trade-filter-good', 'trade-filter-bad', 'trade-filter-high-profit']
+      .forEach(id => {
+        const filter = document.getElementById(id);
+        if (filter) filter.checked = false;
+      });
     tradeMarkerMatches = 0;
-    renderImportedTrades(file.name);
+    renderImportedTrades();
     renderTradeMarkers();
   }).catch(error => {
     status.textContent = `Could not load CSV: ${error.message}`;
@@ -202,7 +258,7 @@ function onTradeCsvSelected(event) {
   });
 }
 
-function renderImportedTrades(fileName) {
+function renderImportedTrades() {
   const totalPnl = importedTrades.reduce((sum, trade) => sum + trade.pnl, 0);
   const wins = importedTrades.filter(trade => trade.pnl > 0).length;
   const losses = importedTrades.filter(trade => trade.pnl < 0).length;
@@ -216,10 +272,12 @@ function renderImportedTrades(fileName) {
   netPnl.classList.toggle('trade-profit', totalPnl > 0);
   document.getElementById('trade-load-dates-btn').disabled = false;
   document.getElementById('trade-clear-btn').disabled = false;
+  setTradeFiltersEnabled(true);
 
   const body = document.getElementById('trade-list-body');
   body.replaceChildren();
-  importedTrades.forEach(trade => {
+  const visibleTrades = visibleTradesFor(tradeSignalAssessments());
+  visibleTrades.forEach(trade => {
     const row = document.createElement('tr');
     const instrument = document.createElement('td');
     instrument.textContent = `#${trade.label} ${trade.instrument}`;
@@ -239,8 +297,11 @@ function renderImportedTrades(fileName) {
     row.appendChild(pnl);
     body.appendChild(row);
   });
-  document.getElementById('trade-csv-status').textContent =
-    `${fileName}: ${importedTrades.length} trade(s). Markers follow the loaded index chart.`;
+  const filterStatus = document.getElementById('trade-filter-status');
+  if (filterStatus) {
+    filterStatus.hidden = false;
+    filterStatus.textContent = `${importedTradeFileName}: showing ${visibleTrades.length} of ${importedTrades.length}; totals above include all trades.`;
+  }
 }
 
 function chartTimeForTrade(timestampMs) {
@@ -280,23 +341,100 @@ function tradeOptionTypeLabel(trade) {
   return trade.optionType || (/\b(CE|PE)$/i.exec(trade.instrument)?.[1]?.toUpperCase() || '');
 }
 
+function tradeSignalAssessments() {
+  const buySignalTimes = new Set((OIB.lastBuySignals || []).map(signal =>
+    chartTimeForTrade(Number(signal.time) * 1000)
+  ));
+  const sellSignalTimes = new Set((OIB.lastSellSignals || []).map(signal =>
+    chartTimeForTrade(Number(signal.time) * 1000)
+  ));
+  return new Map(importedTrades.map(trade => {
+    const optionType = tradeOptionTypeLabel(trade);
+    const expectedSignal = optionType === 'CE' ? 'BUY' : optionType === 'PE' ? 'SELL' : '';
+    const entryTime = chartTimeForTrade(trade.entryTimeMs);
+    const matched = expectedSignal === 'BUY'
+      ? buySignalTimes.has(entryTime)
+      : expectedSignal === 'SELL' && sellSignalTimes.has(entryTime);
+    return [trade, { expectedSignal, matched }];
+  }));
+}
+
+function renderTradeQualitySummary(assessments, trades) {
+  const summary = document.getElementById('trade-quality-summary');
+  if (!summary) return;
+  summary.replaceChildren();
+  summary.hidden = !trades.length;
+  if (!trades.length) return;
+
+  const goodCount = trades.filter(trade => assessments.get(trade)?.matched).length;
+  const badCount = trades.length - goodCount;
+  const goodPnl = trades.reduce((total, trade) =>
+    total + (assessments.get(trade)?.matched ? trade.pnl : 0), 0);
+  const badPnl = trades.reduce((total, trade) =>
+    total + (!assessments.get(trade)?.matched ? trade.pnl : 0), 0);
+  const title = document.createElement('strong');
+  title.className = 'trade-quality-title';
+  title.textContent = 'TRADE CHECK';
+  const good = document.createElement('span');
+  good.className = 'trade-quality-metric trade-quality-good';
+  good.textContent = `GOOD ${goodCount}`;
+  const bad = document.createElement('span');
+  bad.className = 'trade-quality-metric trade-quality-bad';
+  bad.textContent = `BAD ${badCount}`;
+  const goodPnlLabel = document.createElement('span');
+  goodPnlLabel.className = `trade-quality-metric trade-quality-pnl ${
+    goodPnl > 0 ? 'is-profit' : goodPnl < 0 ? 'is-loss' : 'is-flat'
+  }`;
+  goodPnlLabel.textContent = `GOOD P&L ${formatTradeMoney(goodPnl, true)}`;
+  goodPnlLabel.title = 'Cumulative P&L from trades whose entry signal matched.';
+  const badPnlLabel = document.createElement('span');
+  badPnlLabel.className = `trade-quality-metric trade-quality-pnl ${
+    badPnl > 0 ? 'is-profit' : badPnl < 0 ? 'is-loss' : 'is-flat'
+  }`;
+  badPnlLabel.textContent = `BAD P&L ${formatTradeMoney(badPnl, true)}`;
+  badPnlLabel.title = 'Cumulative P&L from trades whose entry signal did not match.';
+  summary.append(title, good, bad, goodPnlLabel, badPnlLabel);
+}
+
 function renderTradeMarkers() {
   const overlay = document.getElementById('trade-marker-overlay');
   if (!overlay) return;
   overlay.replaceChildren();
+  const assessments = tradeSignalAssessments();
+  const visibleTrades = visibleTradesFor(assessments);
+  renderTradeQualitySummary(assessments, visibleTrades);
+  const totalEvents = visibleTrades.length * 2;
   if (!cSeries || !lwChart) {
     tradeMarkerMatches = 0;
     tradeTickMatches = 0;
-    updateTradeMarkerStatus();
+    updateTradeMarkerStatus(totalEvents);
     return;
   }
 
   const labelsByEvent = new Map();
   let matchedEvents = 0;
   let matchedTicks = 0;
-  const totalEvents = importedTrades.length * 2;
+  const exits = importedTrades.slice().sort((left, right) =>
+    left.exitTimeMs - right.exitTimeMs
+  );
+  const cumulativeExits = [];
+  let runningPnl = 0;
+  exits.forEach(trade => {
+    runningPnl += trade.pnl;
+    cumulativeExits.push({ timestampMs: trade.exitTimeMs, pnl: runningPnl });
+  });
+  const cumulativePnlAt = timestampMs => {
+    let low = 0;
+    let high = cumulativeExits.length;
+    while (low < high) {
+      const middle = Math.floor((low + high) / 2);
+      if (cumulativeExits[middle].timestampMs <= timestampMs) low = middle + 1;
+      else high = middle;
+    }
+    return low ? cumulativeExits[low - 1].pnl : 0;
+  };
 
-  importedTrades.forEach((trade, index) => {
+  visibleTrades.forEach((trade, index) => {
     const events = [
       { side: 'IN', timestampMs: trade.entryTimeMs },
       { side: 'OUT', timestampMs: trade.exitTimeMs },
@@ -325,6 +463,7 @@ function renderTradeMarkers() {
         label: trade.label || String(index + 1),
         timestampMs: event.timestampMs,
         side: event.side,
+        signalAssessment: assessments.get(trade),
       });
     });
   });
@@ -336,32 +475,54 @@ function renderTradeMarkers() {
       const y = cSeries.priceToCoordinate(group.indexTick.ltp);
       if (y == null) return null;
       const label = document.createElement('div');
-      label.className = `trade-marker-label ${group.side === 'IN' ? 'is-entry' : 'is-exit'}`;
-      label.appendChild(document.createTextNode(
+      const qualityClass = group.side === 'IN'
+        ? ` is-${group.events.every(event => event.signalAssessment.matched) ? 'good'
+          : group.events.every(event => !event.signalAssessment.matched) ? 'bad' : 'mixed'}-trade`
+        : '';
+      label.className = `trade-marker-label ${group.side === 'IN' ? 'is-entry' : 'is-exit'}${qualityClass}`;
+      const mainLine = document.createElement('span');
+      mainLine.className = 'trade-marker-main';
+      mainLine.appendChild(document.createTextNode(
         `${group.optionType ? `${group.optionType} ` : ''}${group.side} `
       ));
       group.events.forEach((event, index) => {
-        if (index > 0) label.appendChild(document.createTextNode(', '));
-        label.appendChild(document.createTextNode(`#${event.label}`));
+        if (index > 0) mainLine.appendChild(document.createTextNode(', '));
+        mainLine.appendChild(document.createTextNode(`#${event.label}`));
         if (group.side === 'OUT') {
-          label.appendChild(document.createTextNode(' '));
+          mainLine.appendChild(document.createTextNode(' '));
           const pnl = document.createElement('span');
           pnl.className = event.trade.pnl > 0 ? 'trade-profit'
             : event.trade.pnl < 0 ? 'trade-loss' : 'trade-flat';
           pnl.textContent = formatTradeMoney(event.trade.pnl, true);
-          label.appendChild(pnl);
+          mainLine.appendChild(pnl);
         }
       });
+      label.appendChild(mainLine);
+      const cumulativeTime = Math.max(...group.events.map(event => event.timestampMs));
+      const cumulativePnl = cumulativePnlAt(cumulativeTime);
+      const cumulativeLine = document.createElement('span');
+      cumulativeLine.className = `trade-marker-cumulative ${
+        cumulativePnl > 0 ? 'trade-profit' : cumulativePnl < 0 ? 'trade-loss' : 'trade-flat'
+      }`;
+      cumulativeLine.textContent = `Cum ${formatTradeMoney(cumulativePnl, true)}`;
+      label.appendChild(cumulativeLine);
       label.style.left = `${x}px`;
       const details = group.events.map(event => {
         const trade = event.trade;
         const timeLabel = event.side === 'IN' ? trade.entryTimeLabel : trade.exitTimeLabel;
         const dateLabel = event.side === 'IN' ? trade.entryDate : trade.exitDate;
         const price = event.side === 'IN' ? trade.entryPrice : trade.exitPrice;
-        return `${event.side} #${event.label} ${dateLabel} ${timeLabel} @ ${tradeMoneyFormat.format(price)}, Index ${tradeMoneyFormat.format(group.indexTick.ltp)}, Qty ${trade.quantity}, P&L ${formatTradeMoney(trade.pnl, true)}`;
+        const signalResult = event.side === 'IN' && event.signalAssessment.expectedSignal
+          ? event.signalAssessment.matched
+            ? `${event.signalAssessment.expectedSignal} signal matched`
+            : `${event.signalAssessment.expectedSignal} signal missing`
+          : event.side === 'IN' ? 'CE/PE type unavailable' : '';
+        const signalDetail = signalResult ? `, ${signalResult}` : '';
+        return `${event.side} #${event.label} ${dateLabel} ${timeLabel} @ ${tradeMoneyFormat.format(price)}, Index ${tradeMoneyFormat.format(group.indexTick.ltp)}${signalDetail}, Qty ${trade.quantity}, P&L ${formatTradeMoney(trade.pnl, true)}`;
       });
-      label.title = details.join('\n');
-      const width = Math.min(180, label.textContent.length * 5.5 + 12);
+      label.title = `${details.join('\n')}\nCumulative P&L ${formatTradeMoney(cumulativePnl, true)}`;
+      const longestLine = Math.max(mainLine.textContent.length, cumulativeLine.textContent.length);
+      const width = Math.min(240, longestLine * 7.5 + 16);
       if (x < -width / 2 || x > overlay.clientWidth + width / 2) return null;
       return { element: label, x, y, width };
     })
@@ -373,15 +534,15 @@ function renderTradeMarkers() {
     const center = Math.max(width / 2 + 2, Math.min(overlay.clientWidth - width / 2 - 2, x));
     element.style.left = `${center}px`;
     const offsets = [0];
-    for (let distance = 16; distance <= overlay.clientHeight; distance += 16) {
+    for (let distance = 42; distance <= overlay.clientHeight; distance += 42) {
       offsets.push(-distance, distance);
     }
     const top = offsets.map(offset =>
-      Math.max(9, Math.min(overlay.clientHeight - 9, y + offset))
+      Math.max(22, Math.min(overlay.clientHeight - 22, y + offset))
     ).find(candidate => !placedLabels.some(previous =>
       Math.abs(center - previous.x) < (width + previous.width) / 2 + 4 &&
-      Math.abs(candidate - previous.y) < 17
-    )) ?? Math.max(9, Math.min(overlay.clientHeight - 9, y));
+      Math.abs(candidate - previous.y) < 42
+    )) ?? Math.max(22, Math.min(overlay.clientHeight - 22, y));
     element.style.top = `${top}px`;
     overlay.appendChild(element);
     placedLabels.push({ x: center, y: top, width });
@@ -394,22 +555,23 @@ function renderTradeMarkers() {
 
 function updateTradeMarkerStatus(totalEvents = importedTrades.length * 2) {
   const status = document.getElementById('trade-csv-status');
+  const visibleTradeCount = totalEvents / 2;
   if (!importedTrades.length) {
     status.textContent = 'No trade CSV loaded.';
     return;
   }
   if (historicalIndexTickInstrument !== selSym || !historicalIndexTicks.length) {
-    status.textContent = `${importedTrades.length} trade(s) loaded. Load matching index history with historical ticks to place exact-price markers.`;
+    status.textContent = `${visibleTradeCount} visible trade(s). Load matching index history with historical ticks to place exact-price markers.`;
     return;
   }
   if (!cSeries || !cData.length) {
-    status.textContent = `${importedTrades.length} trade(s) loaded. Load matching index candles to place markers.`;
+    status.textContent = `${visibleTradeCount} visible trade(s). Load matching index candles to place markers.`;
     return;
   }
   const missing = totalEvents - tradeMarkerMatches;
   status.textContent = missing
     ? `${tradeMarkerMatches} of ${totalEvents} markers placed at historical tick prices (${tradeTickMatches} timestamps matched ticks; ${missing} missing tick or candle matches).`
-    : `${importedTrades.length} trade(s) loaded; all ${totalEvents} markers placed at historical tick prices.`;
+    : `${visibleTradeCount} visible trade(s); all ${totalEvents} entry/exit markers placed at historical tick prices.`;
 }
 
 function loadTradeDateRange() {
@@ -422,12 +584,24 @@ function loadTradeDateRange() {
 
 function clearTradeCsv() {
   importedTrades = [];
+  importedTradeFileName = '';
   tradeMarkerMatches = 0;
   tradeTickMatches = 0;
+  ['trade-filter-big-loss', 'trade-filter-good', 'trade-filter-bad', 'trade-filter-high-profit']
+    .forEach(id => {
+      const filter = document.getElementById(id);
+      if (filter) filter.checked = false;
+    });
+  setTradeFiltersEnabled(false);
   document.getElementById('trade-summary').hidden = true;
   document.getElementById('trade-list-body').replaceChildren();
   document.getElementById('trade-load-dates-btn').disabled = true;
   document.getElementById('trade-clear-btn').disabled = true;
+  const filterStatus = document.getElementById('trade-filter-status');
+  if (filterStatus) {
+    filterStatus.hidden = true;
+    filterStatus.textContent = '';
+  }
   document.getElementById('trade-csv-status').textContent = 'No trade CSV loaded.';
   renderTradeMarkers();
 }

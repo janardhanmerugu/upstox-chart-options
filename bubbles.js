@@ -330,6 +330,7 @@ const BUB = {
     ctx.clearRect(0, 0, W, H);
     if (!bubOn || this.items.length === 0) {
       OIB.draw(ctx, W, H);
+      if (typeof renderTradeMarkers === 'function') renderTradeMarkers();
       return;
     }
 
@@ -464,6 +465,7 @@ const BUB = {
     // Restore canvas state (removes clip region)
     ctx.restore();
     OIB.draw(ctx, W, H);
+    if (typeof renderTradeMarkers === 'function') renderTradeMarkers();
   },
 
   // ── Mouse move ─────────────────────────────────────────────────────────────

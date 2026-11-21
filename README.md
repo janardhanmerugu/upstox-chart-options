@@ -82,8 +82,19 @@ underlying, including its stored historical ticks. Compact white labels show
 CE/PE and trade numbers; their vertical position uses the underlying index LTP
 from the latest historical tick at or before each trade time on the same IST
 date. IN text is green, OUT text is red, and P&L is green for profit or red for
-loss. Events without a matching tick are not drawn at an approximate candle
-price. Hover a label or check the trade list for prices; the chart displays the
+loss. A second label line shows cumulative realized P&L through that event.
+Each trade is checked against the comment on its entry candle: CE expects BUY,
+and PE expects SELL. Matching entry labels have green backgrounds, entries
+without the expected comment have red backgrounds, and only entries are
+included in the good/bad counts. exit labels keep their normal styling and are
+not checked against signals. A compact summary box at the top of the chart
+shows good and bad entry counts and each group’s cumulative P&L.
+Trade filters can show big losses, high profits, good entries, or bad entries.
+The loss and profit thresholds are editable in the panel and default to ₹800.
+Selected filters are combined with AND and affect the trade list, chart markers,
+and top quality summary; the drawer totals remain for the full CSV.
+Events without a matching tick are not drawn at an approximate candle price.
+Hover a label or check the trade list for prices; the chart displays the
 underlying index, not option-premium candles.
 
 ## Vercel Custom Domain
