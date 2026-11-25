@@ -618,12 +618,12 @@ function optBuildStrikes() {
     .map((strike, index) => ({ strike, index, oi: Number(strike.ce_oi) }))
     .filter(item => Number.isFinite(item.oi) && item.oi > 0)
     .sort((a, b) => b.oi - a.oi)
-    .slice(0, 3);
+    .slice(0, 5);
   const topPeOi = sub
     .map((strike, index) => ({ strike, index, oi: Number(strike.pe_oi) }))
     .filter(item => Number.isFinite(item.oi) && item.oi > 0)
     .sort((a, b) => b.oi - a.oi)
-    .slice(0, 3);
+    .slice(0, 5);
   const ceOiRanks = new Map(topCeOi.map((item, rank) => [item.index, rank + 1]));
   const peOiRanks = new Map(topPeOi.map((item, rank) => [item.index, rank + 1]));
 
