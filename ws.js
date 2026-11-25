@@ -430,9 +430,9 @@ function subscribeOptionInstrument(details) {
   if (existing) return existing;
 
   const sameType = optionSubscriptions.filter(item => item.optionType === details.optionType);
-  if (sameType.length >= 3) {
+  if (sameType.length >= 5) {
     if (!details.replaceOldest) {
-      showAlert('warn', `⚠ You can subscribe to only three ${details.optionType} instruments.`);
+      showAlert('warn', `⚠ You can subscribe to only five ${details.optionType} instruments.`);
       return null;
     }
     unsubscribeOptionInstrument(sameType[0].key);

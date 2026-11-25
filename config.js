@@ -91,7 +91,7 @@ let _atRealTime = true;
 let spot5Bucket = { cur: null, _last: null };
 
 // ── Option Chain UI State ──────────────────────────────────────────────────
-// Selected option streams; capped at two CE and two PE instruments.
+// Selected option streams; capped at five CE and five PE instruments.
 let optionSubscriptions = [];
 let selCEKey=null, selPEKey=null;
 let selCEStrike=null, selPEStrike=null;  // numeric strike price e.g. 22900
