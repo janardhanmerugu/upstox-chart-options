@@ -50,6 +50,9 @@ file:///D:/upstox-chart/upstox-chart-options/index.html?ws=ws%3A%2F%2F127.0.0.1%
 ```
 
 Then click **Connect** and authenticate with a valid Upstox token.
+The Access Token provider dropdown can fill sample values for AWS (`123`) or
+Oracle (`321`); these values are examples and must be replaced with a valid
+token to authenticate.
 
 ## Drawing Tools
 

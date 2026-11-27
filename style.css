@@ -190,6 +190,12 @@ body{font-family:'JetBrains Mono',monospace;background:var(--bg);color:var(--tex
   border-radius:7px;padding:.38rem .65rem;outline:none;width:100%;
   transition:border-color .18s;
 }
+#token-provider{
+  font-family:'JetBrains Mono',monospace;font-size:.68rem;
+  border:1px solid var(--border);background:var(--bg);color:var(--text);
+  border-radius:7px;padding:.38rem .65rem;outline:none;width:100%;
+}
+#token-provider:focus{border-color:var(--accent)}
 #token-input:focus{border-color:var(--accent);box-shadow:0 0 0 2px #00d4ff15}
 #token-input.tok-ok{border-color:var(--green)}
 #token-input.tok-fail{border-color:var(--red)}

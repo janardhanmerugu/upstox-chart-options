@@ -26,6 +26,20 @@ function toggleCrosshair() {
 }
 
 // ──── Token UI ────
+function selectTokenProvider() {
+  const provider = document.getElementById('token-provider').value;
+  const tokens = {
+     aws: 'eyJ0eXAiOiJKV1QiLCJrZXlfaWQiOiJza192MS4wIiwiYWxnIjoiSFMyNTYifQ.eyJzdWIiOiIyOENTTEUiLCJqdGkiOiI2YjA5OWFjNWExY2FlNTEzNmQ5M2FhNzYiLCJpc011bHRpQ2xpZW50IjpmYWxzZSwiaXNQbHVzUGxhbiI6ZmFsc2UsImlzRXh0ZW5kZWQiOnRydWUsImlhdCI6MTc5NTc5MTU1NywiaXNzIjoidWRhcGktZ2F0ZXdheS1zZXJ2aWNlIiwiZXhwIjoxODI3MzUyODAwfQ.yQyYGuHlk5rjJu0rBZs_eZfuRZMAnF85rNBkkjob83s',
+     oracle: 'eyJ0eXAiOiJKV1QiLCJrZXlfaWQiOiJza192MS4wIiwiYWxnIjoiSFMyNTYifQ.eyJzdWIiOiIyOENTTEUiLCJqdGkiOiI2YjA5NWQ2NmI3MjJmZTU3ZjZiOTBhM2MiLCJpc011bHRpQ2xpZW50IjpmYWxzZSwiaXNQbHVzUGxhbiI6ZmFsc2UsImlzRXh0ZW5kZWQiOnRydWUsImlhdCI6MTc5NTc3NTg0NiwiaXNzIjoidWRhcGktZ2F0ZXdheS1zZXJ2aWNlIiwiZXhwIjoxODI3MzUyODAwfQ.dHviwKlaUfhiJ8-cMs_Dewy6CXcUSCDsbWatnMtQHig'};
+  if (!tokens[provider]) return;
+
+  document.getElementById('token-input').value = tokens[provider];
+  sessionStorage.removeItem('upstox_token');
+  tokSaved = false;
+  setTok(null, `${provider === 'aws' ? 'AWS' : 'Oracle'} selected — connect and save token`);
+  document.getElementById('clearTokenBtn').disabled = true;
+}
+
 function toggleTokenVis() {
   const i = document.getElementById('token-input'), b = document.getElementById('showHideBtn');
   i.type = i.type === 'password' ? 'text' : 'password';
