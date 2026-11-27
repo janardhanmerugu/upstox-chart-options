@@ -60,7 +60,7 @@ window.addEventListener('DOMContentLoaded', () => {
   applyOiLegendPreset('smart-sellers');
 
   // ── Restore token from sessionStorage (survives refresh, clears on tab close) ──
-  const defaultToken = 'eyJ0eXAiOiJKV1QiLCJrZXlfaWQiOiJza192MS4wIiwiYWxnIjoiSFMyNTYifQ.eyJzdWIiOiJCTTY3OTIiLCJqdGkiOiI2YjA5NTA1YWI3MjJmZTU3ZjZiOTA5YjkiLCJpc011bHRpQ2xpZW50IjpmYWxzZSwiaXNQbHVzUGxhbiI6dHJ1ZSwiaXNFeHRlbmRlZCI6dHJ1ZSwiaWF0IjoxNzk1NzcyNTA2LCJpc3MiOiJ1ZGFwaS1nYXRld2F5LXNlcnZpY2UiLCJleHAiOjE4MjczNTI4MDB9.q-1kREG3YmcoPj6zv9o3OY4RQWs4YIQ-imejQVkG81Q';
+  const defaultToken = 'eyJ0eXAiOiJKV1QiLCJrZXlfaWQiOiJza192MS4wIiwiYWxnIjoiSFMyNTYifQ.eyJzdWIiOiJCTTY3OTIiLCJqdGkiOiI2YjA5NTZkMGI3MjJmZTU3ZjZiOTBhMGQiLCJpc011bHRpQ2xpZW50IjpmYWxzZSwiaXNQbHVzUGxhbiI6dHJ1ZSwiaXNFeHRlbmRlZCI6dHJ1ZSwiaWF0IjoxNzk1Nzc0MTYwLCJpc3MiOiJ1ZGFwaS1nYXRld2F5LXNlcnZpY2UiLCJleHAiOjE4MjczNTI4MDB9.RKkUFNkhesEGvSVRLjk9RLNo4GPyr-5xnDGkBFBwT80';
   const savedToken = sessionStorage.getItem('upstox_token') || defaultToken;
   if (savedToken) {
     const inp = document.getElementById('token-input');
