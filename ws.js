@@ -220,10 +220,9 @@ function connectWS() {
         showAlert('err','⚠ Feed error: '+msg.message, false);
       } 
       else if (msg.status === 'auth_error') {
-        // Token expired (usually daily expiry with Upstox)
-        setStatus('err','⚠ TOKEN EXPIRED');
-        setTok(false,'❌ Token expired — get a new token from developer.upstox.com');
-        showAlert('err','🔑 Token rejected (403). Get a fresh token.',false);
+        setStatus('err','⚠ FEED REJECTED');
+        setTok(false,'❌ Upstox rejected feed (403); check token and active connections.');
+        showAlert('err','🔑 Upstox rejected the market-data connection (403). Check token validity and active market-data connections.',false);
       } 
       else if (msg.status === 'reconnecting') {
         setStatus('connecting','RECONNECTING…');
