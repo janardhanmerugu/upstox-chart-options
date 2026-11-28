@@ -32,11 +32,6 @@
     <!-- ── ACCESS TOKEN ── -->
     <div class="ds">
       <div class="ds-title"><span class="ds-title-icon">🔑</span><span>Access Token</span></div>
-      <select id="token-provider" onchange="selectTokenProvider()" aria-label="Token provider">
-        <option value="">Select provider</option>
-        <option value="aws">AWS</option>
-        <option value="oracle">Oracle</option>
-      </select>
       <div style="display:flex;gap:.3rem">
         <input type="password" id="token-input" placeholder="Paste Upstox token…" autocomplete="off"/>
         <button class="show-hide" id="showHideBtn" onclick="toggleTokenVis()">Show</button>
